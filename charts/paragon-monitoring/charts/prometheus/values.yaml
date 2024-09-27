@@ -1,0 +1,138 @@
+# Default values for prometheus.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: useparagon/prometheus
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 'latest'
+
+imagePullSecrets:
+  - name: docker-cfg
+nameOverride: ''
+fullnameOverride: 'prometheus'
+
+serviceAccount:
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 9090
+
+ingress:
+  enabled: false
+  className: ''
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    memory: 2Gi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 1
+      preference:
+        matchExpressions:
+        - key: useparagon.com/capacityType
+          operator: In
+          values:
+          - spot
+envKeys:
+  - ADMIN_BASIC_AUTH_PASSWORD
+  - ADMIN_BASIC_AUTH_USERNAME
+  - BASIC_AUTH_PASSWORD
+  - BASIC_AUTH_USER
+  - CACHE_REDIS_URL
+  - CERBERUS_PRIVATE_URL
+  - CHRONOS_PRIVATE_URL
+  - CONNECT_PRIVATE_URL
+  - DASHBOARD_PRIVATE_URL
+  - EMBASSY_PRIVATE_URL
+  - HADES_PRIVATE_URL
+  - HERCULES_PRIVATE_URL
+  - HERMES_PRIVATE_URL
+  - HOST_ENV
+  - MONITOR_BULL_EXPORTER_HOST
+  - MONITOR_BULL_EXPORTER_PORT
+  - MONITOR_KUBE_STATE_METRICS_HOST
+  - MONITOR_KUBE_STATE_METRICS_PORT
+  - MONITOR_POSTGRES_EXPORTER_HOST
+  - MONITOR_POSTGRES_EXPORTER_PORT
+  - MONITOR_PROMETHEUS_ECS_DISCOVERY_AWS_ACCESS_ID
+  - MONITOR_PROMETHEUS_ECS_DISCOVERY_AWS_SECRET_KEY
+  - MONITOR_PROMETHEUS_ECS_DISCOVERY_OUTPUT_FILEPATH
+  - MONITOR_PROMETHEUS_HOST
+  - MONITOR_PROMETHEUS_PORT
+  - MONITOR_PROMETHEUS_RETENTION_SIZE
+  - MONITOR_PROMETHEUS_RETENTION_TIME
+  - MONITOR_PROMETHEUS_SCRAPE_INTERVAL
+  - MONITOR_REDIS_EXPORTER_HOST
+  - MONITOR_REDIS_EXPORTER_PORT
+  - PASSPORT_PRIVATE_URL
+  - PHEME_PRIVATE_URL
+  - PLATO_PRIVATE_URL
+  - QUEUE_REDIS_URL
+  - RELEASE_PRIVATE_URL
+  - SYSTEM_REDIS_URL
+  - WORKER_ACTIONS_PRIVATE_URL
+  - WORKER_CREDENTIALS_PRIVATE_URL
+  - WORKER_CRONS_PRIVATE_URL
+  - WORKER_DEPLOYMENTS_PRIVATE_URL
+  - WORKER_PROXY_PRIVATE_URL
+  - WORKER_TRIGGERS_PRIVATE_URL
+  - WORKER_WORKFLOWS_PRIVATE_URL
+  - WORKFLOW_REDIS_URL
+  - ZEUS_PRIVATE_URL

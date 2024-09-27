@@ -1,0 +1,127 @@
+
+# Default values for grafana.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: useparagon/grafana
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 'latest'
+
+service:
+  type: ClusterIP
+  port: 4500
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+imagePullSecrets:
+  - name: docker-cfg
+nameOverride: ''
+fullnameOverride: 'grafana'
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+ingress:
+  acm_certificate_arn: ''
+  enabled: true
+  className: ''
+  host: chart-example.local
+  healthcheck_path: /api/health
+  include_annotations: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 1
+      preference:
+        matchExpressions:
+        - key: useparagon.com/capacityType
+          operator: In
+          values:
+          - spot
+
+tls_secret: ''
+
+envKeys:
+  - AWS_REGION
+  - CERBERUS_POSTGRES_DATABASE
+  - HERMES_POSTGRES_DATABASE
+  - HERMES_POSTGRES_HOST
+  - HERMES_POSTGRES_PASSWORD
+  - HERMES_POSTGRES_PORT
+  - HERMES_POSTGRES_USERNAME
+  - HOST_ENV
+  - MONITOR_CACHE_REDIS_TARGETS
+  - MONITOR_GRAFANA_ALB_ARN
+  - MONITOR_GRAFANA_AUTH_GITHUB_CLIENT_ID
+  - MONITOR_GRAFANA_AUTH_GITHUB_CLIENT_SECRET
+  - MONITOR_GRAFANA_AWS_ACCESS_ID
+  - MONITOR_GRAFANA_AWS_SECRET_KEY
+  - MONITOR_GRAFANA_HOST
+  - MONITOR_GRAFANA_PORT
+  - MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD
+  - MONITOR_GRAFANA_SECURITY_ADMIN_USER
+  - MONITOR_GRAFANA_SERVER_DOMAIN
+  - MONITOR_GRAFANA_SLACK_CANARY_BETA_CHANNEL
+  - MONITOR_GRAFANA_SLACK_CANARY_BETA_WEBHOOK_URL
+  - MONITOR_GRAFANA_SLACK_CANARY_CHANNEL
+  - MONITOR_GRAFANA_SLACK_CANARY_WEBHOOK_URL
+  - MONITOR_GRAFANA_SLACK_CUSTOMER_WEBHOOK_URL
+  - MONITOR_GRAFANA_UPTIME_WEBHOOK_URL
+  - MONITOR_POSTGRES_EXPORTER_HOST
+  - MONITOR_POSTGRES_EXPORTER_PORT
+  - MONITOR_POSTGRES_EXPORTER_SSL_MODE
+  - MONITOR_PROMETHEUS_HOST
+  - MONITOR_PROMETHEUS_PORT
+  - MONITOR_QUEUE_REDIS_TARGET
+  - MONITOR_SYSTEM_REDIS_TARGET
+  - MONITOR_REDIS_EXPORTER_HOST
+  - MONITOR_REDIS_EXPORTER_PORT
+  - ORGANIZATION
+  - PLATFORM_ENV
+  - ZEUS_POSTGRES_DATABASE

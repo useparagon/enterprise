@@ -1,0 +1,151 @@
+# Default values for connect.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+
+image:
+  repository: useparagon/connect
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 'latest'
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/scheme: "http"
+  prometheus.io/path: "/stats/metrics"
+  prometheus.io/port: "1707"
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+service:
+  type: ClusterIP
+  port: 1707
+
+resources:
+  limits:
+    memory: 512Mi
+  requests:
+    cpu: 0.25
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 40
+  targetMemoryUtilizationPercentage: 40
+
+envKeys:
+  - ADMIN_BASIC_AUTH_PASSWORD
+  - ADMIN_BASIC_AUTH_USERNAME
+  - ANALYTICS_ENABLED
+  - BASIC_AUTH_PASSWORD
+  - BASIC_AUTH_USER
+  - BRANCH
+  - CACHE_REDIS_CLUSTER_ENABLED
+  - CACHE_REDIS_TLS_ENABLED
+  - CACHE_REDIS_URL
+  - CDN_PUBLIC_URL
+  - CONNECT_PORT
+  - CONNECT_PUBLIC_URL
+  - DASHBOARD_PUBLIC_URL
+  - DEBUG_REDIS
+  - EMBASSY_PUBLIC_URL
+  - FEATURE_FLAG_HTTP_AGENT_METRICS
+  - FEATURE_FLAG_INTEGRATION_AXIOS_METRICS
+  - FEATURE_FLAG_SWAGGER_STATS
+  - GIT_SHA
+  - HOST_ENV
+  - HTTP_AGENT_IDLE_SOCKET_TIMEOUT
+  - HTTP_AGENT_KEEP_ALIVE_ENABLED
+  - HTTP_AGENT_MAX_SOCKETS
+  - HTTP_PROXY
+  - LICENSE
+  - LOG_LEVEL
+  - LOG_TYPEORM
+  - MICROSERVICES_OPENTELEMETRY_ENABLED
+  - MICROSERVICES_OPENTELEMETRY_SAMPLE_RATE
+  - MINIO_PUBLIC_URL
+  - MONITOR_JAEGER_COLLECTOR_OTLP_GRPC_PORT
+  - MONITOR_JAEGER_COLLECTOR_OTLP_GRPC_HOST
+  - NODE_ENV
+  - PARAGON_DOMAIN
+  - PASSPORT_PRODUCTION_URL
+  - PASSPORT_PUBLIC_URL
+  - PLATFORM_ENV
+  - POSTGRES_CONNECTION_TIMEOUT_MILLIS
+  - POSTGRES_CONNECTION_IDLE_TIMEOUT_MILLIS
+  - POSTGRES_STATEMENT_TIMEOUT_MILLIS
+  - POSTGRES_QUERY_TIMEOUT_MILLIS
+  - POSTGRES_IDLE_TRANSACTION_TIMEOUT_MILLIS
+  - POSTGRES_MAX_CONNECTIONS_IN_POOL
+  - SEGMENT_API_KEY
+  - SENTRY_DSN
+  - SERVICE
+  - SERVICE_MONITORING_ENABLED
+  - SYSTEM_REDIS_CLUSTER_ENABLED
+  - SYSTEM_REDIS_TLS_ENABLED
+  - SYSTEM_REDIS_URL
+  - VERSION
+  - VOLUME_PATH
+  - WORKER_PROXY_PUBLIC_URL
+  - ZEUS_ACCESS_TOKEN
+  - ZEUS_PRIVATE_URL
+  - ZEUS_PUBLIC_URL
+
+imagePullSecrets:
+  - name: docker-cfg
+nameOverride: ''
+fullnameOverride: 'connect'
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# service:
+#   type: ClusterIP
+#   port: 80
+
+ingress:
+  acm_certificate_arn: ''
+  enabled: true
+  className: ''
+  host: chart-example.local
+  healthcheck_path: /healthz
+  include_annotations: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 1
+      preference:
+        matchExpressions:
+        - key: useparagon.com/capacityType
+          operator: In
+          values:
+          - spot
+
+tls_secret: ''

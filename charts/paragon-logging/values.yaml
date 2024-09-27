@@ -1,0 +1,11 @@
+
+subchart:
+  fluent-bit:
+    enabled: true
+  openobserve:
+    enabled: true
+
+global:
+  pullPolicy: IfNotPresent
+  namespace: paragon
+  env: {}

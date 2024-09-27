@@ -1,0 +1,22 @@
+subchart:
+  bull-exporter:
+    enabled: true
+  grafana:
+    enabled: true
+  pgadmin:
+    enabled: true
+  node-exporter:
+    enabled: true
+  postgres-exporter:
+    enabled: true
+  prometheus:
+    enabled: true
+  redis-exporter:
+    enabled: true
+  redis-insight:
+    enabled: true
+
+global:
+  pullPolicy: IfNotPresent
+  namespace: paragon
+  env: {}

@@ -1,0 +1,69 @@
+---
+# create statefulset
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "openobserve.fullname" . }}
+  labels:
+    {{- include "openobserve.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "openobserve.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "openobserve.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "openobserve.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        fsGroup: 2000
+        runAsUser: 10000
+        runAsGroup: 3000
+        runAsNonRoot: true
+      containers:
+        - name: {{ include "openobserve.fullname" . }}
+          image: {{ .Values.image.repository | default "public.ecr.aws/zinclabs/openobserve" }}:{{ .Values.image.tag | default "latest" }}
+          env:
+            - name: ZO_TELEMETRY
+              value: "false"
+            {{- $globalEnv := .Values.global.env -}}
+            {{- $overrideEnv := .Values.env -}}
+            {{- range $key := .Values.envKeys }}
+            {{- if hasKey $overrideEnv $key }}
+            - name: {{ $key }}
+              value: {{ get $overrideEnv $key | quote }}
+            {{- else if hasKey $globalEnv $key }}
+            - name: {{ $key }}
+              value: {{ get $globalEnv $key | quote }}
+            {{- end -}}
+            {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu | default "4096m" }}
+              memory: {{ .Values.resources.limits.memory | default "2048Mi" }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | default "256m" }}
+              memory: {{ .Values.resources.requests.memory | default "50Mi" }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              name: http
+          volumeMounts:
+          - name: o2-persistent-storage
+            mountPath: /data
+          - name: o2-creds-volume
+            mountPath: /creds
+      volumes:
+        - name: o2-creds-volume
+          configMap:
+            name: openobserve-creds
+  volumeClaimTemplates:
+  - metadata:
+      name: o2-persistent-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi

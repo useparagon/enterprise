@@ -1,0 +1,16 @@
+# we only need to create the role binding if we create a custom service account for this service
+{{- if .Values.serviceAccount.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "worker-crons.serviceAccountName" . }}-modify-hpa
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "worker-crons.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: hpa-modifier
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

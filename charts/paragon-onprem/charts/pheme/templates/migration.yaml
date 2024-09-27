@@ -1,0 +1,56 @@
+{{- if semverCompare ">=2.64.2" (split "-" .Values.global.env.VERSION)._0 }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrations-postgres-pheme
+  annotations:
+    "helm.sh/hook": "pre-install,pre-upgrade"
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "pheme.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "pheme.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: "postgres-pheme"
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "useparagon/postgres-pheme:{{ .Values.global.paragon_version }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            {{- $env := .Values.global.env -}}
+            {{- range $key, $value := $env }}
+            {{- if get $env $key }}
+            - name: {{ $key }}
+              value: {{ get $env $key | quote }}
+            {{- end -}}
+            {{- end }}
+      restartPolicy: Never
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

@@ -1,0 +1,25 @@
+{{- if .Values.restart.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restart-paragon-pods-cronjob
+spec:
+  schedule: "{{ .Values.restart.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: paragon-restart-manager
+          containers:
+          - name: restart-pods
+            image: bitnami/kubectl:1.27.14 # An image with kubectl installed
+            command:
+            - /bin/sh
+            - -c
+            - >
+              kubectl get deployments -n paragon -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.annotations}{"\n"}{end}' | grep paragon-on-prem | awk '{print $1}' | xargs -I {} kubectl rollout restart deployment/{} -n paragon;
+              kubectl get statefulsets -n paragon -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.annotations}{"\n"}{end}' | grep paragon-on-prem | awk '{print $1}' | xargs -I {} kubectl rollout restart statefulset/{} -n paragon;
+              kubectl get deployments -n paragon -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.annotations}{"\n"}{end}' | grep paragon-monitoring | awk '{print $1}' | xargs -I {} kubectl rollout restart deployment/{} -n paragon;
+              kubectl get statefulsets -n paragon -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.annotations}{"\n"}{end}' | grep paragon-monitoring | awk '{print $1}' | xargs -I {} kubectl rollout restart statefulset/{} -n paragon;
+          restartPolicy: OnFailure
+{{- end }}

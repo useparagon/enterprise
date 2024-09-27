@@ -1,0 +1,40 @@
+apiVersion: v2
+name: paragon-monitoring
+description: Paragon-Onprem Monitoring for Kubernetes
+type: application
+version: 2.0.0
+appVersion: 'v1'
+
+dependencies:
+  - name: bull-exporter
+    version: 2.0.0
+    repository: file://charts/bull-exporter
+    condition: subchart.bull-exporter.enabled
+  - name: grafana
+    version: 2.0.0
+    repository: file://charts/grafana
+    condition: subchart.grafana.enabled
+  - name: kube-state-metrics
+    version: 2.0.0
+    condition: subchart.kube-state-metrics.enabled
+    repository: file://charts/kube-state-metrics
+  - name: pgadmin
+    version: 2.0.0
+    condition: subchart.pgadmin.enabled
+    repository: file://charts/pgadmin
+  - name: postgres-exporter
+    version: 2.0.0
+    condition: subchart.postgres-exporter.enabled
+    repository: file://charts/postgres-exporter
+  - name: prometheus
+    version: 2.0.0
+    condition: subchart.prometheus.enabled
+    repository: file://charts/prometheus
+  - name: redis-exporter
+    version: 2.0.0
+    condition: subchart.redis-exporter.enabled
+    repository: file://charts/redis-exporter
+  - name: redis-insight
+    version: 2.0.0
+    condition: subchart.redis-insight.enabled
+    repository: file://charts/redis-insight
