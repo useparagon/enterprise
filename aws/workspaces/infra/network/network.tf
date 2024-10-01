@@ -8,7 +8,7 @@ resource "aws_vpc" "app" {
   enable_dns_support   = true
 
   tags = {
-    Name = "${var.workspace}-network-vpc"
+    Name = "${var.workspace}-vpc"
   }
 }
 
@@ -21,7 +21,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name                                     = "${var.workspace}-network-public-${substr(data.aws_availability_zones.available.names[count.index], length(data.aws_availability_zones.available.names[count.index]) - 2, 2)}"
+    Name                                     = "${var.workspace}-public-${substr(data.aws_availability_zones.available.names[count.index], length(data.aws_availability_zones.available.names[count.index]) - 2, 2)}"
     "kubernetes.io/cluster/${var.workspace}" = "shared"
     "kubernetes.io/role/elb"                 = 1
   }
@@ -36,7 +36,7 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name                                     = "${var.workspace}-network-private-${substr(data.aws_availability_zones.available.names[count.index], length(data.aws_availability_zones.available.names[count.index]) - 2, 2)}"
+    Name                                     = "${var.workspace}-private-${substr(data.aws_availability_zones.available.names[count.index], length(data.aws_availability_zones.available.names[count.index]) - 2, 2)}"
     "kubernetes.io/cluster/${var.workspace}" = "shared"
     "kubernetes.io/role/internal-elb"        = 1
   }
@@ -48,7 +48,7 @@ resource "aws_eip" "gw" {
   depends_on = [aws_internet_gateway.app]
 
   tags = {
-    Name = "${var.workspace}-network-gw-eip"
+    Name = "${var.workspace}-gw-eip"
   }
 }
 
@@ -57,7 +57,7 @@ resource "aws_internet_gateway" "app" {
   vpc_id = aws_vpc.app.id
 
   tags = {
-    Name = "${var.workspace}-network-internet-gw"
+    Name = "${var.workspace}-internet-gw"
   }
 }
 
@@ -75,7 +75,7 @@ resource "aws_nat_gateway" "gw" {
   allocation_id = element(aws_eip.gw.*.id, count.index)
 
   tags = {
-    Name = "${var.workspace}-network-nat-gw"
+    Name = "${var.workspace}-nat-gw"
   }
 }
 
@@ -90,7 +90,7 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "${var.workspace}-network-private-route-table"
+    Name = "${var.workspace}-private-route-table"
   }
 }
 

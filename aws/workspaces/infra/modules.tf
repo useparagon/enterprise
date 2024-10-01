@@ -1,10 +1,6 @@
 module "network" {
   source = "./network"
 
-  providers = {
-    aws = aws
-  }
-
   workspace        = local.workspace
   aws_region       = var.aws_region
   az_count         = var.az_count
@@ -16,10 +12,6 @@ module "cloudtrail" {
   count  = var.disable_cloudtrail ? 0 : 1
   source = "./cloudtrail"
 
-  providers = {
-    aws = aws
-  }
-
   workspace                   = local.workspace
   aws_region                  = var.aws_region
   master_guardduty_account_id = var.master_guardduty_account_id
@@ -29,10 +21,6 @@ module "cloudtrail" {
 
 module "postgres" {
   source = "./postgres"
-
-  providers = {
-    aws = aws
-  }
 
   workspace                   = local.workspace
   aws_region                  = var.aws_region
@@ -51,10 +39,6 @@ module "postgres" {
 module "redis" {
   source = "./redis"
 
-  providers = {
-    aws = aws
-  }
-
   workspace                      = local.workspace
   aws_region                     = var.aws_region
   elasticache_node_type          = var.elasticache_node_type
@@ -69,10 +53,6 @@ module "redis" {
 module "s3" {
   source = "./s3"
 
-  providers = {
-    aws = aws
-  }
-
   workspace             = local.workspace
   force_destroy         = var.disable_deletion_protection
   app_bucket_expiration = var.app_bucket_expiration
@@ -81,19 +61,14 @@ module "s3" {
 module "cluster" {
   source = "./cluster"
 
-  providers = {
-    aws = aws
-  }
-
-  workspace                        = local.workspace
-  eks_k8s_version                  = var.eks_k8s_version
-  eks_ondemand_node_instance_type  = local.eks_ondemand_node_instance_type
-  eks_spot_node_instance_type      = local.eks_spot_node_instance_type
-  eks_spot_instance_percent        = var.eks_spot_instance_percent
-  eks_min_node_count               = var.eks_min_node_count
-  eks_max_node_count               = var.eks_max_node_count
-  eks_addon_ebs_csi_driver_enabled = var.eks_addon_ebs_csi_driver_enabled
-  eks_admin_user_arns              = local.eks_admin_user_arns
+  workspace                       = local.workspace
+  eks_k8s_version                 = var.eks_k8s_version
+  eks_ondemand_node_instance_type = local.eks_ondemand_node_instance_type
+  eks_spot_node_instance_type     = local.eks_spot_node_instance_type
+  eks_spot_instance_percent       = var.eks_spot_instance_percent
+  eks_min_node_count              = var.eks_min_node_count
+  eks_max_node_count              = var.eks_max_node_count
+  eks_admin_user_arns             = local.eks_admin_user_arns
 
   vpc              = module.network.vpc
   public_subnet    = module.network.public_subnet
@@ -104,11 +79,8 @@ module "cluster" {
 module "bastion" {
   source = "./bastion"
 
-  providers = {
-    aws = aws
-  }
-
   workspace     = local.workspace
+  aws_region    = var.aws_region
   ssh_whitelist = local.ssh_whitelist
 
   cloudflare_api_token           = var.cloudflare_api_token

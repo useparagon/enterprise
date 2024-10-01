@@ -115,14 +115,14 @@ resource "aws_db_instance" "postgres" {
 
   db_subnet_group_name      = aws_db_subnet_group.postgres.id
   deletion_protection       = !var.disable_deletion_protection
-  final_snapshot_identifier = "${each.value.name}-${random_string.snapshot_identifier[0].result}"
+  final_snapshot_identifier = "${each.value.name}-${random_string.snapshot_identifier.result}"
   publicly_accessible       = false
   skip_final_snapshot       = false
   storage_encrypted         = true
   vpc_security_group_ids    = [aws_security_group.postgres.id]
 
   performance_insights_enabled          = true
-  performance_insights_retention_period = 90
+  performance_insights_retention_period = 31
   enabled_cloudwatch_logs_exports       = ["postgresql", "upgrade"]
 
   apply_immediately = true

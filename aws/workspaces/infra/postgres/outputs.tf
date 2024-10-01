@@ -6,7 +6,7 @@ output "rds" {
       port     = aws_db_instance.postgres[key].port
       user     = aws_db_instance.postgres[key].username
       password = random_password.postgres_root_password[key].result
-      database = aws_db_instance.postgres[key].name
+      database = aws_db_instance.postgres[key].db_name
     }
   }
   sensitive = true

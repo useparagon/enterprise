@@ -68,11 +68,6 @@ variable "eks_cluster_name" {
   type        = string
 }
 
-variable "default_tags" {
-  description = "The default tags applied to resources."
-  type        = map(string)
-}
-
 locals {
   # TODO: update to random port
   ssh_port = 22

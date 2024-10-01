@@ -1,5 +1,5 @@
 resource "aws_iam_role" "rds_enhanced_monitoring" {
-  name_prefix           = "${var.workspace}-rds"
+  name_prefix           = substr("${var.workspace}-rds", 0, 38)
   description           = "${var.workspace} rds monitor"
   assume_role_policy    = data.aws_iam_policy_document.rds_enhanced_monitoring.json
   force_detach_policies = true

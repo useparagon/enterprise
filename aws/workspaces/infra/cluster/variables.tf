@@ -78,6 +78,12 @@ locals {
     if value != null
   }
 
+  cluster_addons = {
+    aws-ebs-csi-driver = {}
+    coredns            = {}
+    kube-proxy         = {}
+  }
+
   # We need to lookup K8s taint effect from the AWS API value
   taint_effects = {
     NO_SCHEDULE        = "NoSchedule"

@@ -1,7 +1,7 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "vpc_flow_logs" {
-  name_prefix = "${var.workspace}-vpc-logs"
+  name_prefix = substr("${var.workspace}-vpc-logs", 0, 38)
 
   assume_role_policy = jsonencode(
     {

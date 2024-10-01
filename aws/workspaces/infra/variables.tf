@@ -83,7 +83,7 @@ variable "elasticache_node_type" {
 variable "elasticache_multiple_instances" {
   description = "Whether or not to create multiple ElastiCache instances. Used for higher volume installations."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "elasticache_multi_az" {
@@ -137,7 +137,7 @@ variable "eks_admin_user_arns" {
   # If these aren't available when the cluster is first initialized, it'll have to be manually created
   # https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
   description = "Comma-separated list of ARNs for IAM users that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
-  type        = string
+  type        = list(string)
   default     = null
 }
 
@@ -219,31 +219,16 @@ variable "cloudflare_tunnel_email_domain" {
   default     = "useparagon.com"
 }
 
-variable "cloudflare_dns_api_token" {
-  description = "Cloudflare DNS API token for SSL certificate creation and verification."
-  type        = string
-  sensitive   = true
-  default     = null
-}
-
-variable "cloudflare_zone_id" {
-  description = "Cloudflare zone id to set CNAMEs."
-  type        = string
-  sensitive   = true
-  default     = null
-}
-
 locals {
   # hash of account ID to help ensure uniqueness of resources like S3 bucket names
   hash        = substr(sha256(data.aws_caller_identity.current.account_id), 0, 8)
   environment = "enterprise"
-  workspace   = "paragon-${local.environment}-${var.organization}-${local.hash}"
+  workspace   = "paragon-${var.organization}-${local.hash}"
 
   default_tags = {
-    Name         = local.workspace
+    Name         = "paragon-${var.organization}"
     Environment  = local.environment
     Organization = var.organization
-    Workspace    = local.workspace
     Creator      = "Terraform"
   }
 
@@ -257,10 +242,10 @@ locals {
 
   # split ARNs by comma, trim, remove duplicates, and transform into object
   eks_admin_user_arns = var.eks_admin_user_arns == null ? [] : [
-    for value in distinct([for value in split(",", var.eks_admin_user_arns) : trimspace(value)]) : {
+    for value in distinct([for value in var.eks_admin_user_arns : trimspace(value)]) : {
       userarn  = value
       username = element(split("/", value), length(split("/", value)) - 1)
-      groups   = ["system:masters"]
+      groups   = ["cluster-admin", "admin"]
     }
   ]
 }
