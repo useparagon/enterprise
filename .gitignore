@@ -36,5 +36,9 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# used to define backends
+# used to define backends and private settings
 main.tf
+.secure
+
+# only keep the top level charts
+**/paragon/charts

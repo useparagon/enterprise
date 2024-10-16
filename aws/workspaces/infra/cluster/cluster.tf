@@ -8,20 +8,20 @@ module "eks" {
 
   # networking
   cluster_endpoint_public_access = true
-  subnet_ids                     = var.private_subnet.*.id
-  vpc_id                         = var.vpc.id
+  subnet_ids                     = var.private_subnet_ids
+  vpc_id                         = var.vpc_id
 
   # access
   authentication_mode                      = "API"
   enable_cluster_creator_admin_permissions = true
   access_entries = {
-    for username, entry in var.eks_admin_user_arns : username => {
+    for username, entry in var.eks_admins : username => {
       kubernetes_groups = entry.groups
-      principal_arn     = entry.userarn
+      principal_arn     = entry.principal_arn
 
       policy_associations = {
         username = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
           access_scope = {
             namespaces = ["default", "paragon"]
             type       = "namespace"
@@ -45,6 +45,34 @@ module "eks" {
   }
 }
 
+# resource "aws_eks_access_entry" "this" {
+#   for_each = var.eks_admins
+
+#   cluster_name      = module.eks.cluster_name
+#   kubernetes_groups = try(each.value.groups, null)
+#   principal_arn     = each.value.userarn
+#   type              = try(each.value.type, "STANDARD")
+#   user_name         = try(each.key, null)
+# }
+
+# resource "aws_eks_access_policy_association" "this" {
+#   for_each = var.eks_admins
+
+#   access_scope {
+#     namespaces = try(each.value.association_access_scope_namespaces, [])
+#     type       = each.value.association_access_scope_type
+#   }
+
+#   cluster_name = aws_eks_cluster.this[0].name
+
+#   policy_arn    = each.value.association_policy_arn
+#   principal_arn = each.value.principal_arn
+
+#   depends_on = [
+#     aws_eks_access_entry.this,
+#   ]
+# }
+
 resource "random_string" "node_group" {
   for_each = local.nodes
 
@@ -56,7 +84,7 @@ resource "random_string" "node_group" {
   keepers = {
     workspace      = var.workspace
     iam_role_arn   = aws_iam_role.node_role.arn
-    subnet_ids     = join(",", var.private_subnet.*.id)
+    subnet_ids     = join(",", var.private_subnet_ids)
     capacity_type  = each.value.capacity
     instance_types = join(",", each.value.instance_types)
   }
@@ -78,7 +106,7 @@ module "eks_managed_node_group" {
 
   create_iam_role        = false
   iam_role_arn           = aws_iam_role.node_role.arn
-  subnet_ids             = var.private_subnet.*.id
+  subnet_ids             = var.private_subnet_ids
   vpc_security_group_ids = [module.eks.cluster_security_group_id]
 
   capacity_type  = each.value.capacity

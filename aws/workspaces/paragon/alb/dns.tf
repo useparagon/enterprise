@@ -1,5 +1,5 @@
 data "aws_lb" "load_balancer" {
-  name = var.aws_workspace
+  name = var.workspace
 
   depends_on = [
     var.release_ingress,
@@ -34,9 +34,9 @@ resource "aws_route53_record" "microservice" {
 resource "cloudflare_record" "nameserver" {
   count = local.has_cloudflare_credentials ? length(aws_route53_zone.paragon.name_servers) : 0
 
+  content = aws_route53_zone.paragon.name_servers[count.index]
   name    = var.domain
-  zone_id = var.cloudflare_zone_id
-  value   = aws_route53_zone.paragon.name_servers[count.index]
+  ttl     = 600
   type    = "NS"
-  ttl     = 60 # TODO: increase the TTL to `600` (10 MINUTES) when stable
+  zone_id = var.cloudflare_zone_id
 }

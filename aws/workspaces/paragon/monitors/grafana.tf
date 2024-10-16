@@ -1,11 +1,11 @@
 resource "aws_iam_user" "grafana" {
   count = var.grafana_aws_access_key_id == null && var.grafana_aws_secret_access_key == null ? 1 : 0
 
-  name = "${var.aws_workspace}-iam-grafana"
+  name = "${var.workspace}-iam-grafana"
   path = "/env/"
 
   tags = {
-    Name = "${var.aws_workspace}-iam-grafana"
+    Name = "${var.workspace}-iam-grafana"
   }
 }
 
@@ -18,7 +18,7 @@ resource "aws_iam_access_key" "grafana" {
 resource "aws_iam_user_policy" "grafana_ro" {
   count = var.grafana_aws_access_key_id == null && var.grafana_aws_secret_access_key == null ? 1 : 0
 
-  name = "${var.aws_workspace}-iam-grafana-policy"
+  name = "${var.workspace}-iam-grafana-policy"
   user = aws_iam_user.grafana[0].name
 
   policy = jsonencode({

@@ -7,7 +7,7 @@ keywords:
 - prometheus
 - kubernetes
 type: application
-version: 2.0.0
+version: __PARAGON_VERSION__
 appVersion: 2.8.2
 home: https://github.com/kubernetes/kube-state-metrics/
 sources:

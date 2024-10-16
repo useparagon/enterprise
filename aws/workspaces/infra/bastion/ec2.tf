@@ -21,10 +21,8 @@ data "aws_ami" "bastion" {
 }
 
 locals {
-  bastion_name = var.workspace
-
-  # allowing both SSH and Cloudflare until we are confident CFZT fulfills all needs
-  only_cloudflare_tunnel = false # var.cloudflare_tunnel_enabled
+  bastion_name           = "${var.workspace}-bastion"
+  only_cloudflare_tunnel = var.cloudflare_tunnel_enabled
 }
 
 resource "tls_private_key" "bastion" {
@@ -54,7 +52,7 @@ module "bastion" {
   version = "3.0.6"
 
   # logging
-  bucket_name     = "${var.workspace}-bastion"
+  bucket_name     = local.bastion_name
   log_expiry_days = 365
 
   # networking
@@ -74,9 +72,10 @@ module "bastion" {
   allow_ssh_commands           = true
   bastion_ami                  = data.aws_ami.bastion.id
   bastion_host_key_pair        = aws_key_pair.bastion.id
-  bastion_iam_policy_name      = var.workspace
-  bastion_iam_role_name        = var.workspace
+  bastion_iam_policy_name      = local.bastion_name
+  bastion_iam_role_name        = local.bastion_name
   bastion_launch_template_name = substr(local.bastion_name, 0, 22)
+  disk_encrypt                 = true
   instance_type                = "t3.micro"
   use_imds_v2                  = true
 
@@ -85,7 +84,7 @@ module "bastion" {
     account_id     = var.cloudflare_tunnel_account_id,
     aws_account_id = data.aws_caller_identity.current.account_id
     aws_region     = var.aws_region,
-    bastion_role   = var.workspace,
+    bastion_role   = local.bastion_name,
     cluster_name   = var.eks_cluster_name,
     tunnel_id      = local.tunnel_id,
     tunnel_name    = local.tunnel_domain,
@@ -96,7 +95,7 @@ module "bastion" {
 # allow SSM Connect access
 resource "aws_iam_role_policy_attachment" "ssm_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  role       = var.workspace
+  role       = local.bastion_name
 
   depends_on = [module.bastion]
 }

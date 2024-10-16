@@ -3,7 +3,7 @@ variable "aws_region" {
   type        = string
 }
 
-variable "aws_workspace" {
+variable "workspace" {
   description = "The name of the resource group that all resources are associated with."
   type        = string
 }

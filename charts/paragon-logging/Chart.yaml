@@ -2,15 +2,15 @@ apiVersion: v2
 name: paragon-logging
 description: A Helm chart for Kubernetes
 type: application
-version: 2.0.0
+version: __PARAGON_VERSION__
 appVersion: 'v1'
 
 dependencies:
   - name: fluent-bit
-    version: 2.0.0
+    version: __PARAGON_VERSION__
     repository: file://charts/fluent-bit
     condition: subchart.fluent-bit.enabled
   - name: openobserve
-    version: 2.0.0
+    version: __PARAGON_VERSION__
     repository: file://charts/openobserve
     condition: subchart.openobserve.enabled

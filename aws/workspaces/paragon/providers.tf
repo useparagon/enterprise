@@ -4,15 +4,10 @@ provider "aws" {
   token      = var.aws_session_token
   region     = var.aws_region
   default_tags {
-    tags = {
-      Name        = var.aws_workspace
-      Creator     = "Terraform"
-      Environment = var.environment
-      Workspace   = var.aws_workspace
-    }
+    tags = local.default_tags
   }
 }
 
-provider "cloudflare" {
-  api_token = var.cloudflare_dns_api_token
-}
+# provider "cloudflare" {
+#   api_token = var.cloudflare_dns_api_token
+# }

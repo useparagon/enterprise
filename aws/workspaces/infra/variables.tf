@@ -96,19 +96,19 @@ variable "elasticache_multi_az" {
 variable "eks_k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
-  default     = "1.30"
+  default     = "1.31"
 }
 
 variable "eks_ondemand_node_instance_type" {
   description = "The compute instance type to use for Kubernetes nodes."
   type        = string
-  default     = "t3a.medium,t3.medium"
+  default     = "t3a.large,t3.large"
 }
 
 variable "eks_spot_node_instance_type" {
   description = "The compute instance type to use for Kubernetes spot nodes."
   type        = string
-  default     = "t3a.medium,t3.medium"
+  default     = "t3a.large,t3.large"
 }
 
 variable "eks_spot_instance_percent" {
@@ -225,6 +225,7 @@ locals {
   environment = "enterprise"
   workspace   = "paragon-${var.organization}-${local.hash}"
 
+  # NOTE hash and workspace can't be included in tags since it creates a circular reference
   default_tags = {
     Name         = "paragon-${var.organization}"
     Environment  = local.environment
@@ -241,11 +242,12 @@ locals {
   eks_spot_node_instance_type     = distinct([for value in split(",", var.eks_spot_node_instance_type) : trimspace(value)])
 
   # split ARNs by comma, trim, remove duplicates, and transform into object
-  eks_admin_user_arns = var.eks_admin_user_arns == null ? [] : [
-    for value in distinct([for value in var.eks_admin_user_arns : trimspace(value)]) : {
-      userarn  = value
-      username = element(split("/", value), length(split("/", value)) - 1)
-      groups   = ["cluster-admin", "admin"]
+  bastion_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.workspace}-bastion"
+  eks_admin_arns   = concat(coalesce(var.eks_admin_user_arns, []), [local.bastion_role_arn])
+  eks_admins = {
+    for value in distinct([for value in local.eks_admin_arns : trimspace(value)]) : element(split("/", value), length(split("/", value)) - 1) => {
+      principal_arn = value
+      groups        = ["cluster-admin", "admin"]
     }
-  ]
+  }
 }

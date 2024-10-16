@@ -1,29 +1,23 @@
 variable "workspace" {
   description = "The name of the workspace resources are being created in."
+  type        = string
 }
 
-variable "vpc" {
-  description = "The VPC to create resources in."
+variable "vpc_id" {
+  description = "The ID of VPC to create resources in."
+  type        = string
 }
 
-variable "public_subnet" {
-  description = "The public subnets within the VPC."
+variable "private_subnet_ids" {
+  description = "The private subnet IDs within the VPC."
+  type        = list(string)
 }
 
-variable "private_subnet" {
-  description = "The private subnets within the VPC."
-}
-
-variable "bastion_role_arn" {
-  description = "IAM role arn of bastion instance"
-}
-
-variable "eks_admin_user_arns" {
-  description = "List of ARNs for IAM users that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
-  type = list(object({
-    userarn  = string
-    username = string
-    groups   = list(string)
+variable "eks_admins" {
+  description = "List of users, groups or roles that should have admin access to cluster."
+  type = map(object({
+    principal_arn = string
+    groups        = list(string)
   }))
 }
 

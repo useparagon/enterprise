@@ -227,7 +227,7 @@ resource "helm_release" "paragon_on_prem" {
 
     content {
       name  = "${set.key}.ingress.load_balancer_name"
-      value = var.aws_workspace
+      value = var.workspace
     }
   }
 
@@ -416,7 +416,7 @@ resource "helm_release" "paragon_monitoring" {
 
     content {
       name  = "${set.key}.ingress.load_balancer_name"
-      value = var.aws_workspace
+      value = var.workspace
     }
   }
 
