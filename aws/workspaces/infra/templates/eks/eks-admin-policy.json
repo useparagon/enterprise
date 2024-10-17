@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "aps:ListScrapers",
+        "autoscaling:*",
+        "cloudformation:*",
+        "cloudwatch:*",
+        "ec2:*",
+        "eks:*",
+        "elasticloadbalancing:*",
+        "kms:CreateGrant",
+        "kms:DescribeKey",
+        "logs:PutRetentionPolicy"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:CreateServiceLinkedRole",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "iam:AWSServiceName": [
+            "autoscaling.amazonaws.com",
+            "ec2scheduled.amazonaws.com",
+            "eks-fargate.amazonaws.com",
+            "eks-nodegroup.amazonaws.com",
+            "eks.amazonaws.com",
+            "elasticloadbalancing.amazonaws.com",
+            "spot.amazonaws.com",
+            "spotfleet.amazonaws.com",
+            "transitgateway.amazonaws.com"
+          ]
+        }
+      }
+    }
+  ]
+}

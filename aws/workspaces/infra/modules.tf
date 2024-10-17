@@ -62,7 +62,7 @@ module "cluster" {
   source = "./cluster"
 
   workspace                       = local.workspace
-  eks_admins                      = local.eks_admins
+  eks_admin_arns                  = var.eks_admin_arns
   eks_k8s_version                 = var.eks_k8s_version
   eks_ondemand_node_instance_type = local.eks_ondemand_node_instance_type
   eks_spot_node_instance_type     = local.eks_spot_node_instance_type

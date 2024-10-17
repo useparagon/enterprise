@@ -15,16 +15,29 @@ module "eks" {
   authentication_mode                      = "API"
   enable_cluster_creator_admin_permissions = true
   access_entries = {
-    for username, entry in var.eks_admins : username => {
-      kubernetes_groups = entry.groups
-      principal_arn     = entry.principal_arn
+    bastion = {
+      kubernetes_groups = ["cluster-admin", "admin"]
+      principal_arn     = local.bastion_role_arn
 
       policy_associations = {
-        username = {
+        bastion = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
           access_scope = {
             namespaces = ["default", "paragon"]
             type       = "namespace"
+          }
+        }
+      }
+    }
+    eks-admins = {
+      kubernetes_groups = ["cluster-admin", "admin"]
+      principal_arn     = aws_iam_role.eks_cluster_admin.arn
+
+      policy_associations = {
+        eks-admins = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
           }
         }
       }
@@ -43,35 +56,9 @@ module "eks" {
   cluster_tags = {
     Name = var.workspace
   }
+
+  depends_on = [aws_iam_role.eks_cluster_admin]
 }
-
-# resource "aws_eks_access_entry" "this" {
-#   for_each = var.eks_admins
-
-#   cluster_name      = module.eks.cluster_name
-#   kubernetes_groups = try(each.value.groups, null)
-#   principal_arn     = each.value.userarn
-#   type              = try(each.value.type, "STANDARD")
-#   user_name         = try(each.key, null)
-# }
-
-# resource "aws_eks_access_policy_association" "this" {
-#   for_each = var.eks_admins
-
-#   access_scope {
-#     namespaces = try(each.value.association_access_scope_namespaces, [])
-#     type       = each.value.association_access_scope_type
-#   }
-
-#   cluster_name = aws_eks_cluster.this[0].name
-
-#   policy_arn    = each.value.association_policy_arn
-#   principal_arn = each.value.principal_arn
-
-#   depends_on = [
-#     aws_eks_access_entry.this,
-#   ]
-# }
 
 resource "random_string" "node_group" {
   for_each = local.nodes

@@ -13,12 +13,9 @@ variable "private_subnet_ids" {
   type        = list(string)
 }
 
-variable "eks_admins" {
-  description = "List of users, groups or roles that should have admin access to cluster."
-  type = map(object({
-    principal_arn = string
-    groups        = list(string)
-  }))
+variable "eks_admin_arns" {
+  description = "Array of ARNs for IAM users, groups or roles that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
+  type        = list(string)
 }
 
 variable "eks_k8s_version" {
@@ -52,6 +49,8 @@ variable "eks_max_node_count" {
 }
 
 locals {
+  bastion_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.workspace}-bastion"
+
   node_volume_size = 50
 
   nodes = {

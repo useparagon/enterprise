@@ -48,25 +48,23 @@ resource "random_string" "bastion_id" {
 }
 
 module "bastion" {
-  source  = "Guimove/bastion/aws"
-  version = "3.0.6"
+  source = "github.com/useparagon/terraform-aws-bastion"
 
   # logging
   bucket_name     = local.bastion_name
   log_expiry_days = 365
 
   # networking
-  associate_public_ip_address = false
-  auto_scaling_group_subnets  = var.private_subnet.*.id
-  cidrs                       = var.ssh_whitelist
-  create_dns_record           = false
-  create_elb                  = !local.only_cloudflare_tunnel
-  elb_subnets                 = var.public_subnet.*.id
-  is_lb_private               = local.only_cloudflare_tunnel
-  private_ssh_port            = local.ssh_port
-  public_ssh_port             = local.ssh_port
-  region                      = var.aws_region
-  vpc_id                      = var.vpc_id
+  auto_scaling_group_subnets = var.private_subnet.*.id
+  cidrs                      = var.ssh_whitelist
+  create_dns_record          = false
+  create_elb                 = !local.only_cloudflare_tunnel
+  elb_subnets                = var.public_subnet.*.id
+  is_lb_private              = local.only_cloudflare_tunnel
+  private_ssh_port           = local.ssh_port
+  public_ssh_port            = local.ssh_port
+  region                     = var.aws_region
+  vpc_id                     = var.vpc_id
 
   # instance
   allow_ssh_commands           = true
@@ -75,9 +73,7 @@ module "bastion" {
   bastion_iam_policy_name      = local.bastion_name
   bastion_iam_role_name        = local.bastion_name
   bastion_launch_template_name = substr(local.bastion_name, 0, 22)
-  disk_encrypt                 = true
   instance_type                = "t3.micro"
-  use_imds_v2                  = true
 
   # user data template
   extra_user_data_content = templatefile("${path.module}/../templates/bastion/bastion-startup.tpl.sh", {

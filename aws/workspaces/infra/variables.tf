@@ -133,10 +133,8 @@ variable "eks_max_node_count" {
   default     = 30
 }
 
-variable "eks_admin_user_arns" {
-  # If these aren't available when the cluster is first initialized, it'll have to be manually created
-  # https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
-  description = "Comma-separated list of ARNs for IAM users that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
+variable "eks_admin_arns" {
+  description = "Array of ARNs for IAM users or roles that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
   type        = list(string)
   default     = null
 }
@@ -240,14 +238,4 @@ locals {
   # split instance types by comma, trim, and remove duplicates
   eks_ondemand_node_instance_type = distinct([for value in split(",", var.eks_ondemand_node_instance_type) : trimspace(value)])
   eks_spot_node_instance_type     = distinct([for value in split(",", var.eks_spot_node_instance_type) : trimspace(value)])
-
-  # split ARNs by comma, trim, remove duplicates, and transform into object
-  bastion_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.workspace}-bastion"
-  eks_admin_arns   = concat(coalesce(var.eks_admin_user_arns, []), [local.bastion_role_arn])
-  eks_admins = {
-    for value in distinct([for value in local.eks_admin_arns : trimspace(value)]) : element(split("/", value), length(split("/", value)) - 1) => {
-      principal_arn = value
-      groups        = ["cluster-admin", "admin"]
-    }
-  }
 }
