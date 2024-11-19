@@ -92,4 +92,5 @@ module "bastion" {
   public_subnet    = module.network.public_subnet
   private_subnet   = module.network.private_subnet
   eks_cluster_name = module.cluster.eks_cluster.name
+  eks_k8s_version  = var.eks_k8s_version
 }

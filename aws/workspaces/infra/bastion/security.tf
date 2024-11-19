@@ -1,8 +1,16 @@
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_role" "bastion" {
+  name = local.bastion_name
+
+  depends_on = [
+    module.bastion
+  ]
+}
+
+# infrastructure read only role for bastion
 data "aws_iam_policy_document" "bastion_infra_read_only" {
   statement {
-    sid = "BastionReadInfra"
     actions = [
       "autoscaling:Describe*",
       "autoscaling:Get*",
@@ -28,46 +36,41 @@ data "aws_iam_policy_document" "bastion_infra_read_only" {
   }
 }
 
-data "aws_iam_role" "bastion" {
-  name = var.workspace
-
-  depends_on = [
-    module.bastion
-  ]
-}
-
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    sid     = "BastionAssumeRole"
-    actions = ["sts:AssumeRole"]
-    effect  = "Allow"
-    resources = [
-      # TODO: get from eks outputs
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*"
-    ]
-  }
-}
-
 resource "aws_iam_policy" "bastion_infra_read_only" {
-  name   = "${var.workspace}-bastion-infra-read-only"
+  name   = "${local.bastion_name}-infra-read-only"
   policy = data.aws_iam_policy_document.bastion_infra_read_only.json
-}
-
-resource "aws_iam_policy" "assume_role" {
-  name   = "${var.workspace}-assume-role"
-  policy = data.aws_iam_policy_document.assume_role.json
 
   tags = {
-    Name = "${var.workspace}-assume-role"
+    Name = "${local.bastion_name}-infra-read-only"
   }
 }
 
 resource "aws_iam_role_policy_attachment" "bastion_infra_read_only" {
   policy_arn = aws_iam_policy.bastion_infra_read_only.arn
-  role       = var.workspace
+  role       = data.aws_iam_role.bastion.name
+}
+
+# allow bastion to assume role
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    resources = [
+      data.aws_iam_role.bastion.arn
+    ]
+  }
+}
+
+resource "aws_iam_policy" "assume_role" {
+  name   = "${local.bastion_name}-assume-role"
+  policy = data.aws_iam_policy_document.assume_role.json
+
+  tags = {
+    Name = "${local.bastion_name}-assume-role"
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "assume_role" {
   policy_arn = aws_iam_policy.assume_role.arn
-  role       = var.workspace
+  role       = data.aws_iam_role.bastion.name
 }

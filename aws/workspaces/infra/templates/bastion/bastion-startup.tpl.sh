@@ -30,9 +30,9 @@ sudo ./aws/install
 aws --version
 
 # install kubectl
-KUBECTL_MINOR=1.28
+KUBECTL_MINOR=${cluster_version}
 writeLog "installing kubectl $KUBECTL_MINOR"
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v$KUBECTL_MINOR/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v$KUBECTL_MINOR/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update -y
 sudo apt-get install -y kubectl
@@ -65,7 +65,7 @@ writeLog "installing terraform"
 curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/hashicorp.gpg
 echo "deb [signed-by=/etc/apt/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 sudo apt-get update -y
-sudo apt-get install -y terraform=1.2.4
+sudo apt-get install -y terraform
 
 # install docker
 writeLog "installing docker"

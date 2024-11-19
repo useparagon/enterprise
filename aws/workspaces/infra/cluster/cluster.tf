@@ -1,7 +1,7 @@
 # Creating the EKS cluster
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.24.2"
+  version = "20.26.0"
 
   cluster_name    = var.workspace
   cluster_version = var.eks_k8s_version
@@ -12,7 +12,7 @@ module "eks" {
   vpc_id                         = var.vpc_id
 
   # access
-  authentication_mode                      = "API"
+  # authentication_mode                      = "API"
   enable_cluster_creator_admin_permissions = true
   access_entries = {
     bastion = {
@@ -23,8 +23,7 @@ module "eks" {
         bastion = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
           access_scope = {
-            namespaces = ["default", "paragon"]
-            type       = "namespace"
+            type = "cluster"
           }
         }
       }
@@ -79,7 +78,7 @@ resource "random_string" "node_group" {
 
 module "eks_managed_node_group" {
   source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
-  version = "20.24.2"
+  version = "20.26.0"
 
   for_each = local.nodes
 

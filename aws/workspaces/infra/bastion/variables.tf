@@ -68,6 +68,11 @@ variable "eks_cluster_name" {
   type        = string
 }
 
+variable "eks_k8s_version" {
+  description = "The version of Kubernetes to run in the cluster."
+  type        = string
+}
+
 locals {
   # TODO: update to random port
   ssh_port = 22

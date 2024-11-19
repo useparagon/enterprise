@@ -77,14 +77,15 @@ module "bastion" {
 
   # user data template
   extra_user_data_content = templatefile("${path.module}/../templates/bastion/bastion-startup.tpl.sh", {
-    account_id     = var.cloudflare_tunnel_account_id,
-    aws_account_id = data.aws_caller_identity.current.account_id
-    aws_region     = var.aws_region,
-    bastion_role   = local.bastion_name,
-    cluster_name   = var.eks_cluster_name,
-    tunnel_id      = local.tunnel_id,
-    tunnel_name    = local.tunnel_domain,
-    tunnel_secret  = local.tunnel_secret,
+    account_id      = var.cloudflare_tunnel_account_id,
+    aws_account_id  = data.aws_caller_identity.current.account_id
+    aws_region      = var.aws_region,
+    bastion_role    = local.bastion_name,
+    cluster_name    = var.eks_cluster_name,
+    cluster_version = var.eks_k8s_version,
+    tunnel_id       = local.tunnel_id,
+    tunnel_name     = local.tunnel_domain,
+    tunnel_secret   = local.tunnel_secret,
   })
 }
 
