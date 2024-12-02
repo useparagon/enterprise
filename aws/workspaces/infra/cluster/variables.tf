@@ -48,6 +48,12 @@ variable "eks_max_node_count" {
   type        = number
 }
 
+variable "kms_admin_role" {
+  description = "ARN of IAM role allowed to administer KMS keys."
+  type        = string
+  default     = null
+}
+
 locals {
   bastion_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.workspace}-bastion"
 
@@ -72,9 +78,18 @@ locals {
   }
 
   cluster_addons = {
-    aws-ebs-csi-driver = {}
-    coredns            = {}
-    kube-proxy         = {}
+    aws-ebs-csi-driver = {
+      version = "v1.37.0-eksbuild.1"
+    }
+    coredns = {
+      version = "v1.11.3-eksbuild.1"
+    }
+    kube-proxy = {
+      version = "v1.31.0-eksbuild.2"
+    }
+    vpc-cni = {
+      version = "v1.18.3-eksbuild.2"
+    }
   }
 
   # We need to lookup K8s taint effect from the AWS API value
@@ -189,6 +204,14 @@ locals {
       type             = "egress"
       cidr_blocks      = ["0.0.0.0/0"]
       ipv6_cidr_blocks = null
+    }
+    ingress_bastion_https = {
+      description              = "Bastion to cluster API"
+      protocol                 = "tcp"
+      from_port                = 443
+      to_port                  = 443
+      type                     = "ingress"
+      source_security_group_id = data.aws_security_group.bastion.id
     }
   }
 

@@ -138,6 +138,7 @@ $(eksctl get iamidentitymapping --cluster ${cluster_name} --arn arn:aws:iam::${a
 kubectl config set-context --current --namespace=paragon
 
 writeLog "configuring k8s tools as ubuntu"
+echo "alias k=kubectl" > /home/ubuntu/.bash_aliases && chown ubuntu:ubuntu /home/ubuntu/.bash_aliases
 sudo -u ubuntu aws configure set region ${aws_region}
 sudo -u ubuntu aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name}
 sudo -u ubuntu kubectl config set-context --current --namespace=paragon

@@ -51,19 +51,23 @@ spec:
             - containerPort: {{ .Values.service.port }}
               name: http
           volumeMounts:
-          - name: o2-persistent-storage
+          - name: openobserve-data
             mountPath: /data
-          - name: o2-creds-volume
+          - name: openobserve-creds
             mountPath: /creds
       volumes:
-        - name: o2-creds-volume
+        - name: openobserve-creds
           configMap:
             name: openobserve-creds
   volumeClaimTemplates:
-  - metadata:
-      name: o2-persistent-storage
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 5Gi
+    - metadata:
+        name: openobserve-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        {{- if eq .Values.global.env.HOST_ENV "AWS_K8" }}
+        storageClassName: gp3
+        {{- end }}

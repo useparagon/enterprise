@@ -28,6 +28,8 @@ autoscaling:
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 70
 
+secretName: "paragon-secrets"
+
 envKeys:
   - MINIO_PORT
   - MINIO_MODE

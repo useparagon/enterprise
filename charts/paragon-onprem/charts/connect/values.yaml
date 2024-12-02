@@ -38,6 +38,8 @@ autoscaling:
   targetCPUUtilizationPercentage: 40
   targetMemoryUtilizationPercentage: 40
 
+secretName: "paragon-secrets"
+
 envKeys:
   - ADMIN_BASIC_AUTH_PASSWORD
   - ADMIN_BASIC_AUTH_USERNAME

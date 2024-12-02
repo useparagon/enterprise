@@ -28,6 +28,8 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
+secretName: "paragon-secrets"
+
 envKeys:
   - ACCOUNT_ACCESS_TOKEN
   - ACCOUNT_PRIVATE_URL

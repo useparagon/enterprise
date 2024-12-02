@@ -12,36 +12,64 @@ module "eks" {
   vpc_id                         = var.vpc_id
 
   # access
-  # authentication_mode                      = "API"
   enable_cluster_creator_admin_permissions = true
-  access_entries = {
-    bastion = {
-      kubernetes_groups = ["cluster-admin", "admin"]
-      principal_arn     = local.bastion_role_arn
+
+  access_entries = merge(
+    {
+      bastion = {
+        kubernetes_groups = ["admin", "cluster-admin"]
+        principal_arn     = local.bastion_role_arn
+
+        policy_associations = {
+          bastion = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      },
+      eks-admins = {
+        kubernetes_groups = ["admin", "cluster-admin"]
+        principal_arn     = aws_iam_role.eks_cluster_admin.arn
+
+        policy_associations = {
+          eks-admins = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      }
+    },
+    { for arn in var.eks_admin_arns : arn => {
+      kubernetes_groups = ["admin", "cluster-admin"]
+      principal_arn     = arn
 
       policy_associations = {
-        bastion = {
+        "${replace(arn, ":", "-")}" = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
           access_scope = {
             type = "cluster"
           }
         }
+      }
       }
     }
-    eks-admins = {
-      kubernetes_groups = ["cluster-admin", "admin"]
-      principal_arn     = aws_iam_role.eks_cluster_admin.arn
+  )
 
-      policy_associations = {
-        eks-admins = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-          access_scope = {
-            type = "cluster"
-          }
-        }
-      }
+  cluster_security_group_additional_rules = {
+    bastion_api_access = {
+      description              = "Bastion to cluster API"
+      protocol                 = "tcp"
+      from_port                = 443
+      to_port                  = 443
+      type                     = "ingress"
+      source_security_group_id = data.aws_security_group.bastion.id
     }
   }
+  # local.node_security_group_rules
 
   # encryption
   create_kms_key                  = false
@@ -140,11 +168,14 @@ resource "aws_eks_addon" "addons" {
   for_each = local.cluster_addons
 
   addon_name                  = each.key
+  addon_version               = try(each.value.version, null)
   cluster_name                = module.eks.cluster_name
-  configuration_values        = jsonencode(each.value)
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "PRESERVE"
 
   # certain addons such as coredns and EBS CNI require nodes
-  depends_on = [module.eks_managed_node_group]
+  depends_on = [
+    module.eks_managed_node_group,
+    kubernetes_service_account.ebs_csi_controller
+  ]
 }

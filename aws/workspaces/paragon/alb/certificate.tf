@@ -9,3 +9,12 @@ module "acm_request_certificate" {
   subject_alternative_names         = ["*.${var.domain}"]
   zone_id                           = aws_route53_zone.paragon.zone_id
 }
+
+# this has been required at times for certificate validation to succeed for alternate name
+resource "aws_route53_record" "caa" {
+  name    = var.domain
+  records = ["0 issue \"amazon.com\""]
+  ttl     = 300
+  type    = "CAA"
+  zone_id = aws_route53_zone.paragon.zone_id
+}

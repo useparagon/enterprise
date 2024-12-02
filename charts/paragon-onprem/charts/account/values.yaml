@@ -38,6 +38,8 @@ autoscaling:
   targetCPUUtilizationPercentage: 40
   targetMemoryUtilizationPercentage: 40
 
+secretName: "paragon-secrets"
+
 envKeys:
   - ACCOUNT_ACCESS_TOKEN
   - ACCOUNT_BILLING_SYNC_FREQUENCY
