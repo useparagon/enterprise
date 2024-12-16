@@ -16,6 +16,7 @@ variable "private_subnet_ids" {
 variable "eks_admin_arns" {
   description = "Array of ARNs for IAM users, groups or roles that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
   type        = list(string)
+  default     = []
 }
 
 variable "eks_k8s_version" {
@@ -54,9 +55,19 @@ variable "kms_admin_role" {
   default     = null
 }
 
-locals {
-  bastion_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.workspace}-bastion"
+variable "bastion_role_arn" {
+  description = "ARN of IAM role associated with Bastion."
+  type        = string
+}
 
+variable "bastion_security_group_id" {
+  description = "Security Group ID associated with Bastion."
+  type        = string
+}
+
+data "aws_caller_identity" "current" {}
+
+locals {
   node_volume_size = 50
 
   nodes = {
@@ -121,103 +132,15 @@ locals {
 
   cluster_autoscaler_asg_tags = merge(local.cluster_autoscaler_label_tags, local.cluster_autoscaler_taint_tags)
 
-  node_security_group_rules = {
-    egress_cluster_443 = {
-      description                   = "Node groups to cluster API"
-      protocol                      = "tcp"
-      from_port                     = 443
-      to_port                       = 443
-      type                          = "egress"
-      source_cluster_security_group = true
-    }
-    ingress_cluster_443 = {
-      description                   = "Cluster API to node groups"
-      protocol                      = "tcp"
-      from_port                     = 443
-      to_port                       = 443
-      type                          = "ingress"
-      source_cluster_security_group = true
-    }
-    ingress_cluster_kubelet = {
-      description                   = "Cluster API to node kubelets"
-      protocol                      = "tcp"
-      from_port                     = 10250
-      to_port                       = 10250
-      type                          = "ingress"
-      source_cluster_security_group = true
-    }
-    ingress_self_coredns_tcp = {
-      description = "Node to node CoreDNS"
-      protocol    = "tcp"
-      from_port   = 53
-      to_port     = 53
-      type        = "ingress"
-      self        = true
-    }
-    egress_self_coredns_tcp = {
-      description = "Node to node CoreDNS"
-      protocol    = "tcp"
-      from_port   = 53
-      to_port     = 53
-      type        = "egress"
-      self        = true
-    }
-    ingress_self_coredns_udp = {
-      description = "Node to node CoreDNS"
-      protocol    = "udp"
-      from_port   = 53
-      to_port     = 53
-      type        = "ingress"
-      self        = true
-    }
-    egress_self_coredns_udp = {
-      description = "Node to node CoreDNS"
-      protocol    = "udp"
-      from_port   = 53
-      to_port     = 53
-      type        = "egress"
-      self        = true
-    }
-    egress_https = {
-      description      = "Egress all HTTPS to internet"
-      protocol         = "tcp"
-      from_port        = 443
-      to_port          = 443
-      type             = "egress"
-      cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = null
-    }
-    egress_ntp_tcp = {
-      description      = "Egress NTP/TCP to internet"
-      protocol         = "tcp"
-      from_port        = 123
-      to_port          = 123
-      type             = "egress"
-      cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = null
-    }
-    egress_ntp_udp = {
-      description      = "Egress NTP/UDP to internet"
-      protocol         = "udp"
-      from_port        = 123
-      to_port          = 123
-      type             = "egress"
-      cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = null
-    }
-    ingress_bastion_https = {
-      description              = "Bastion to cluster API"
-      protocol                 = "tcp"
-      from_port                = 443
-      to_port                  = 443
-      type                     = "ingress"
-      source_security_group_id = data.aws_security_group.bastion.id
-    }
-  }
-
   metadata_options = {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
   }
+
+  # include current user as EKS admin
+  eks_admin_arns = distinct(compact(concat(
+    var.eks_admin_arns,
+    [data.aws_caller_identity.current.arn]
+  )))
 }

@@ -58,7 +58,7 @@ variable "rds_instance_class" {
 variable "rds_postgres_version" {
   description = "Postgres version for the database."
   type        = string
-  default     = "16.3"
+  default     = "14"
 }
 
 variable "rds_multiple_instances" {

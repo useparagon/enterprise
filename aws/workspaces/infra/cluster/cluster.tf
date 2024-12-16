@@ -12,13 +12,11 @@ module "eks" {
   vpc_id                         = var.vpc_id
 
   # access
-  enable_cluster_creator_admin_permissions = true
-
   access_entries = merge(
     {
       bastion = {
         kubernetes_groups = ["admin", "cluster-admin"]
-        principal_arn     = local.bastion_role_arn
+        principal_arn     = var.bastion_role_arn
 
         policy_associations = {
           bastion = {
@@ -43,7 +41,7 @@ module "eks" {
         }
       }
     },
-    { for arn in var.eks_admin_arns : arn => {
+    { for arn in local.eks_admin_arns : arn => {
       kubernetes_groups = ["admin", "cluster-admin"]
       principal_arn     = arn
 
@@ -55,8 +53,7 @@ module "eks" {
           }
         }
       }
-      }
-    }
+    } if arn != "" }
   )
 
   cluster_security_group_additional_rules = {
@@ -66,10 +63,9 @@ module "eks" {
       from_port                = 443
       to_port                  = 443
       type                     = "ingress"
-      source_security_group_id = data.aws_security_group.bastion.id
+      source_security_group_id = var.bastion_security_group_id
     }
   }
-  # local.node_security_group_rules
 
   # encryption
   create_kms_key                  = false

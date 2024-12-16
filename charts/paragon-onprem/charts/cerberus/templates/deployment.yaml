@@ -80,8 +80,8 @@ spec:
                 secretKeyRef:
                   name: {{ $.Values.secretName }}
                   key: {{ $key }}
-              {{- end }}
-              {{- if hasKey $overrideEnv $key }}
+                  optional: true
+              {{- else if hasKey $overrideEnv $key }}
               value: {{ get $overrideEnv $key | quote }}
               {{- else if hasKey $globalEnv $key }}
               value: {{ get $globalEnv $key | quote }}

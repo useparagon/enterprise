@@ -182,16 +182,8 @@ locals {
   infra_vars      = jsondecode(fileexists(local.infra_json_path) && var.infra_json == null ? file(local.infra_json_path) : var.infra_json)
 
   # use default where standard value can be determined
-  cluster_name         = try(local.infra_vars.cluster_name.value, local.workspace)
-  logs_bucket          = try(local.infra_vars.logs_bucket.value, "${local.workspace}-logs")
-  minio_private_bucket = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
-  minio_public_bucket  = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
-
-  # fail on any missing required values
-  minio_microservice_pass = local.infra_vars.minio.value.microservice_pass
-  minio_microservice_user = local.infra_vars.minio.value.microservice_user
-  minio_root_password     = local.infra_vars.minio.value.root_password
-  minio_root_user         = local.infra_vars.minio.value.root_user
+  cluster_name = try(local.infra_vars.cluster_name.value, local.workspace)
+  logs_bucket  = try(local.infra_vars.logs_bucket.value, "${local.workspace}-logs")
 
   helm_yaml_path = abspath(var.helm_yaml_path)
   helm_vars      = yamldecode(fileexists(local.helm_yaml_path) && var.helm_yaml == null ? file(local.helm_yaml_path) : var.helm_yaml)
@@ -434,11 +426,17 @@ locals {
             QUEUE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.queue.cluster, "false")
             WORKFLOW_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.workflow.cluster, "false")
 
-            MINIO_BROWSER        = "off"
-            MINIO_NGINX_PROXY    = "on"
-            MINIO_MODE           = "gateway-s3"
-            MINIO_INSTANCE_COUNT = "1"
-            MINIO_REGION         = var.aws_region
+            MINIO_BROWSER           = "off"
+            MINIO_INSTANCE_COUNT    = "1"
+            MINIO_MICROSERVICE_PASS = local.infra_vars.minio.value.microservice_pass
+            MINIO_MICROSERVICE_USER = local.infra_vars.minio.value.microservice_user
+            MINIO_MODE              = "gateway-s3"
+            MINIO_NGINX_PROXY       = "on"
+            MINIO_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
+            MINIO_REGION            = var.aws_region
+            MINIO_ROOT_PASSWORD     = local.infra_vars.minio.value.root_password
+            MINIO_ROOT_USER         = local.infra_vars.minio.value.root_user
+            MINIO_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
 
             ACCOUNT_PORT   = try(local.microservices.account.port, null)
             CERBERUS_PORT  = try(local.microservices.cerberus.port, null)

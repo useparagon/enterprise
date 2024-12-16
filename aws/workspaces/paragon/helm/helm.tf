@@ -5,24 +5,18 @@ subchart:
     enabled: ${contains(keys(var.microservices), "account")}
   cerberus:
     enabled: ${contains(keys(var.microservices), "cerberus")}
-  chronos:
-    enabled: ${contains(keys(var.microservices), "chronos")}
   connect:
     enabled: ${contains(keys(var.microservices), "connect")}
   dashboard:
     enabled: ${contains(keys(var.microservices), "dashboard")}
   hades:
     enabled: ${contains(keys(var.microservices), "hades")}
-  hercules:
-    enabled: ${contains(keys(var.microservices), "hercules")}
   hermes:
     enabled: ${contains(keys(var.microservices), "hermes")}
   minio:
     enabled: ${contains(keys(var.microservices), "minio")}
   passport:
     enabled: ${contains(keys(var.microservices), "passport")}
-  plato:
-    enabled: ${contains(keys(var.microservices), "plato")}
   pheme:
     enabled: ${contains(keys(var.microservices), "pheme")}
   release:
@@ -92,7 +86,7 @@ resource "kubernetes_secret" "paragon_secrets" {
   data = {
     # Map global.env from helm_values into secret data
     for key, value in nonsensitive(var.helm_values.global.env) :
-    key => base64encode(value)
+    key => value
   }
 }
 

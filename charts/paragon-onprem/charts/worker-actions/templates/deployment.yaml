@@ -74,13 +74,20 @@ spec:
             {{- $globalEnv := .Values.global.env -}}
             {{- $overrideEnv := .Values.env -}}
             {{- range $key := .Values.envKeys }}
-            {{- if hasKey $overrideEnv $key }}
             - name: {{ $key }}
+              {{- if $.Values.secretName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secretName }}
+                  key: {{ $key }}
+                  optional: true
+              {{- else if hasKey $overrideEnv $key }}
               value: {{ get $overrideEnv $key | quote }}
-            {{- else if hasKey $globalEnv $key }}
-            - name: {{ $key }}
+              {{- else if hasKey $globalEnv $key }}
               value: {{ get $globalEnv $key | quote }}
-            {{- end -}}
+              {{- else }}
+              value: ""
+              {{- end }}
             {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

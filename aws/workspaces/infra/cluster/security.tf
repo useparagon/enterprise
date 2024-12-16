@@ -7,7 +7,7 @@ resource "aws_iam_role" "eks_cluster_admin" {
       {
         Effect = "Allow",
         Principal = {
-          AWS = var.eks_admin_arns
+          AWS = local.eks_admin_arns
         },
         Action = "sts:AssumeRole"
       }
@@ -101,6 +101,8 @@ module "aws_ebs_csi_driver_iam_role" {
 
 # Annotate the Kubernetes service account to use the IAM Role
 resource "kubernetes_service_account" "ebs_csi_controller" {
+  automount_service_account_token = true
+
   metadata {
     name      = "ebs-csi-controller-sa"
     namespace = "kube-system"
@@ -110,5 +112,7 @@ resource "kubernetes_service_account" "ebs_csi_controller" {
     }
   }
 
-  automount_service_account_token = true
+  lifecycle {
+    ignore_changes = [metadata[0].labels]
+  }
 }

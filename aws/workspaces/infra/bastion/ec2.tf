@@ -48,7 +48,9 @@ resource "random_string" "bastion_id" {
 }
 
 module "bastion" {
-  source = "github.com/useparagon/terraform-aws-bastion"
+  source = "github.com/useparagon/terraform-aws-bastion?ref=fix%2FPARA-12122%2Fstandardize-naming"
+
+  name = local.bastion_name
 
   # logging
   bucket_name     = local.bastion_name

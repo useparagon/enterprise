@@ -33,11 +33,19 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
             {{- $env := .Values.global.env -}}
-            {{- range $key, $value := $env }}
-            {{- if get $env $key }}
+            {{- range $key := .Values.envKeys }}
             - name: {{ $key }}
+              {{- if $.Values.secretName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secretName }}
+                  key: {{ $key }}
+                  optional: true
+              {{- else if get $env $key }}
               value: {{ get $env $key | quote }}
-            {{- end -}}
+              {{- else }}
+              value: ""
+              {{- end }}
             {{- end }}
       restartPolicy: Never
       {{- with .Values.nodeSelector }}
