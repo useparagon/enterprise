@@ -50,8 +50,8 @@ module "redis" {
   private_subnet = module.network.private_subnet
 }
 
-module "s3" {
-  source = "./s3"
+module "storage" {
+  source = "./storage"
 
   workspace             = local.workspace
   force_destroy         = var.disable_deletion_protection
