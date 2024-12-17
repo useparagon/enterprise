@@ -1,0 +1,80 @@
+apiVersion: v2
+name: paragon-onprem
+description: A Helm chart for Kubernetes
+type: application
+version: __PARAGON_VERSION__
+appVersion: 'v1'
+
+dependencies:
+  - name: account
+    repository: file://charts/account
+    version: __PARAGON_VERSION__
+    condition: subchart.account.enabled
+  - name: cerberus
+    repository: file://charts/cerberus
+    version: __PARAGON_VERSION__
+    condition: subchart.cerberus.enabled
+  - name: connect
+    repository: file://charts/connect
+    version: __PARAGON_VERSION__
+    condition: subchart.connect.enabled
+  - name: dashboard
+    repository: file://charts/dashboard
+    version: __PARAGON_VERSION__
+    condition: subchart.dashboard.enabled
+  - name: hades
+    repository: file://charts/hades
+    version: __PARAGON_VERSION__
+    condition: subchart.hades.enabled
+  - name: hermes
+    repository: file://charts/hermes
+    version: __PARAGON_VERSION__
+    condition: subchart.hermes.enabled
+  - name: minio
+    repository: file://charts/minio
+    version: __PARAGON_VERSION__
+    condition: subchart.minio.enabled
+  - name: passport
+    repository: file://charts/passport
+    version: __PARAGON_VERSION__
+    condition: subchart.passport.enabled
+  - name: pheme
+    repository: file://charts/pheme
+    version: __PARAGON_VERSION__
+    condition: subchart.pheme.enabled
+  - name: release
+    repository: file://charts/release
+    version: __PARAGON_VERSION__
+    condition: subchart.release.enabled
+  - name: zeus
+    repository: file://charts/zeus
+    version: __PARAGON_VERSION__
+    condition: subchart.zeus.enabled
+  - name: worker-actions
+    repository: file://charts/worker-actions
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-actions.enabled
+  - name: worker-credentials
+    repository: file://charts/worker-credentials
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-credentials.enabled
+  - name: worker-crons
+    repository: file://charts/worker-crons
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-crons.enabled
+  - name: worker-deployments
+    repository: file://charts/worker-deployments
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-deployments.enabled
+  - name: worker-proxy
+    repository: file://charts/worker-proxy
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-proxy.enabled
+  - name: worker-triggers
+    repository: file://charts/worker-triggers
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-triggers.enabled
+  - name: worker-workflows
+    repository: file://charts/worker-workflows
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-workflows.enabled

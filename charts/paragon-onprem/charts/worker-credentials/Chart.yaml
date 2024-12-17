@@ -1,0 +1,6 @@
+apiVersion: v1
+name: worker-credentials
+description: Helm Chart for Paragon worker-credentials service
+type: application
+version: __PARAGON_VERSION__
+appVersion: '1.16.0'

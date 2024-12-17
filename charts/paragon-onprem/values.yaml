@@ -1,0 +1,46 @@
+subchart:
+  account:
+    enabled: true
+  cerberus:
+    enabled: true
+  connect:
+    enabled: true
+  dashboard:
+    enabled: true
+  hades:
+    enabled: true
+  hermes:
+    enabled: true
+  minio:
+    enabled: true
+  passport:
+    enabled: true
+  pheme:
+    enabled: true
+  release:
+    enabled: true
+  zeus:
+    enabled: true
+  worker-actions:
+    enabled: true
+  worker-credentials:
+    enabled: true
+  worker-crons:
+    enabled: true
+  worker-deployments:
+    enabled: true
+  worker-proxy:
+    enabled: true
+  worker-triggers:
+    enabled: true
+  worker-workflows:
+    enabled: true
+
+restart:
+  enabled: true
+  schedule: 0 21 * * * # everyday at 1pm PST
+
+global:
+  pullPolicy: IfNotPresent
+  namespace: paragon
+  env: {}

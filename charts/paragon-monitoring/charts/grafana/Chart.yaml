@@ -1,0 +1,6 @@
+apiVersion: v2
+name: grafana
+description: A Helm chart for Kubernetes
+type: application
+version: __PARAGON_VERSION__
+appVersion: "1.16.0"

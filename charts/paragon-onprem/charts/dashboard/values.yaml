@@ -1,0 +1,237 @@
+# Default values for dashboard.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  repository: useparagon/dashboard
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 'latest'
+
+service:
+  type: ClusterIP
+  port: 1704
+
+resources:
+  limits:
+    memory: 512Mi
+  requests:
+    cpu: 0.25
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 40
+  targetMemoryUtilizationPercentage: 40
+
+envKeys:
+  - ADMIN_BASIC_AUTH_PASSWORD
+  - ADMIN_BASIC_AUTH_USERNAME
+  - ANALYTICS_ENABLED
+  - AIRTABLE_CLIENT_SECRET
+  - ASANA_CLIENT_ID
+  - ASANA_CLIENT_SECRET
+  - AZURE_DEVOPS_CLIENT_ID
+  - AZURE_DEVOPS_CLIENT_SECRET
+  - BAMBOO_HR_APPLICATION_KEY
+  - BAMBOO_HR_CLIENT_ID
+  - BASIC_AUTH_PASSWORD
+  - BASIC_AUTH_USER
+  - BRANCH
+  - CACHE_REDIS_CLUSTER_ENABLED
+  - CACHE_REDIS_TLS_ENABLED
+  - CACHE_REDIS_URL
+  - CLICKUP_CLIENT_ID
+  - CLICKUP_CLIENT_SECRET
+  - CONNECT_PUBLIC_URL
+  - COOKIE_CONSENT_SDK_ID
+  - DASHBOARD_PORT
+  - DASHBOARD_PUBLIC_URL
+  - DEBUG_REDIS
+  - DYNAMICS_365_FINANCE_CLIENT_ID
+  - DYNAMICS_365_FINANCE_CLIENT_SECRET
+  - DYNAMICS_BUSINESS_CENTRAL_CLIENT_ID
+  - DYNAMICS_BUSINESS_CENTRAL_CLIENT_SECRET
+  - ELOQUA_CLIENT_ID
+  - ELOQUA_CLIENT_SECRET
+  - EMBASSY_PUBLIC_URL
+  - FACEBOOK_CLIENT_ID
+  - FACEBOOK_CLIENT_SECRET
+  - FEATURE_FLAG_HTTP_AGENT_METRICS
+  - FEATURE_FLAG_INTEGRATION_AXIOS_METRICS
+  - FEATURE_FLAG_SWAGGER_STATS
+  - GIT_SHA
+  - GONG_CLIENT_ID
+  - GONG_CLIENT_SECRET
+  - GOOGLE_ANALYTICS_TRACKING_ID
+  - GOOGLE_CLIENT_ID
+  - GOOGLE_CLIENT_SECRET
+  - GOOGLE_TAG_MANAGER_ID
+  - HEADWAY_ACCOUNT_ID
+  - HERMES_PUBLIC_URL
+  - HOST_ENV
+  - HTTP_AGENT_IDLE_SOCKET_TIMEOUT
+  - HTTP_AGENT_KEEP_ALIVE_ENABLED
+  - HTTP_AGENT_MAX_SOCKETS
+  - HTTP_PROXY
+  - HUBSPOT_CLIENT_ID
+  - HUBSPOT_CLIENT_SECRET
+  - IMANAGE_CLIENT_ID
+  - IMANAGE_CLIENT_SECRET
+  - INTERCOM_APP_ID
+  - INTERCOM_CLIENT_ID
+  - INTERCOM_CLIENT_SECRET
+  - JIRA_CLIENT_ID
+  - JIRA_CLIENT_SECRET
+  - LICENSE
+  - LINEAR_CLIENT_ID
+  - LINEAR_CLIENT_SECRET
+  - LOG_LEVEL
+  - LOG_TYPEORM
+  - MAILCHIMP_CLIENT_ID
+  - MAILCHIMP_CLIENT_SECRET
+  - MICROSERVICES_OPENTELEMETRY_ENABLED
+  - MICROSERVICES_OPENTELEMETRY_SAMPLE_RATE
+  - MICROSOFT_DYNAMICS_CLIENT_ID
+  - MICROSOFT_DYNAMICS_CLIENT_SECRET
+  - MICROSOFT_TEAMS_BOT_ID
+  - MICROSOFT_TEAMS_CLIENT_ID
+  - MICROSOFT_TEAMS_CLIENT_SECRET
+  - MINIO_PUBLIC_URL
+  - MONITOR_JAEGER_COLLECTOR_OTLP_GRPC_PORT
+  - MONITOR_JAEGER_COLLECTOR_OTLP_GRPC_HOST
+  - NETSUITE_CLIENT_ID
+  - NETSUITE_CLIENT_SECRET
+  - NODE_ENV
+  - OAUTH_STATE_ENCRYPTION_KEY
+  - QA_OAUTH_STATE_ENCRYPTION_KEY
+  - ONBOARDING_POSTGRES_DATABASE
+  - ONBOARDING_POSTGRES_HOST
+  - ONBOARDING_POSTGRES_PASSWORD
+  - ONBOARDING_POSTGRES_PORT
+  - ONBOARDING_POSTGRES_USERNAME
+  - OUTLOOK_CLIENT_ID
+  - OUTLOOK_CLIENT_SECRET
+  - OUTREACH_CLIENT_ID
+  - OUTREACH_CLIENT_SECRET
+  - PARDOT_CLIENT_ID
+  - PARDOT_CLIENT_SECRET
+  - PASSPORT_PRODUCTION_URL
+  - PASSPORT_PUBLIC_URL
+  - PIPEDRIVE_CLIENT_ID
+  - PIPEDRIVE_CLIENT_SECRET
+  - PLATFORM_ENV
+  - QUICKBOOKS_CLIENT_ID
+  - QUICKBOOKS_CLIENT_ID_SANDBOX
+  - QUICKBOOKS_CLIENT_SECRET
+  - QUICKBOOKS_CLIENT_SECRET_SANDBOX
+  - RELEASE_ENVIRONMENT_ENABLED
+  - RESTRICT_TASK_HISTORY_VIEW_RULES
+  - SAGE_ACCOUNTING_CLIENT_ID
+  - SAGE_ACCOUNTING_CLIENT_SECRET
+  - SAGE_INTACCT_SENDER_ID
+  - SAGE_INTACCT_SENDER_PASSWORD
+  - SALESFORCE_CLIENT_ID
+  - SALESFORCE_CLIENT_SECRET
+  - SEGMENT_ANALYTICS_JS_WRITE_KEY
+  - SEGMENT_API_KEY
+  - SENTRY_DSN
+  - SERVICE
+  - SERVICE_MONITORING_ENABLED
+  - SHAREPOINT_CLIENT_ID
+  - SHAREPOINT_CLIENT_SECRET
+  - SHOPIFY_CLIENT_ID
+  - SHOPIFY_CLIENT_SECRET
+  - SLACK_APP_CLIENT_ID
+  - SLACK_APP_SECRET_ID
+  - SSO_ENABLED
+  - SSO_WORKOS_API_KEY
+  - SSO_WORKOS_CLIENT_ID
+  - SSO_WORKOS_ORGANIZATION_ID
+  - STRIPE_PUBLIC_KEY
+  - SYSTEM_REDIS_CLUSTER_ENABLED
+  - SYSTEM_REDIS_TLS_ENABLED
+  - SYSTEM_REDIS_URL
+  - TASK_HISTORY_DISABLED
+  - TASK_HISTORY_LOGS_DISABLED
+  - TRELLO_APP_NAME
+  - VERSION
+  - VOLUME_PATH
+  - XERO_CLIENT_ID
+  - XERO_CLIENT_SECRET
+  - ZENDESK_CLIENT_ID
+  - ZENDESK_CLIENT_SECRET
+  - ZEUS_ACCESS_TOKEN
+  - ZEUS_PRIVATE_URL
+  - ZEUS_PUBLIC_URL
+  - ZOOM_CLIENT_ID
+  - ZOOM_CLIENT_SECRET
+
+imagePullSecrets:
+  - name: docker-cfg
+nameOverride: ''
+fullnameOverride: 'dashboard'
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/scheme: "http"
+  prometheus.io/path: "/stats/metrics"
+  prometheus.io/port: "1704"
+
+
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# service:
+#   type: ClusterIP
+#   port: 80
+
+ingress:
+  acm_certificate_arn: ''
+  enabled: true
+  className: ''
+  host: chart-example.local
+  healthcheck_path: /healthz
+  include_annotations: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 1
+      preference:
+        matchExpressions:
+        - key: useparagon.com/capacityType
+          operator: In
+          values:
+          - spot
+
+
+tls_secret: ''
