@@ -242,11 +242,6 @@ resource "helm_release" "paragon_on_prem" {
     }
   }
 
-  set {
-    name  = "global.env.eks_k8s_version"
-    value = var.eks_k8s_version
-  }
-
   depends_on = [
     helm_release.ingress,
     kubernetes_secret.docker_login,
@@ -413,8 +408,8 @@ resource "helm_release" "paragon_monitoring" {
   }
 
   set {
-    name  = "global.env.eks_k8s_version"
-    value = var.eks_k8s_version
+    name  = "global.env.k8s_version"
+    value = var.k8s_version
   }
 
   depends_on = [

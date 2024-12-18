@@ -101,7 +101,7 @@ variable "ingress_scheme" {
   type        = string
 }
 
-variable "eks_k8s_version" {
+variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
 }

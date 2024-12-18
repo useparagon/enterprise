@@ -72,11 +72,11 @@ module "bastion" {
   cloudflare_tunnel_account_id   = var.cloudflare_tunnel_account_id
   cloudflare_tunnel_email_domain = var.cloudflare_tunnel_email_domain
 
-  vpc_id           = module.network.vpc.id
-  public_subnet    = module.network.public_subnet
-  private_subnet   = module.network.private_subnet
-  eks_cluster_name = local.workspace
-  eks_k8s_version  = var.eks_k8s_version
+  cluster_name   = local.workspace
+  k8s_version    = var.k8s_version
+  private_subnet = module.network.private_subnet
+  public_subnet  = module.network.public_subnet
+  vpc_id         = module.network.vpc.id
 }
 
 module "cluster" {
@@ -88,12 +88,12 @@ module "cluster" {
   bastion_security_group_id = module.bastion.security_group.host[0]
 
   eks_admin_arns                  = var.eks_admin_arns
-  eks_k8s_version                 = var.eks_k8s_version
-  eks_ondemand_node_instance_type = local.eks_ondemand_node_instance_type
-  eks_spot_node_instance_type     = local.eks_spot_node_instance_type
-  eks_spot_instance_percent       = var.eks_spot_instance_percent
-  eks_min_node_count              = var.eks_min_node_count
   eks_max_node_count              = var.eks_max_node_count
+  eks_min_node_count              = var.eks_min_node_count
+  eks_ondemand_node_instance_type = local.eks_ondemand_node_instance_type
+  eks_spot_instance_percent       = var.eks_spot_instance_percent
+  eks_spot_node_instance_type     = local.eks_spot_node_instance_type
+  k8s_version                     = var.k8s_version
 
   vpc_id             = module.network.vpc.id
   private_subnet_ids = module.network.private_subnet[*].id

@@ -4,7 +4,7 @@ module "eks" {
   version = "20.26.0"
 
   cluster_name    = var.workspace
-  cluster_version = var.eks_k8s_version
+  cluster_version = var.k8s_version
 
   # networking
   cluster_endpoint_public_access = true

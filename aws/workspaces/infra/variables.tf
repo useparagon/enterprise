@@ -25,7 +25,7 @@ variable "aws_session_token" {
 
 # account
 variable "organization" {
-  description = "Optional configuration to override resource names."
+  description = "Name of organization to include in resource names."
   type        = string
 }
 
@@ -93,7 +93,7 @@ variable "elasticache_multi_az" {
 }
 
 # eks
-variable "eks_k8s_version" {
+variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
   default     = "1.31"

@@ -87,7 +87,7 @@ variable "ingress_scheme" {
   default     = "internet-facing"
 }
 
-variable "eks_k8s_version" {
+variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
   default     = "1.30"
