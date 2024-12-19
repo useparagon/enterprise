@@ -97,9 +97,8 @@ locals {
   # hash of subscription ID to help ensure uniqueness of resources like bucket names
   hash        = substr(sha256(var.azure_subscription_id), 0, 8)
   environment = "enterprise"
-  workspace   = "paragon-${var.organization}-${local.hash}"
+  workspace   = nonsensitive("paragon-${var.organization}-${local.hash}")
 
-  # NOTE hash and workspace can't be included in tags since it creates a circular reference
   default_tags = {
     Name         = local.workspace
     Environment  = local.environment

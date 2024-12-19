@@ -37,6 +37,7 @@ curl -fsSL https://pkgs.k8s.io/core:/stable:/v$KUBECTL_MINOR/deb/Release.key | s
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v$KUBECTL_MINOR/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update -y
 sudo apt-get install -y kubectl
+kubectl version
 
 # install helm
 writeLog "installing helm"
@@ -44,6 +45,7 @@ curl -fsSL https://baltocdn.com/helm/signing.asc | sudo apt-key add -
 echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 sudo apt-get update -y
 sudo apt-get install -y helm
+helm version
 
 # install nodejs
 NODE_MAJOR=18
@@ -54,6 +56,7 @@ echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.co
 sudo apt-get update -y
 sudo apt-get install -y nodejs
 sudo npm install -g npx
+node --version
 
 # install terraform
 writeLog "installing terraform"
@@ -61,6 +64,7 @@ curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /etc/a
 echo "deb [signed-by=/etc/apt/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 sudo apt-get update -y
 sudo apt-get install -y terraform
+terraform version
 
 # install docker
 writeLog "installing docker"
@@ -73,8 +77,7 @@ sudo apt-get install -y \
     docker-ce-cli \
     docker-compose-plugin
 sudo usermod -a -G docker ubuntu
-# systemctl enable containerd.service
-# service docker start
+systemctl disable containerd.service
 
 # install cloudflare zero trust and register tunnel
 # see https://bwriteLog.cloudflare.com/automating-cloudflare-tunnel-with-terraform/
@@ -114,29 +117,11 @@ else
 fi
 
 # configure az, aks and kubectl
-# note that cluster may be still CREATING so wait up to 5 min for that to complete
-writeLog "configuring k8s tools as root"
-az login --service-principal -u ${client_id} -p ${client_secret} --tenant ${tenant_id}
-az account set --subscription ${subscription_id}
-sudo az aks install-cli
-max_loops=10
-current_loop=0
-while [ $current_loop -lt $max_loops ]; do
-    # az aks get-credentials --overwrite-existing --resource-group ${resource_group} --name ${cluster_name}
-    output=$(az aks get-credentials --overwrite-existing --resource-group ${resource_group} --name ${cluster_name} 2>&1)
-    if [[ ! $output =~ "CREATING" ]]; then
-        break
-    else
-        echo "OUTPUT: $output"
-    fi
-    echo "Cluster still creating. Waiting for 30s."
-    sleep 30
-    ((current_loop++))
-done
-kubectl config set-context --current --namespace=paragon
-
 writeLog "configuring k8s tools as ubuntu"
 echo "alias k=kubectl" > /home/ubuntu/.bash_aliases && chown ubuntu:ubuntu /home/ubuntu/.bash_aliases
+sudo -u ubuntu az login --service-principal -u ${client_id} -p ${client_secret} --tenant ${tenant_id}
+sudo -u ubuntu az account set --subscription ${subscription_id}
+sudo -u ubuntu az aks get-credentials --overwrite-existing --resource-group ${resource_group} --name ${cluster_name}
 sudo -u ubuntu kubectl config set-context --current --namespace=paragon
 
 writeLog "paragon setup complete"

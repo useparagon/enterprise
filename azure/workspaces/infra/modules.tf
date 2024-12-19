@@ -2,6 +2,7 @@ module "network" {
   source = "./network"
 
   location  = var.location
+  tags      = local.default_tags
   vpc_cidr  = var.vpc_cidr
   workspace = local.workspace
 }
@@ -48,12 +49,21 @@ module "bastion" {
   azure_client_secret   = var.azure_client_secret
   azure_subscription_id = var.azure_subscription_id
   azure_tenant_id       = var.azure_tenant_id
-  cluster_name          = "${local.workspace}-cluster" # TODO module.cluster.kubernetes.name
-  k8s_version           = var.k8s_version
-  private_subnet        = module.network.private_subnet
-  resource_group        = module.network.resource_group
-  ssh_whitelist         = local.ssh_whitelist
-  workspace             = local.workspace
+
+  cloudflare_api_token           = var.cloudflare_api_token
+  cloudflare_tunnel_account_id   = var.cloudflare_tunnel_account_id
+  cloudflare_tunnel_email_domain = var.cloudflare_tunnel_email_domain
+  cloudflare_tunnel_enabled      = var.cloudflare_tunnel_enabled
+  cloudflare_tunnel_subdomain    = var.cloudflare_tunnel_subdomain
+  cloudflare_tunnel_zone_id      = var.cloudflare_tunnel_zone_id
+
+  cluster_name   = "${local.workspace}-cluster" # TODO module.cluster.kubernetes.name
+  k8s_version    = var.k8s_version
+  private_subnet = module.network.private_subnet
+  resource_group = module.network.resource_group
+  ssh_whitelist  = local.ssh_whitelist
+  tags           = local.default_tags
+  workspace      = local.workspace
 }
 
 # module "helm" {

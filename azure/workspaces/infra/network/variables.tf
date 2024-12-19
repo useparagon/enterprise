@@ -12,3 +12,8 @@ variable "location" {
   description = "The Azure region resources are created in."
   type        = string
 }
+
+variable "tags" {
+  description = "Default tags to apply to resources"
+  type        = map(string)
+}

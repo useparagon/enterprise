@@ -90,3 +90,8 @@ variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
 }
+
+variable "tags" {
+  description = "Default tags to apply to resources"
+  type        = map(string)
+}
