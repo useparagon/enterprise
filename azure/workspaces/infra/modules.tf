@@ -7,6 +7,51 @@ module "network" {
   workspace = local.workspace
 }
 
+module "bastion" {
+  source = "./bastion"
+
+  azure_client_id       = var.azure_client_id
+  azure_client_secret   = var.azure_client_secret
+  azure_subscription_id = var.azure_subscription_id
+  azure_tenant_id       = var.azure_tenant_id
+
+  cloudflare_api_token           = var.cloudflare_api_token
+  cloudflare_tunnel_account_id   = var.cloudflare_tunnel_account_id
+  cloudflare_tunnel_email_domain = var.cloudflare_tunnel_email_domain
+  cloudflare_tunnel_enabled      = var.cloudflare_tunnel_enabled
+  cloudflare_tunnel_subdomain    = var.cloudflare_tunnel_subdomain
+  cloudflare_tunnel_zone_id      = var.cloudflare_tunnel_zone_id
+
+  cluster_name   = "${local.workspace}-cluster" # TODO module.cluster.kubernetes.name
+  k8s_version    = var.k8s_version
+  private_subnet = module.network.private_subnet
+  resource_group = module.network.resource_group
+  ssh_whitelist  = local.ssh_whitelist
+  tags           = local.default_tags
+  workspace      = local.workspace
+}
+
+module "postgres" {
+  source = "./postgres"
+
+  postgres_redundant = var.postgres_redundant
+  postgres_sku_name  = var.postgres_sku_name
+  postgres_version   = var.postgres_version
+  resource_group     = module.network.resource_group
+  tags               = local.default_tags
+  virtual_network    = module.network.virtual_network
+  workspace          = local.workspace
+}
+
+module "storage" {
+  source = "./storage"
+
+  resource_group             = module.network.resource_group
+  tags                       = local.default_tags
+  virtual_network_subnet_ids = [module.network.public_subnet.id] # TODO allow access from AKS subnet
+  workspace                  = local.workspace
+}
+
 # module "cluster" {
 #   source = "./cluster"
 
@@ -41,30 +86,6 @@ module "network" {
 #   private_subnet = module.network.private_subnet
 #   public_subnet  = module.network.public_subnet
 # }
-
-module "bastion" {
-  source = "./bastion"
-
-  azure_client_id       = var.azure_client_id
-  azure_client_secret   = var.azure_client_secret
-  azure_subscription_id = var.azure_subscription_id
-  azure_tenant_id       = var.azure_tenant_id
-
-  cloudflare_api_token           = var.cloudflare_api_token
-  cloudflare_tunnel_account_id   = var.cloudflare_tunnel_account_id
-  cloudflare_tunnel_email_domain = var.cloudflare_tunnel_email_domain
-  cloudflare_tunnel_enabled      = var.cloudflare_tunnel_enabled
-  cloudflare_tunnel_subdomain    = var.cloudflare_tunnel_subdomain
-  cloudflare_tunnel_zone_id      = var.cloudflare_tunnel_zone_id
-
-  cluster_name   = "${local.workspace}-cluster" # TODO module.cluster.kubernetes.name
-  k8s_version    = var.k8s_version
-  private_subnet = module.network.private_subnet
-  resource_group = module.network.resource_group
-  ssh_whitelist  = local.ssh_whitelist
-  tags           = local.default_tags
-  workspace      = local.workspace
-}
 
 # module "helm" {
 #   source = "./helm"
@@ -231,17 +252,6 @@ module "bastion" {
 #   }
 # }
 
-# module "postgres" {
-#   source = "./postgres"
-
-#   app_name            = local.app_name
-#   postgres_storage_mb = var.postgres_storage_mb
-
-#   resource_group = module.network.resource_group
-#   private_subnet = module.network.private_subnet
-#   public_subnet  = module.network.public_subnet
-# }
-
 # module "redis" {
 #   source = "./redis"
 
@@ -253,17 +263,6 @@ module "bastion" {
 #   virtual_network = module.network.virtual_network
 #   private_subnet  = module.network.private_subnet
 #   public_subnet   = module.network.public_subnet
-# }
-
-# module "storage" {
-#   source = "./storage"
-
-#   app_name      = local.app_name
-#   microservices = local.microservices
-
-#   resource_group = module.network.resource_group
-#   private_subnet = module.network.private_subnet
-#   public_subnet  = module.network.public_subnet
 # }
 
 # module "alb" {

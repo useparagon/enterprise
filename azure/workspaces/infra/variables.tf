@@ -41,7 +41,7 @@ variable "ssh_whitelist" {
 }
 
 variable "vpc_cidr" {
-  description = "CIDR for the VPC."
+  description = "CIDR for the virtual network. A `/16` (65,536 IPs) or larger is recommended."
   type        = string
   default     = "10.0.0.0/16"
 }
@@ -91,6 +91,25 @@ variable "cloudflare_tunnel_email_domain" {
   type        = string
   sensitive   = true
   default     = "useparagon.com"
+}
+
+# postgres
+variable "postgres_redundant" {
+  description = "Whether zone redundant HA should be enabled (region must support it and many don't)"
+  type        = bool
+  default     = false
+}
+
+variable "postgres_sku_name" {
+  description = "PostgreSQL SKU name"
+  type        = string
+  default     = "GP_Standard_D2ds_v5"
+}
+
+variable "postgres_version" {
+  description = "PostgreSQL version (14, 15 or 16)"
+  type        = string
+  default     = "14"
 }
 
 locals {

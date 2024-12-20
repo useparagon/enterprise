@@ -3,37 +3,6 @@ output "workspace" {
   value       = local.workspace
 }
 
-# output "postgres" {
-#   description = "Connection info for Postgres."
-#   value       = module.postgres.rds
-#   sensitive   = true
-# }
-
-# output "redis" {
-#   description = "Connection information for Redis."
-#   value       = module.redis.elasticache
-#   sensitive   = true
-# }
-
-# output "logs_bucket" {
-#   description = "The bucket used to store system logs."
-#   value       = module.storage.s3.logs_bucket
-#   sensitive   = true
-# }
-
-# output "minio" {
-#   description = "MinIO server connection info."
-#   value = {
-#     public_bucket     = module.storage.s3.public_bucket
-#     private_bucket    = module.storage.s3.private_bucket
-#     microservice_user = module.storage.s3.minio_microservice_user
-#     microservice_pass = module.storage.s3.minio_microservice_pass
-#     root_user         = module.storage.s3.access_key_id
-#     root_password     = module.storage.s3.access_key_secret
-#   }
-#   sensitive = true
-# }
-
 output "bastion" {
   description = "Bastion server connection info."
   value = {
@@ -42,6 +11,36 @@ output "bastion" {
   }
   sensitive = true
 }
+
+output "postgres" {
+  description = "Connection info for Postgres."
+  value       = module.postgres.postgres
+  sensitive   = true
+}
+
+output "logs_container" {
+  description = "The bucket used to store system logs."
+  value       = module.storage.blob.logs_container
+  sensitive   = true
+}
+
+output "minio" {
+  description = "MinIO server connection info."
+  value = {
+    public_bucket     = module.storage.blob.public_container
+    private_bucket    = module.storage.blob.private_container
+    microservice_user = module.storage.blob.minio_microservice_user
+    microservice_pass = module.storage.blob.minio_microservice_pass
+    access_key        = module.storage.blob.access_key
+  }
+  sensitive = true
+}
+
+# output "redis" {
+#   description = "Connection information for Redis."
+#   value       = module.redis.elasticache
+#   sensitive   = true
+# }
 
 # output "cluster_name" {
 #   description = "The name of the EKS cluster."

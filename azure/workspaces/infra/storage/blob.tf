@@ -1,9 +1,14 @@
 resource "random_string" "storage_hash" {
-  length  = 10
-  special = false
-  number  = true
+  length  = 12
   lower   = true
   upper   = false
+  numeric = true
+  special = false
+}
+
+locals {
+  # storage accounts must be globally unique and only up to 24 lower case alphanumeric characters
+  storage_account_name = substr(replace("${var.workspace}-${random_string.storage_hash.result}", "/[^a-z0-9]/", ""), 0, 24)
 }
 
 resource "azurerm_storage_account" "blob" {
@@ -11,47 +16,36 @@ resource "azurerm_storage_account" "blob" {
   resource_group_name = var.resource_group.name
   location            = var.resource_group.location
 
-  account_tier                     = "Premium"
-  account_kind                     = "BlockBlobStorage"
-  account_replication_type         = "LRS"
-  cross_tenant_replication_enabled = false
-  enable_https_traffic_only        = true
-  allow_nested_items_to_be_public  = true
+  account_kind                    = "BlockBlobStorage"
+  account_replication_type        = "LRS"
+  account_tier                    = "Premium"
+  allow_nested_items_to_be_public = true
+  tags                            = merge(var.tags, { Name = local.storage_account_name })
 }
 
 resource "azurerm_storage_container" "app" {
-  name                  = local.private_container_name
-  storage_account_name  = azurerm_storage_account.blob.name
+  name                  = "${var.workspace}-app"
   container_access_type = "private"
+  storage_account_id    = azurerm_storage_account.blob.id
 }
 
 resource "azurerm_storage_container" "cdn" {
-  name                  = local.public_container_name
-  storage_account_name  = azurerm_storage_account.blob.name
+  name                  = "${var.workspace}-cdn"
   container_access_type = "container"
+  storage_account_id    = azurerm_storage_account.blob.id
+}
+
+resource "azurerm_storage_container" "logs" {
+  name                  = "${var.workspace}-logs"
+  container_access_type = "private"
+  storage_account_id    = azurerm_storage_account.blob.id
 }
 
 resource "azurerm_storage_account_network_rules" "storage" {
   storage_account_id = azurerm_storage_account.blob.id
 
+  bypass                     = ["Metrics"]
   default_action             = "Allow"
   ip_rules                   = []
-  virtual_network_subnet_ids = [var.public_subnet.id, var.private_subnet.id]
-  bypass                     = ["Metrics"]
-}
-
-resource "random_string" "minio_microservice_user" {
-  length  = 10
-  special = false
-  number  = true
-  lower   = true
-  upper   = false
-}
-
-resource "random_string" "minio_microservice_pass" {
-  length  = 10
-  special = false
-  number  = true
-  lower   = true
-  upper   = false
+  virtual_network_subnet_ids = var.virtual_network_subnet_ids
 }

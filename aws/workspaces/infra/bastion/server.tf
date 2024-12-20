@@ -40,7 +40,7 @@ resource "aws_key_pair" "bastion" {
 }
 
 module "bastion" {
-  source = "github.com/useparagon/terraform-aws-bastion?ref=fix%2FPARA-12122%2Fstandardize-naming"
+  source = "github.com/useparagon/terraform-aws-bastion"
 
   name = local.bastion_name
 

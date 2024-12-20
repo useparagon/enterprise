@@ -6,10 +6,10 @@ output "virtual_network" {
   value = azurerm_virtual_network.main
 }
 
-output "private_subnet" {
-  value = azurerm_subnet.private
-}
-
 output "public_subnet" {
   value = azurerm_subnet.public
+}
+
+output "private_subnet" {
+  value = azurerm_subnet.private
 }

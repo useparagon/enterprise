@@ -1,23 +1,32 @@
-variable "app_name" {
-  description = "An optional name to override the name of the resources created."
-}
-
 variable "resource_group" {
   description = "The resource group to associate resources."
 }
 
-variable "private_subnet" {
-  description = "The private subnet(s) within the VPC."
+variable "virtual_network" {
+  description = "The virtual network to deploy to."
 }
 
-variable "public_subnet" {
-  description = "The public subnet(s) within the VPC."
+variable "workspace" {
+  description = "The workspace prefix to use for created resources."
+  type        = string
 }
 
-# Azure has an option to autoscale Postgres size. However once you provision a certain size, you can't scale down.
-# This configuration is a legacy configuration to support Azure instances provisioned before 2022-07-24 which originally had `640000` mb provisioned.
-# This was lowered to reduce initial costs of running Paragon on-prem.
-variable "postgres_storage_mb" {
-  description = "How many megabytes to initially provision for the Postgres instance."
-  type        = number
+variable "tags" {
+  description = "Default tags to apply to resources"
+  type        = map(string)
+}
+
+variable "postgres_redundant" {
+  description = "Whether zone redundant HA should be enabled (location must support it)"
+  type        = bool
+}
+
+variable "postgres_sku_name" {
+  description = "PostgreSQL SKU name"
+  type        = string
+}
+
+variable "postgres_version" {
+  description = "PostgreSQL version (14, 15 or 16)"
+  type        = string
 }
