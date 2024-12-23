@@ -44,6 +44,20 @@ module "postgres" {
   workspace          = local.workspace
 }
 
+module "redis" {
+  source = "./redis"
+
+  private_subnet  = module.network.private_subnet
+  public_subnet   = module.network.public_subnet
+  redis_capacity  = var.redis_capacity
+  redis_sku_name  = var.redis_sku_name
+  redis_subnet    = module.network.redis_subnet
+  resource_group  = module.network.resource_group
+  tags            = local.default_tags
+  virtual_network = module.network.virtual_network
+  workspace       = local.workspace
+}
+
 module "storage" {
   source = "./storage"
 
@@ -251,19 +265,6 @@ module "storage" {
 #     key => value
 #     if key != null && key != "" && value != null && value != ""
 #   }
-# }
-
-# module "redis" {
-#   source = "./redis"
-
-#   app_name       = local.app_name
-#   vpc_cidr       = var.vpc_cidr
-#   redis_capacity = parseint(var.redis_capacity, 10)
-
-#   resource_group  = module.network.resource_group
-#   virtual_network = module.network.virtual_network
-#   private_subnet  = module.network.private_subnet
-#   public_subnet   = module.network.public_subnet
 # }
 
 # module "alb" {

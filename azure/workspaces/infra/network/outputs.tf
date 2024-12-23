@@ -17,3 +17,7 @@ output "private_subnet" {
 output "postgres_subnet" {
   value = azurerm_subnet.postgres
 }
+
+output "redis_subnet" {
+  value = azurerm_subnet.redis
+}

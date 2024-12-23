@@ -1,12 +1,5 @@
-resource "azurerm_subnet" "redis" {
-  name                 = "${var.app_name}-redis-subnet"
-  resource_group_name  = var.resource_group.name
-  virtual_network_name = var.virtual_network.name
-  address_prefixes     = [cidrsubnet(var.vpc_cidr, 2, 2)]
-}
-
 resource "azurerm_redis_firewall_rule" "private_subnet_access" {
-  name = replace("${var.app_name}-private-subnet-access", "-", "_")
+  name = replace("${var.workspace}-redis-private-access", "-", "_")
 
   redis_cache_name    = azurerm_redis_cache.redis.name
   resource_group_name = var.resource_group.name
@@ -16,7 +9,7 @@ resource "azurerm_redis_firewall_rule" "private_subnet_access" {
 }
 
 resource "azurerm_redis_firewall_rule" "public_subnet_access" {
-  name = replace("${var.app_name}-public-subnet-access", "-", "_")
+  name = replace("${var.workspace}-redis-public-access", "-", "_")
 
   redis_cache_name    = azurerm_redis_cache.redis.name
   resource_group_name = var.resource_group.name
@@ -26,11 +19,11 @@ resource "azurerm_redis_firewall_rule" "public_subnet_access" {
 }
 
 resource "azurerm_redis_firewall_rule" "redis_subnet_access" {
-  name = replace("${var.app_name}-redis-subnet-access", "-", "_")
+  name = replace("${var.workspace}-redis-self-access", "-", "_")
 
   redis_cache_name    = azurerm_redis_cache.redis.name
   resource_group_name = var.resource_group.name
 
-  start_ip = cidrhost(azurerm_subnet.redis.address_prefixes[0], 0)
-  end_ip   = cidrhost(azurerm_subnet.redis.address_prefixes[0], -1)
+  start_ip = cidrhost(var.redis_subnet.address_prefixes[0], 0)
+  end_ip   = cidrhost(var.redis_subnet.address_prefixes[0], -1)
 }

@@ -55,3 +55,13 @@ resource "azurerm_subnet" "postgres" {
     }
   }
 }
+
+# subnet specifically for postgres resources
+resource "azurerm_subnet" "redis" {
+  name = "${var.workspace}-redis-subnet"
+
+  address_prefixes     = [cidrsubnet(var.vpc_cidr, 4, 3)]
+  resource_group_name  = azurerm_resource_group.main.name
+  service_endpoints    = ["Microsoft.Storage"]
+  virtual_network_name = azurerm_virtual_network.main.name
+}

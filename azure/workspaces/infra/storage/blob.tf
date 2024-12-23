@@ -1,5 +1,5 @@
 resource "random_string" "storage_hash" {
-  length  = 12
+  length  = 8
   lower   = true
   upper   = false
   numeric = true
@@ -8,7 +8,7 @@ resource "random_string" "storage_hash" {
 
 locals {
   # storage accounts must be globally unique and only up to 24 lower case alphanumeric characters
-  storage_account_name = substr(replace("${var.workspace}-${random_string.storage_hash.result}", "/[^a-z0-9]/", ""), 0, 24)
+  storage_account_name = "${substr(replace(var.workspace, "/[^a-z0-9]/", ""), 0, 16)}${random_string.storage_hash.result}"
 }
 
 resource "azurerm_storage_account" "blob" {

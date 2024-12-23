@@ -112,6 +112,27 @@ variable "postgres_version" {
   default     = "14"
 }
 
+# redis
+variable "redis_capacity" {
+  description = "Used to configure the capacity of the Redis cache."
+  type        = number
+  default     = 1
+  validation {
+    condition     = contains([0, 1, 2, 3, 4, 5, 6], var.redis_capacity)
+    error_message = "The capacity for the redis instance. It must be between 0 - 6 (inclusive)."
+  }
+}
+
+variable "redis_sku_name" {
+  description = "The SKU Name of the Redis cache (`Basic`, `Standard` or `Premium`)."
+  type        = string
+  default     = "Premium"
+  validation {
+    condition     = contains(["Basic", "Standard", "Premium"], var.redis_sku_name)
+    error_message = "The sku_name for the redis instance. It must be `Basic`, `Standard`, or `Premium`."
+  }
+}
+
 locals {
   # hash of subscription ID to help ensure uniqueness of resources like bucket names
   hash        = substr(sha256(var.azure_subscription_id), 0, 8)
