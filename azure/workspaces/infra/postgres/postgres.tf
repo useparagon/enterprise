@@ -27,7 +27,7 @@ resource "azurerm_postgresql_flexible_server" "postgres" {
 
   auto_grow_enabled             = true
   backup_retention_days         = 7
-  delegated_subnet_id           = azurerm_subnet.postgres.id
+  delegated_subnet_id           = var.private_subnet.id
   geo_redundant_backup_enabled  = var.postgres_redundant
   private_dns_zone_id           = azurerm_private_dns_zone.postgres.id
   public_network_access_enabled = false
@@ -49,7 +49,7 @@ resource "azurerm_postgresql_flexible_server_database" "paragon" {
   name      = "paragon"
   server_id = azurerm_postgresql_flexible_server.postgres.id
   collation = "en_US.utf8"
-  charset   = "utf8"
+  charset   = "UTF8"
 }
 
 # resource "azurerm_postgresql_virtual_network_rule" "private_subnet_access" {

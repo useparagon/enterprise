@@ -40,6 +40,7 @@ module "postgres" {
   resource_group     = module.network.resource_group
   tags               = local.default_tags
   virtual_network    = module.network.virtual_network
+  private_subnet     = module.network.postgres_subnet
   workspace          = local.workspace
 }
 

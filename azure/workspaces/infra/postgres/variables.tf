@@ -6,6 +6,10 @@ variable "virtual_network" {
   description = "The virtual network to deploy to."
 }
 
+variable "private_subnet" {
+  description = "Private subnet accessible only within the virtual network to deploy to."
+}
+
 variable "workspace" {
   description = "The workspace prefix to use for created resources."
   type        = string

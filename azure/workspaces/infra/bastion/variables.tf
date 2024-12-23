@@ -33,7 +33,7 @@ variable "workspace" {
 }
 
 variable "private_subnet" {
-  description = "Private subnet accessible only within the VPC."
+  description = "Private subnet accessible only within the virtual network to deploy to."
 }
 
 variable "ssh_whitelist" {

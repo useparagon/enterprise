@@ -13,3 +13,7 @@ output "public_subnet" {
 output "private_subnet" {
   value = azurerm_subnet.private
 }
+
+output "postgres_subnet" {
+  value = azurerm_subnet.postgres
+}

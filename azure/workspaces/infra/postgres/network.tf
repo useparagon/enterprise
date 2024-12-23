@@ -1,24 +1,3 @@
-resource "azurerm_subnet" "postgres" {
-  name = "${var.workspace}-postgres-subnet"
-
-  address_prefixes     = [cidrsubnet(tolist(var.virtual_network.address_space)[0], 4, 4)]
-  resource_group_name  = var.resource_group.name
-  service_endpoints    = ["Microsoft.Sql", "Microsoft.Storage"]
-  virtual_network_name = var.virtual_network.name
-
-  delegation {
-    name = "fs"
-
-    service_delegation {
-      name = "Microsoft.DBforPostgreSQL/flexibleServers"
-
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/join/action",
-      ]
-    }
-  }
-}
-
 resource "azurerm_network_security_group" "postgres" {
   name                = "${var.workspace}-postgres"
   location            = var.resource_group.location
@@ -38,7 +17,7 @@ resource "azurerm_network_security_group" "postgres" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "postgres" {
-  subnet_id                 = azurerm_subnet.postgres.id
+  subnet_id                 = var.private_subnet.id
   network_security_group_id = azurerm_network_security_group.postgres.id
 }
 
