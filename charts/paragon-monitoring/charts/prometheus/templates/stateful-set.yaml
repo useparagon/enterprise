@@ -81,8 +81,11 @@ spec:
     - metadata:
         name: prometheus
       spec:
-        resources:
-          requests:
-            storage: 20Gi
         accessModes:
           - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Gi
+        {{- if eq .Values.global.env.HOST_ENV "AWS_K8" }}
+        storageClassName: gp3
+        {{- end }}

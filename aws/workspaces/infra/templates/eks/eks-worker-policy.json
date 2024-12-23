@@ -3,19 +3,25 @@
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": ["acm:*"],
+      "Action": [
+        "acm:*"
+      ],
       "Resource": "*"
     },
     {
       "Effect": "Allow",
       "Action": [
+        "ec2:AttachVolume",
         "ec2:AuthorizeSecurityGroupIngress",
         "ec2:CreateSecurityGroup",
         "ec2:CreateTags",
-        "ec2:DeleteTags",
+        "ec2:CreateVolume",
         "ec2:DeleteSecurityGroup",
+        "ec2:DeleteTags",
+        "ec2:DeleteVolume",
         "ec2:DescribeAccountAttributes",
         "ec2:DescribeAddresses",
+        "ec2:DescribeAvailabilityZones",
         "ec2:DescribeInstances",
         "ec2:DescribeInstanceStatus",
         "ec2:DescribeInternetGateways",
@@ -24,10 +30,10 @@
         "ec2:DescribeSubnets",
         "ec2:DescribeTags",
         "ec2:DescribeVpcs",
+        "ec2:DetachVolume",
         "ec2:ModifyInstanceAttribute",
         "ec2:ModifyNetworkInterfaceAttribute",
-        "ec2:RevokeSecurityGroupIngress",
-        "ec2:DescribeAvailabilityZones"
+        "ec2:RevokeSecurityGroupIngress"
       ],
       "Resource": "*"
     },
@@ -81,11 +87,6 @@
     },
     {
       "Effect": "Allow",
-      "Action": ["cognito-idp:DescribeUserPoolClient"],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
       "Action": [
         "waf-regional:GetWebACLForResource",
         "waf-regional:GetWebACL",
@@ -96,12 +97,17 @@
     },
     {
       "Effect": "Allow",
-      "Action": ["tag:GetResources", "tag:TagResources"],
+      "Action": [
+        "tag:GetResources",
+        "tag:TagResources"
+      ],
       "Resource": "*"
     },
     {
       "Effect": "Allow",
-      "Action": ["waf:GetWebACL"],
+      "Action": [
+        "waf:GetWebACL"
+      ],
       "Resource": "*"
     },
     {

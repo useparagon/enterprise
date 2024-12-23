@@ -7,7 +7,7 @@ resource "aws_iam_role" "eks_cluster_admin" {
       {
         Effect = "Allow",
         Principal = {
-          AWS = var.eks_admin_arns
+          AWS = local.eks_admin_arns
         },
         Action = "sts:AssumeRole"
       }
@@ -77,212 +77,42 @@ resource "aws_iam_role_policy_attachment" "AmazonEKS_CNI_Policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
-resource "aws_iam_policy" "aws_ebs_csi_driver" {
-  name_prefix = "${var.workspace}-ebs"
-  policy      = data.aws_iam_policy_document.aws_ebs_csi_driver.json
-}
-
-data "aws_iam_policy_document" "aws_ebs_csi_driver" {
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = ["*"]
-
-    actions = [
-      "ec2:CreateSnapshot",
-      "ec2:AttachVolume",
-      "ec2:DetachVolume",
-      "ec2:ModifyVolume",
-      "ec2:DescribeAvailabilityZones",
-      "ec2:DescribeInstances",
-      "ec2:DescribeSnapshots",
-      "ec2:DescribeTags",
-      "ec2:DescribeVolumes",
-      "ec2:DescribeVolumesModifications",
-    ]
-  }
-
-  statement {
-    sid    = ""
-    effect = "Allow"
-
-    resources = [
-      "arn:${data.aws_partition.current.id}:ec2:*:*:volume/*",
-      "arn:${data.aws_partition.current.id}:ec2:*:*:snapshot/*",
-    ]
-
-    actions = ["ec2:CreateTags"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "ec2:CreateAction"
-
-      values = [
-        "CreateVolume",
-        "CreateSnapshot",
-      ]
-    }
-  }
-
-  statement {
-    sid    = ""
-    effect = "Allow"
-
-    resources = [
-      "arn:${data.aws_partition.current.id}:ec2:*:*:volume/*",
-      "arn:${data.aws_partition.current.id}:ec2:*:*:snapshot/*",
-    ]
-
-    actions = ["ec2:DeleteTags"]
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = ["*"]
-    actions   = ["ec2:CreateVolume"]
-
-    condition {
-      test     = "StringLike"
-      variable = "aws:RequestTag/ebs.csi.aws.com/cluster"
-      values   = ["true"]
-    }
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = ["*"]
-    actions   = ["ec2:CreateVolume"]
-
-    condition {
-      test     = "StringLike"
-      variable = "aws:RequestTag/CSIVolumeName"
-      values   = ["*"]
-    }
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = ["*"]
-    actions   = ["ec2:CreateVolume"]
-
-    condition {
-      test     = "StringLike"
-      variable = "aws:RequestTag/kubernetes.io/cluster/*"
-      values   = ["owned"]
-    }
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = ["*"]
-    actions   = ["ec2:DeleteVolume"]
-
-    condition {
-      test     = "StringLike"
-      variable = "ec2:ResourceTag/ebs.csi.aws.com/cluster"
-      values   = ["true"]
-    }
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = ["*"]
-    actions   = ["ec2:DeleteVolume"]
-
-    condition {
-      test     = "StringLike"
-      variable = "ec2:ResourceTag/CSIVolumeName"
-      values   = ["*"]
-    }
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = ["*"]
-    actions   = ["ec2:DeleteVolume"]
-
-    condition {
-      test     = "StringLike"
-      variable = "ec2:ResourceTag/kubernetes.io/cluster/*"
-      values   = ["owned"]
-    }
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = ["*"]
-    actions   = ["ec2:DeleteSnapshot"]
-
-    condition {
-      test     = "StringLike"
-      variable = "ec2:ResourceTag/CSIVolumeSnapshotName"
-      values   = ["*"]
-    }
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = ["*"]
-    actions   = ["ec2:DeleteSnapshot"]
-
-    condition {
-      test     = "StringLike"
-      variable = "ec2:ResourceTag/ebs.csi.aws.com/cluster"
-      values   = ["true"]
-    }
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = [module.ebs_kms_key.key_arn]
-    actions = [
-      "kms:CreateGrant",
-      "kms:ListGrants",
-      "kms:RevokeGrant"
-    ]
-
-    condition {
-      test     = "Bool"
-      variable = "kms:GrantIsForAWSResource"
-      values   = ["true"]
-    }
-  }
-
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    resources = [module.ebs_kms_key.key_arn]
-    actions = [
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*",
-      "kms:DescribeKey"
-    ]
-  }
-}
-
 module "aws_ebs_csi_driver_iam_role" {
-  source           = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
-  version          = "5.44.0"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version = "5.48.0"
+
   create_role      = true
   role_description = "EBS CSI Driver Role"
   role_name_prefix = "${var.workspace}-eks-csi-"
   provider_url     = module.eks.oidc_provider
-  role_policy_arns = [aws_iam_policy.aws_ebs_csi_driver.arn]
+
+  role_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+  ]
+
   oidc_fully_qualified_audiences = [
     "sts.amazonaws.com"
   ]
+
   oidc_fully_qualified_subjects = [
     "system:serviceaccount:kube-system:ebs-csi-controller-sa"
   ]
+}
+
+# Annotate the Kubernetes service account to use the IAM Role
+resource "kubernetes_service_account" "ebs_csi_controller" {
+  automount_service_account_token = true
+
+  metadata {
+    name      = "ebs-csi-controller-sa"
+    namespace = "kube-system"
+
+    annotations = {
+      "eks.amazonaws.com/role-arn" = module.aws_ebs_csi_driver_iam_role.iam_role_arn
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [metadata[0].labels]
+  }
 }

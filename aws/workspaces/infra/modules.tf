@@ -50,28 +50,12 @@ module "redis" {
   private_subnet = module.network.private_subnet
 }
 
-module "s3" {
-  source = "./s3"
+module "storage" {
+  source = "./storage"
 
   workspace             = local.workspace
   force_destroy         = var.disable_deletion_protection
   app_bucket_expiration = var.app_bucket_expiration
-}
-
-module "cluster" {
-  source = "./cluster"
-
-  workspace                       = local.workspace
-  eks_admin_arns                  = var.eks_admin_arns
-  eks_k8s_version                 = var.eks_k8s_version
-  eks_ondemand_node_instance_type = local.eks_ondemand_node_instance_type
-  eks_spot_node_instance_type     = local.eks_spot_node_instance_type
-  eks_spot_instance_percent       = var.eks_spot_instance_percent
-  eks_min_node_count              = var.eks_min_node_count
-  eks_max_node_count              = var.eks_max_node_count
-
-  vpc_id             = module.network.vpc.id
-  private_subnet_ids = module.network.private_subnet[*].id
 }
 
 module "bastion" {
@@ -88,9 +72,29 @@ module "bastion" {
   cloudflare_tunnel_account_id   = var.cloudflare_tunnel_account_id
   cloudflare_tunnel_email_domain = var.cloudflare_tunnel_email_domain
 
-  vpc_id           = module.network.vpc.id
-  public_subnet    = module.network.public_subnet
-  private_subnet   = module.network.private_subnet
-  eks_cluster_name = module.cluster.eks_cluster.name
-  eks_k8s_version  = var.eks_k8s_version
+  cluster_name   = local.workspace
+  k8s_version    = var.k8s_version
+  private_subnet = module.network.private_subnet
+  public_subnet  = module.network.public_subnet
+  vpc_id         = module.network.vpc.id
+}
+
+module "cluster" {
+  source = "./cluster"
+
+  workspace = local.workspace
+
+  bastion_role_arn          = module.bastion.bastion_role_arn
+  bastion_security_group_id = module.bastion.security_group.host[0]
+
+  eks_admin_arns                  = var.eks_admin_arns
+  eks_max_node_count              = var.eks_max_node_count
+  eks_min_node_count              = var.eks_min_node_count
+  eks_ondemand_node_instance_type = local.eks_ondemand_node_instance_type
+  eks_spot_instance_percent       = var.eks_spot_instance_percent
+  eks_spot_node_instance_type     = local.eks_spot_node_instance_type
+  k8s_version                     = var.k8s_version
+
+  vpc_id             = module.network.vpc.id
+  private_subnet_ids = module.network.private_subnet[*].id
 }

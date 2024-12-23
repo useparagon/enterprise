@@ -5,24 +5,18 @@ subchart:
     enabled: ${contains(keys(var.microservices), "account")}
   cerberus:
     enabled: ${contains(keys(var.microservices), "cerberus")}
-  chronos:
-    enabled: ${contains(keys(var.microservices), "chronos")}
   connect:
     enabled: ${contains(keys(var.microservices), "connect")}
   dashboard:
     enabled: ${contains(keys(var.microservices), "dashboard")}
   hades:
     enabled: ${contains(keys(var.microservices), "hades")}
-  hercules:
-    enabled: ${contains(keys(var.microservices), "hercules")}
   hermes:
     enabled: ${contains(keys(var.microservices), "hermes")}
   minio:
     enabled: ${contains(keys(var.microservices), "minio")}
   passport:
     enabled: ${contains(keys(var.microservices), "passport")}
-  plato:
-    enabled: ${contains(keys(var.microservices), "plato")}
   pheme:
     enabled: ${contains(keys(var.microservices), "pheme")}
   release:
@@ -80,29 +74,36 @@ resource "kubernetes_secret" "docker_login" {
   }
 }
 
+# shared secrets
+resource "kubernetes_secret" "paragon_secrets" {
+  metadata {
+    name      = "paragon-secrets"
+    namespace = kubernetes_namespace.paragon.id
+  }
+
+  type = "Opaque"
+
+  data = {
+    # Map global.env from helm_values into secret data
+    for key, value in nonsensitive(var.helm_values.global.env) :
+    key => value
+  }
+}
+
 # ingress controller; provisions load balancer
 resource "helm_release" "ingress" {
   name        = "ingress"
   description = "AWS Ingress Controller"
 
-  repository       = "https://aws.github.io/eks-charts"
-  chart            = "aws-load-balancer-controller"
-  version          = "1.5.3"
-  namespace        = kubernetes_namespace.paragon.id
-  create_namespace = false
-  cleanup_on_fail  = true
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  version    = "1.9.1"
+
   atomic           = true
+  cleanup_on_fail  = true
+  create_namespace = false
+  namespace        = kubernetes_namespace.paragon.id
   verify           = false
-
-  set {
-    name  = "autoDiscoverAwsRegion"
-    value = "true"
-  }
-
-  set {
-    name  = "autoDiscoverAwsVpcID"
-    value = "true"
-  }
 
   set {
     name  = "clusterName"
@@ -111,7 +112,7 @@ resource "helm_release" "ingress" {
 
   set {
     name  = "replicaCount"
-    value = "5"
+    value = "3"
   }
 }
 
@@ -133,14 +134,12 @@ resource "helm_release" "metricsserver" {
   ]
 }
 
-######
-# Microservices
-######
+# graceful handling of spot evictions
+module "aws_node_termination_handler" {
+  source  = "qvest-digital/aws-node-termination-handler/kubernetes"
+  version = "4.0.0"
 
-# helm hash
-module "helm_hash_onprem" {
-  source          = "../helm-hash"
-  chart_directory = "./charts/paragon-onprem"
+  json_logging = true
 }
 
 # microservices deployment
@@ -148,7 +147,7 @@ resource "helm_release" "paragon_on_prem" {
   name             = "paragon-on-prem"
   description      = "Paragon microservices"
   chart            = "./charts/paragon-onprem"
-  version          = "${var.helm_values.global.env["VERSION"]}-${module.helm_hash_onprem.hash}"
+  version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
   namespace        = kubernetes_namespace.paragon.id
   create_namespace = false
   cleanup_on_fail  = true
@@ -162,19 +161,12 @@ resource "helm_release" "paragon_on_prem" {
     // map `var.helm_values` but remove `global.env`, as we'll map it below
     yamlencode(merge(nonsensitive(var.helm_values), {
       global = merge(nonsensitive(var.helm_values).global, {
-        env = {}
+        env = {
+          secretName = "paragon-secrets"
+        }
       })
     }))
   ]
-
-  # used to load environment variables into microservices
-  dynamic "set_sensitive" {
-    for_each = nonsensitive(merge(var.helm_values.global.env))
-    content {
-      name  = "global.env.${set_sensitive.key}"
-      value = set_sensitive.value
-    }
-  }
 
   # set version of paragon microservices
   set {
@@ -241,25 +233,12 @@ resource "helm_release" "paragon_on_prem" {
     }
   }
 
-  set {
-    name  = "global.env.eks_k8s_version"
-    value = var.eks_k8s_version
-  }
-
   depends_on = [
     helm_release.ingress,
-    kubernetes_secret.docker_login
+    kubernetes_secret.docker_login,
+    kubernetes_secret.paragon_secrets,
+    kubernetes_storage_class_v1.gp3_encrypted
   ]
-}
-
-######
-# Logging
-######
-
-# helm hash
-module "helm_hash_logging" {
-  source          = "../helm-hash"
-  chart_directory = "./charts/paragon-logging"
 }
 
 # paragon logging stack fluent bit and openobserve
@@ -267,7 +246,7 @@ resource "helm_release" "paragon_logging" {
   name             = "paragon-logging"
   description      = "Paragon logging services"
   chart            = "./charts/paragon-logging"
-  version          = "${var.helm_values.global.env["VERSION"]}-${module.helm_hash_logging.hash}"
+  version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
   namespace        = kubernetes_namespace.paragon.id
   create_namespace = false
   cleanup_on_fail  = true
@@ -314,19 +293,8 @@ resource "helm_release" "paragon_logging" {
   depends_on = [
     helm_release.ingress,
     kubernetes_secret.docker_login,
+    kubernetes_storage_class_v1.gp3_encrypted
   ]
-}
-
-######
-# Monitors
-######
-
-# helm hash
-module "helm_hash_monitoring" {
-  count = var.monitors_enabled ? 1 : 0
-
-  source          = "../helm-hash"
-  chart_directory = "./charts/paragon-monitoring"
 }
 
 # monitors deployment
@@ -336,7 +304,7 @@ resource "helm_release" "paragon_monitoring" {
   name             = "paragon-monitoring"
   description      = "Paragon monitors"
   chart            = "./charts/paragon-monitoring"
-  version          = "${var.monitor_version}-${module.helm_hash_monitoring[count.index].hash}"
+  version          = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
   namespace        = "paragon"
   cleanup_on_fail  = true
   create_namespace = false
@@ -431,13 +399,14 @@ resource "helm_release" "paragon_monitoring" {
   }
 
   set {
-    name  = "global.env.eks_k8s_version"
-    value = var.eks_k8s_version
+    name  = "global.env.k8s_version"
+    value = var.k8s_version
   }
 
   depends_on = [
     helm_release.ingress,
     helm_release.paragon_on_prem,
-    kubernetes_secret.docker_login
+    kubernetes_secret.docker_login,
+    kubernetes_storage_class_v1.gp3_encrypted
   ]
 }

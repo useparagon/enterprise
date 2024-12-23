@@ -28,6 +28,8 @@ autoscaling:
   targetCPUUtilizationPercentage: 40
   targetMemoryUtilizationPercentage: 40
 
+secretName: "paragon-secrets"
+
 envKeys:
   - ADMIN_BASIC_AUTH_PASSWORD
   - ADMIN_BASIC_AUTH_USERNAME
@@ -88,6 +90,7 @@ envKeys:
   - JIRA_CLIENT_ID
   - JIRA_CLIENT_SECRET
   - LICENSE
+  - LICENSE_CONFIG
   - LINEAR_CLIENT_ID
   - LINEAR_CLIENT_SECRET
   - LOG_LEVEL

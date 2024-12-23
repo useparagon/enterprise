@@ -101,7 +101,23 @@ variable "ingress_scheme" {
   type        = string
 }
 
-variable "eks_k8s_version" {
+variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
+}
+
+locals {
+  chart_names     = var.monitors_enabled ? ["paragon-logging", "paragon-monitoring", "paragon-onprem"] : ["paragon-logging", "paragon-onprem"]
+  chart_directory = "../charts"
+  chart_hashes = {
+    for chart_name in local.chart_names :
+    chart_name => base64sha512(
+      jsonencode(
+        {
+          for path in sort(fileset("${local.chart_directory}/${chart_name}", "**")) :
+          path => filebase64sha512("${local.chart_directory}/${chart_name}/${path}")
+        }
+      )
+    )
+  }
 }

@@ -63,12 +63,12 @@ variable "cloudflare_tunnel_email_domain" {
   default     = "useparagon.com"
 }
 
-variable "eks_cluster_name" {
+variable "cluster_name" {
   description = "The EKS cluster that node groups and resources should be deployed to."
   type        = string
 }
 
-variable "eks_k8s_version" {
+variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
 }

@@ -16,9 +16,10 @@ variable "private_subnet_ids" {
 variable "eks_admin_arns" {
   description = "Array of ARNs for IAM users, groups or roles that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
   type        = list(string)
+  default     = []
 }
 
-variable "eks_k8s_version" {
+variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
 }
@@ -48,9 +49,25 @@ variable "eks_max_node_count" {
   type        = number
 }
 
-locals {
-  bastion_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.workspace}-bastion"
+variable "kms_admin_role" {
+  description = "ARN of IAM role allowed to administer KMS keys."
+  type        = string
+  default     = null
+}
 
+variable "bastion_role_arn" {
+  description = "ARN of IAM role associated with Bastion."
+  type        = string
+}
+
+variable "bastion_security_group_id" {
+  description = "Security Group ID associated with Bastion."
+  type        = string
+}
+
+data "aws_caller_identity" "current" {}
+
+locals {
   node_volume_size = 50
 
   nodes = {
@@ -72,9 +89,18 @@ locals {
   }
 
   cluster_addons = {
-    aws-ebs-csi-driver = {}
-    coredns            = {}
-    kube-proxy         = {}
+    aws-ebs-csi-driver = {
+      version = "v1.37.0-eksbuild.1"
+    }
+    coredns = {
+      version = "v1.11.3-eksbuild.1"
+    }
+    kube-proxy = {
+      version = "v1.31.0-eksbuild.2"
+    }
+    vpc-cni = {
+      version = "v1.18.3-eksbuild.2"
+    }
   }
 
   # We need to lookup K8s taint effect from the AWS API value
@@ -106,95 +132,15 @@ locals {
 
   cluster_autoscaler_asg_tags = merge(local.cluster_autoscaler_label_tags, local.cluster_autoscaler_taint_tags)
 
-  node_security_group_rules = {
-    egress_cluster_443 = {
-      description                   = "Node groups to cluster API"
-      protocol                      = "tcp"
-      from_port                     = 443
-      to_port                       = 443
-      type                          = "egress"
-      source_cluster_security_group = true
-    }
-    ingress_cluster_443 = {
-      description                   = "Cluster API to node groups"
-      protocol                      = "tcp"
-      from_port                     = 443
-      to_port                       = 443
-      type                          = "ingress"
-      source_cluster_security_group = true
-    }
-    ingress_cluster_kubelet = {
-      description                   = "Cluster API to node kubelets"
-      protocol                      = "tcp"
-      from_port                     = 10250
-      to_port                       = 10250
-      type                          = "ingress"
-      source_cluster_security_group = true
-    }
-    ingress_self_coredns_tcp = {
-      description = "Node to node CoreDNS"
-      protocol    = "tcp"
-      from_port   = 53
-      to_port     = 53
-      type        = "ingress"
-      self        = true
-    }
-    egress_self_coredns_tcp = {
-      description = "Node to node CoreDNS"
-      protocol    = "tcp"
-      from_port   = 53
-      to_port     = 53
-      type        = "egress"
-      self        = true
-    }
-    ingress_self_coredns_udp = {
-      description = "Node to node CoreDNS"
-      protocol    = "udp"
-      from_port   = 53
-      to_port     = 53
-      type        = "ingress"
-      self        = true
-    }
-    egress_self_coredns_udp = {
-      description = "Node to node CoreDNS"
-      protocol    = "udp"
-      from_port   = 53
-      to_port     = 53
-      type        = "egress"
-      self        = true
-    }
-    egress_https = {
-      description      = "Egress all HTTPS to internet"
-      protocol         = "tcp"
-      from_port        = 443
-      to_port          = 443
-      type             = "egress"
-      cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = null
-    }
-    egress_ntp_tcp = {
-      description      = "Egress NTP/TCP to internet"
-      protocol         = "tcp"
-      from_port        = 123
-      to_port          = 123
-      type             = "egress"
-      cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = null
-    }
-    egress_ntp_udp = {
-      description      = "Egress NTP/UDP to internet"
-      protocol         = "udp"
-      from_port        = 123
-      to_port          = 123
-      type             = "egress"
-      cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = null
-    }
-  }
-
   metadata_options = {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
   }
+
+  # include current user as EKS admin
+  eks_admin_arns = distinct(compact(concat(
+    var.eks_admin_arns,
+    [data.aws_caller_identity.current.arn]
+  )))
 }

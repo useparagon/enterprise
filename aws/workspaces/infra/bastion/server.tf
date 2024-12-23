@@ -39,16 +39,10 @@ resource "aws_key_pair" "bastion" {
   }
 }
 
-resource "random_string" "bastion_id" {
-  length  = 4
-  special = false
-  numeric = false
-  lower   = true
-  upper   = true
-}
-
 module "bastion" {
-  source = "github.com/useparagon/terraform-aws-bastion"
+  source = "github.com/useparagon/terraform-aws-bastion?ref=fix%2FPARA-12122%2Fstandardize-naming"
+
+  name = local.bastion_name
 
   # logging
   bucket_name     = local.bastion_name
@@ -81,8 +75,8 @@ module "bastion" {
     aws_account_id  = data.aws_caller_identity.current.account_id
     aws_region      = var.aws_region,
     bastion_role    = local.bastion_name,
-    cluster_name    = var.eks_cluster_name,
-    cluster_version = var.eks_k8s_version,
+    cluster_name    = var.cluster_name,
+    cluster_version = var.k8s_version,
     tunnel_id       = local.tunnel_id,
     tunnel_name     = local.tunnel_domain,
     tunnel_secret   = local.tunnel_secret,

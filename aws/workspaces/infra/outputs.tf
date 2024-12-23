@@ -17,19 +17,19 @@ output "redis" {
 
 output "logs_bucket" {
   description = "The bucket used to store system logs."
-  value       = module.s3.s3.logs_bucket
+  value       = module.storage.s3.logs_bucket
   sensitive   = true
 }
 
 output "minio" {
   description = "MinIO server connection info."
   value = {
-    public_bucket     = module.s3.s3.public_bucket
-    private_bucket    = module.s3.s3.private_bucket
-    microservice_user = module.s3.s3.minio_microservice_user
-    microservice_pass = module.s3.s3.minio_microservice_pass
-    root_user         = module.s3.s3.access_key_id
-    root_password     = module.s3.s3.access_key_secret
+    public_bucket     = module.storage.s3.public_bucket
+    private_bucket    = module.storage.s3.private_bucket
+    microservice_user = module.storage.s3.minio_microservice_user
+    microservice_pass = module.storage.s3.minio_microservice_pass
+    root_user         = module.storage.s3.access_key_id
+    root_password     = module.storage.s3.access_key_secret
   }
   sensitive = true
 }

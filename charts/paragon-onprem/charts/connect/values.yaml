@@ -38,6 +38,8 @@ autoscaling:
   targetCPUUtilizationPercentage: 40
   targetMemoryUtilizationPercentage: 40
 
+secretName: "paragon-secrets"
+
 envKeys:
   - ADMIN_BASIC_AUTH_PASSWORD
   - ADMIN_BASIC_AUTH_USERNAME
@@ -64,6 +66,7 @@ envKeys:
   - HTTP_AGENT_MAX_SOCKETS
   - HTTP_PROXY
   - LICENSE
+  - LICENSE_CONFIG
   - LOG_LEVEL
   - LOG_TYPEORM
   - MICROSERVICES_OPENTELEMETRY_ENABLED

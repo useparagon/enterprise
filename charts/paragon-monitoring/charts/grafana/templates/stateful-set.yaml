@@ -101,8 +101,11 @@ spec:
     - metadata:
         name: grafana
       spec:
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
             storage: 5Gi
-        accessModes:
-          - ReadWriteOnce
+        {{- if eq .Values.global.env.HOST_ENV "AWS_K8" }}
+        storageClassName: gp3
+        {{- end }}
