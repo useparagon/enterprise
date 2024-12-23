@@ -168,15 +168,6 @@ resource "helm_release" "paragon_on_prem" {
     }))
   ]
 
-  # # used to load environment variables into microservices
-  # dynamic "set_sensitive" {
-  #   for_each = nonsensitive(merge(var.helm_values.global.env))
-  #   content {
-  #     name  = "global.env.${set_sensitive.key}"
-  #     value = set_sensitive.value
-  #   }
-  # }
-
   # set version of paragon microservices
   set {
     name  = "global.paragon_version"
