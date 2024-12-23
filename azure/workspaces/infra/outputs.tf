@@ -36,13 +36,13 @@ output "minio" {
   sensitive = true
 }
 
-# output "redis" {
-#   description = "Connection information for Redis."
-#   value       = module.redis.elasticache
-#   sensitive   = true
-# }
+output "redis" {
+  description = "Connection information for Redis."
+  value       = module.redis.redis
+  sensitive   = true
+}
 
-# output "cluster_name" {
-#   description = "The name of the EKS cluster."
-#   value       = module.cluster.eks_cluster.name
-# }
+output "cluster_name" {
+  description = "The name of the AKS cluster."
+  value       = module.cluster.kubernetes.name
+}

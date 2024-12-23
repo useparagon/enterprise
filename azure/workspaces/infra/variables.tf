@@ -46,12 +46,6 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "k8s_version" {
-  description = "The version of Kubernetes to run in the cluster."
-  type        = string
-  default     = "1.31"
-}
-
 # cloudflare
 variable "cloudflare_api_token" {
   description = "Cloudflare API token created at https://dash.cloudflare.com/profile/api-tokens. Requires Edit permissions on Account `Cloudflare Tunnel`, `Access: Organizations, Identity Providers, and Groups`, `Access: Apps and Policies` and Zone `DNS`"
@@ -130,6 +124,57 @@ variable "redis_sku_name" {
   validation {
     condition     = contains(["Basic", "Standard", "Premium"], var.redis_sku_name)
     error_message = "The sku_name for the redis instance. It must be `Basic`, `Standard`, or `Premium`."
+  }
+}
+
+# aks
+variable "k8s_version" {
+  description = "The version of Kubernetes to run in the cluster."
+  type        = string
+  default     = "1.31"
+}
+
+variable "k8s_min_node_count" {
+  description = "Minimum number of node Kubernetes can scale down to."
+  type        = number
+  default     = 3
+}
+
+variable "k8s_max_node_count" {
+  description = "Maximum number of node Kubernetes can scale up to."
+  type        = number
+  default     = 20
+}
+
+variable "k8s_spot_instance_percent" {
+  description = "The percentage of spot instances to use for Kubernetes nodes."
+  type        = number
+  default     = 75
+  validation {
+    condition     = var.k8s_spot_instance_percent >= 0 && var.k8s_spot_instance_percent <= 100
+    error_message = "Value must be between 0 - 100."
+  }
+}
+
+variable "k8s_ondemand_node_instance_type" {
+  description = "The compute instance type to use for Kubernetes on demand nodes."
+  type        = string
+  default     = "Standard_B2ms"
+}
+
+variable "k8s_spot_node_instance_type" {
+  description = "The compute instance type to use for Kubernetes spot nodes."
+  type        = string
+  default     = "Standard_B2ms"
+}
+
+variable "k8s_sku_tier" {
+  description = "The SKU Tier of the AKS cluster (`Free`, `Standard` or `Premium`)."
+  type        = string
+  default     = "Premium"
+  validation {
+    condition     = contains(["Free", "Standard", "Premium"], var.k8s_sku_tier)
+    error_message = "The sku_tier for the AKS cluster. It must be `Free`, `Standard`, or `Premium`."
   }
 }
 
