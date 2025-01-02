@@ -10,7 +10,7 @@ resource "azurerm_network_security_group" "postgres" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_address_prefix      = "VirtualNetwork"
-    destination_port_range     = "5432"
+    destination_port_range     = var.postgres_port
     source_port_range          = "*"
     destination_address_prefix = "*"
   }

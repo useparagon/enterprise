@@ -1,38 +1,42 @@
-variable "aws_region" {
-  description = "The AWS region resources are created in."
+# credentials
+variable "azure_client_id" {
+  description = "Azure client ID"
   type        = string
+  sensitive   = true
 }
 
-variable "aws_access_key_id" {
-  description = "AWS Access Key for AWS account to provision resources on."
+variable "azure_client_secret" {
+  description = "Azure client secret"
   type        = string
+  sensitive   = true
 }
 
-variable "aws_secret_access_key" {
-  description = "AWS Secret Access Key for AWS account to provision resources on."
+variable "azure_subscription_id" {
+  description = "Azure subscription ID"
   type        = string
+  sensitive   = true
 }
 
-variable "aws_session_token" {
-  description = "AWS session token."
+variable "azure_tenant_id" {
+  description = "Azure tenant ID"
   type        = string
-  default     = null
+  sensitive   = true
+}
+
+# account
+variable "location" {
+  description = "Azure geographic region to deploy resources in."
+  type        = string
 }
 
 variable "organization" {
-  description = "The name of the organization that's deploying Paragon."
+  description = "Name of organization to include in resource names."
   type        = string
 }
 
 variable "domain" {
   description = "The root domain used for the microservices."
   type        = string
-}
-
-variable "acm_certificate_arn" {
-  description = "Optional ACM certificate ARN of an existing certificate to use with the load balancer."
-  type        = string
-  default     = null
 }
 
 variable "docker_registry_server" {
@@ -158,14 +162,13 @@ variable "helm_yaml" {
 }
 
 locals {
-  # hash of account ID to help ensure uniqueness of resources like S3 bucket names
-  hash        = substr(sha256(data.aws_caller_identity.current.account_id), 0, 8)
+  # hash of subscription ID to help ensure uniqueness of resources like bucket names
+  hash        = substr(sha256(var.azure_subscription_id), 0, 8)
   environment = "enterprise"
-  workspace   = "paragon-${var.organization}-${local.hash}"
+  workspace   = nonsensitive("paragon-${var.organization}-${local.hash}")
 
-  # NOTE hash and workspace can't be included in tags since it creates a circular reference
   default_tags = {
-    Name         = "paragon-${var.organization}"
+    Name         = local.workspace
     Environment  = local.environment
     Organization = var.organization
     Creator      = "Terraform"
@@ -372,11 +375,9 @@ locals {
           local.helm_vars.global.env,
           {
             // transformations, take priority over `values.yaml` -> global.env
-            AWS_REGION     = var.aws_region
-            REGION         = var.aws_region
             ORGANIZATION   = var.organization
             PARAGON_DOMAIN = var.domain
-            HOST_ENV       = "AWS_K8"
+            HOST_ENV       = "AZURE_K8"
 
             // worker variables
             HERCULES_CLUSTER_MAX_INSTANCES = 1
@@ -423,13 +424,13 @@ locals {
             MINIO_INSTANCE_COUNT    = "1"
             MINIO_MICROSERVICE_PASS = local.infra_vars.minio.value.microservice_pass
             MINIO_MICROSERVICE_USER = local.infra_vars.minio.value.microservice_user
-            MINIO_MODE              = "gateway-s3"
+            MINIO_MODE              = "gateway-azure"
             MINIO_NGINX_PROXY       = "on"
             MINIO_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
-            MINIO_REGION            = var.aws_region
-            MINIO_ROOT_PASSWORD     = local.infra_vars.minio.value.root_password
-            MINIO_ROOT_USER         = local.infra_vars.minio.value.root_user
-            MINIO_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
+            # MINIO_REGION            = var.aws_region
+            MINIO_ROOT_PASSWORD = local.infra_vars.minio.value.root_password
+            MINIO_ROOT_USER     = local.infra_vars.minio.value.root_user
+            MINIO_SYSTEM_BUCKET = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
 
             ACCOUNT_PORT   = try(local.microservices.account.port, null)
             CERBERUS_PORT  = try(local.microservices.cerberus.port, null)
@@ -472,33 +473,33 @@ locals {
             WORKER_TRIGGERS_PRIVATE_URL    = try("http://worker-triggers:${local.microservices["worker-triggers"].port}", null)
             WORKER_WORKFLOWS_PRIVATE_URL   = try("http://worker-workflows:${local.microservices["worker-workflows"].port}", null)
 
-            MONITOR_BULL_EXPORTER_HOST              = "http://bull-exporter"
-            MONITOR_BULL_EXPORTER_PORT              = try(local.monitors["bull-exporter"].port, null)
-            MONITOR_GRAFANA_AWS_ACCESS_ID           = var.monitors_enabled ? module.monitors[0].grafana_aws_access_key_id : null
-            MONITOR_GRAFANA_AWS_SECRET_KEY          = var.monitors_enabled ? module.monitors[0].grafana_aws_secret_access_key : null
-            MONITOR_GRAFANA_HOST                    = "http://grafana"
-            MONITOR_GRAFANA_PORT                    = try(local.monitors["grafana"].port, null)
-            MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD = var.monitors_enabled ? module.monitors[0].grafana_admin_password : null
-            MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
-            MONITOR_GRAFANA_SERVER_DOMAIN           = try(local.monitors["grafana"].public_url, null)
-            MONITOR_GRAFANA_UPTIME_WEBHOOK_URL      = module.uptime.webhook
-            MONITOR_KUBE_STATE_METRICS_HOST         = "http://kube-state-metrics"
-            MONITOR_KUBE_STATE_METRICS_PORT         = try(local.monitors["kube-state-metrics"].port, null)
-            MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null
-            MONITOR_PGADMIN_HOST                    = "http://pgadmin"
-            MONITOR_PGADMIN_PASSWORD                = var.monitors_enabled ? module.monitors[0].pgadmin_admin_password : null
-            MONITOR_PGADMIN_PORT                    = try(local.monitors["pgadmin"].port, null)
-            MONITOR_PGADMIN_SSL_MODE                = "disable"
-            MONITOR_POSTGRES_EXPORTER_HOST          = "http://postgres-exporter"
-            MONITOR_POSTGRES_EXPORTER_PORT          = try(local.monitors["postgres-exporter"].port, null)
-            MONITOR_POSTGRES_EXPORTER_SSL_MODE      = "disable"
-            MONITOR_PROMETHEUS_HOST                 = "http://prometheus"
-            MONITOR_PROMETHEUS_PORT                 = try(local.monitors["prometheus"].port, null)
-            MONITOR_QUEUE_REDIS_TARGET              = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
-            MONITOR_REDIS_EXPORTER_HOST             = "http://redis-exporter"
-            MONITOR_REDIS_EXPORTER_PORT             = try(local.monitors["redis-exporter"].port, null)
-            MONITOR_REDIS_INSIGHT_HOST              = "http://redis-insight"
-            MONITOR_REDIS_INSIGHT_PORT              = try(local.monitors["redis-insight"].port, null)
+            MONITOR_BULL_EXPORTER_HOST = "http://bull-exporter"
+            MONITOR_BULL_EXPORTER_PORT = try(local.monitors["bull-exporter"].port, null)
+            # MONITOR_GRAFANA_AWS_ACCESS_ID           = var.monitors_enabled ? module.monitors[0].grafana_aws_access_key_id : null
+            # MONITOR_GRAFANA_AWS_SECRET_KEY          = var.monitors_enabled ? module.monitors[0].grafana_aws_secret_access_key : null
+            MONITOR_GRAFANA_HOST = "http://grafana"
+            MONITOR_GRAFANA_PORT = try(local.monitors["grafana"].port, null)
+            # MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD = var.monitors_enabled ? module.monitors[0].grafana_admin_password : null
+            # MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
+            MONITOR_GRAFANA_SERVER_DOMAIN      = try(local.monitors["grafana"].public_url, null)
+            MONITOR_GRAFANA_UPTIME_WEBHOOK_URL = module.uptime.webhook
+            MONITOR_KUBE_STATE_METRICS_HOST    = "http://kube-state-metrics"
+            MONITOR_KUBE_STATE_METRICS_PORT    = try(local.monitors["kube-state-metrics"].port, null)
+            # MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null
+            MONITOR_PGADMIN_HOST = "http://pgadmin"
+            # MONITOR_PGADMIN_PASSWORD                = var.monitors_enabled ? module.monitors[0].pgadmin_admin_password : null
+            MONITOR_PGADMIN_PORT               = try(local.monitors["pgadmin"].port, null)
+            MONITOR_PGADMIN_SSL_MODE           = "disable"
+            MONITOR_POSTGRES_EXPORTER_HOST     = "http://postgres-exporter"
+            MONITOR_POSTGRES_EXPORTER_PORT     = try(local.monitors["postgres-exporter"].port, null)
+            MONITOR_POSTGRES_EXPORTER_SSL_MODE = "disable"
+            MONITOR_PROMETHEUS_HOST            = "http://prometheus"
+            MONITOR_PROMETHEUS_PORT            = try(local.monitors["prometheus"].port, null)
+            MONITOR_QUEUE_REDIS_TARGET         = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
+            MONITOR_REDIS_EXPORTER_HOST        = "http://redis-exporter"
+            MONITOR_REDIS_EXPORTER_PORT        = try(local.monitors["redis-exporter"].port, null)
+            MONITOR_REDIS_INSIGHT_HOST         = "http://redis-insight"
+            MONITOR_REDIS_INSIGHT_PORT         = try(local.monitors["redis-insight"].port, null)
         }) : key => value if !contains(local.helm_keys_to_remove, key) && value != null
       })
     })

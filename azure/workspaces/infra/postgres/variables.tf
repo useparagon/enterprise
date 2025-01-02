@@ -34,3 +34,9 @@ variable "postgres_version" {
   description = "PostgreSQL version (14, 15 or 16)"
   type        = string
 }
+
+variable "postgres_port" {
+  description = "PostgreSQL port"
+  type        = string
+  default     = "5432"
+}
