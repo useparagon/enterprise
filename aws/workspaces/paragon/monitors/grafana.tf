@@ -60,7 +60,7 @@ resource "random_string" "grafana_admin_email_prefix" {
   upper   = false
 }
 
-resource "random_string" "grafana_admin_password" {
+resource "random_password" "grafana_admin_password" {
   count = var.grafana_admin_email == null && var.grafana_admin_password == null ? 1 : 0
 
   length      = 16
