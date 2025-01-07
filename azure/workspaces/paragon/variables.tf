@@ -101,9 +101,10 @@ variable "dns_provider" {
   }
 }
 
-variable "cloudflare_dns_api_token" {
-  description = "Cloudflare DNS API token for SSL certificate creation and verification."
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token created at https://dash.cloudflare.com/profile/api-tokens. Requires Edit permissions on Zone `DNS`"
   type        = string
+  sensitive   = true
   default     = null
 }
 
@@ -324,6 +325,15 @@ locals {
     if lookup(config, "public_url", null) != null
   } : {}
 
+  public_services = {
+    for service, config in merge(local.microservices, local.monitors) :
+    service => {
+      port       = config.port
+      public_url = config.public_url
+    }
+    if lookup(config, "public_url") != null
+  }
+
   helm_keys_to_remove = [
     "POSTGRES_HOST",
     "POSTGRES_PORT",
@@ -333,6 +343,24 @@ locals {
     "REDIS_HOST",
     "REDIS_PORT",
   ]
+
+  default_redis_cluster = try(
+    local.helm_vars.global.env["REDIS_CLSUTER"],
+    local.infra_vars.redis.value.cache.cluster,
+    "false"
+  )
+
+  default_redis_ssl = try(
+    local.helm_vars.global.env["REDIS_SSL"],
+    local.infra_vars.redis.value.cache.ssl,
+    "true"
+  )
+
+  default_redis_url = try(
+    local.helm_vars.global.env["REDIS_URL"],
+    "redis://${local.helm_vars.global.env["REDIS_HOST"]}:${local.helm_vars.global.env["REDIS_PORT"]}",
+    "redis://${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}"
+  )
 
   helm_values = merge(local.helm_vars, {
     global = merge(local.helm_vars.global, {
@@ -407,18 +435,20 @@ locals {
             ZEUS_POSTGRES_PASSWORD     = try(local.infra_vars.postgres.value.zeus.password, local.infra_vars.postgres.value.postgres.password)
             ZEUS_POSTGRES_DATABASE     = try(local.infra_vars.postgres.value.zeus.database, local.infra_vars.postgres.value.postgres.database)
 
-            REDIS_URL = try(
-              local.helm_vars.global.env["REDIS_URL"],
-              try("${local.helm_vars.global.env["REDIS_HOST"]}:${local.helm_vars.global.env["REDIS_PORT"]}/0", null),
-            )
-            CACHE_REDIS_URL                = "${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}/0"
-            SYSTEM_REDIS_URL               = try("${local.infra_vars.redis.value.system.host}:${local.infra_vars.redis.value.system.port}/0", "${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}/0")
-            QUEUE_REDIS_URL                = try("${local.infra_vars.redis.value.queue.host}:${local.infra_vars.redis.value.queue.port}/0", "${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}/0")
-            WORKFLOW_REDIS_URL             = try("${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}/0", "${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}/0")
-            CACHE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.cache.cluster, "false")
-            SYSTEM_REDIS_CLUSTER_ENABLED   = try(local.infra_vars.redis.value.system.cluster, "false")
-            QUEUE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.queue.cluster, "false")
-            WORKFLOW_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.workflow.cluster, "false")
+            REDIS_URL = local.default_redis_url
+
+            CACHE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.cache.cluster, local.default_redis_cluster)
+            CACHE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.cache.ssl, local.default_redis_ssl)
+            CACHE_REDIS_URL                = try("redis://${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}", local.default_redis_url)
+            QUEUE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.queue.cluster, local.default_redis_cluster)
+            QUEUE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.queue.ssl, local.default_redis_ssl)
+            QUEUE_REDIS_URL                = try("redis://${local.infra_vars.redis.value.queue.host}:${local.infra_vars.redis.value.queue.port}", local.default_redis_url)
+            SYSTEM_REDIS_CLUSTER_ENABLED   = try(local.infra_vars.redis.value.system.cluster, local.default_redis_cluster)
+            SYSTEM_REDIS_TLS_ENABLED       = try(local.infra_vars.redis.value.system.ssl, local.default_redis_ssl)
+            SYSTEM_REDIS_URL               = try("redis://${local.infra_vars.redis.value.system.host}:${local.infra_vars.redis.value.system.port}", local.default_redis_url)
+            WORKFLOW_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.workflow.cluster, local.default_redis_cluster)
+            WORKFLOW_REDIS_TLS_ENABLED     = try(local.infra_vars.redis.value.workflow.ssl, local.default_redis_ssl)
+            WORKFLOW_REDIS_URL             = try("redis://${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
 
             MINIO_BROWSER           = "off"
             MINIO_INSTANCE_COUNT    = "1"
@@ -477,29 +507,29 @@ locals {
             MONITOR_BULL_EXPORTER_PORT = try(local.monitors["bull-exporter"].port, null)
             # MONITOR_GRAFANA_AWS_ACCESS_ID           = var.monitors_enabled ? module.monitors[0].grafana_aws_access_key_id : null
             # MONITOR_GRAFANA_AWS_SECRET_KEY          = var.monitors_enabled ? module.monitors[0].grafana_aws_secret_access_key : null
-            MONITOR_GRAFANA_HOST = "http://grafana"
-            MONITOR_GRAFANA_PORT = try(local.monitors["grafana"].port, null)
-            # MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD = var.monitors_enabled ? module.monitors[0].grafana_admin_password : null
-            # MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
-            MONITOR_GRAFANA_SERVER_DOMAIN      = try(local.monitors["grafana"].public_url, null)
-            MONITOR_GRAFANA_UPTIME_WEBHOOK_URL = module.uptime.webhook
-            MONITOR_KUBE_STATE_METRICS_HOST    = "http://kube-state-metrics"
-            MONITOR_KUBE_STATE_METRICS_PORT    = try(local.monitors["kube-state-metrics"].port, null)
-            # MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null
-            MONITOR_PGADMIN_HOST = "http://pgadmin"
-            # MONITOR_PGADMIN_PASSWORD                = var.monitors_enabled ? module.monitors[0].pgadmin_admin_password : null
-            MONITOR_PGADMIN_PORT               = try(local.monitors["pgadmin"].port, null)
-            MONITOR_PGADMIN_SSL_MODE           = "disable"
-            MONITOR_POSTGRES_EXPORTER_HOST     = "http://postgres-exporter"
-            MONITOR_POSTGRES_EXPORTER_PORT     = try(local.monitors["postgres-exporter"].port, null)
-            MONITOR_POSTGRES_EXPORTER_SSL_MODE = "disable"
-            MONITOR_PROMETHEUS_HOST            = "http://prometheus"
-            MONITOR_PROMETHEUS_PORT            = try(local.monitors["prometheus"].port, null)
-            MONITOR_QUEUE_REDIS_TARGET         = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
-            MONITOR_REDIS_EXPORTER_HOST        = "http://redis-exporter"
-            MONITOR_REDIS_EXPORTER_PORT        = try(local.monitors["redis-exporter"].port, null)
-            MONITOR_REDIS_INSIGHT_HOST         = "http://redis-insight"
-            MONITOR_REDIS_INSIGHT_PORT         = try(local.monitors["redis-insight"].port, null)
+            MONITOR_GRAFANA_HOST                    = "http://grafana"
+            MONITOR_GRAFANA_PORT                    = try(local.monitors["grafana"].port, null)
+            MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD = var.monitors_enabled ? module.monitors[0].grafana_admin_password : null
+            MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
+            MONITOR_GRAFANA_SERVER_DOMAIN           = try(local.monitors["grafana"].public_url, null)
+            MONITOR_GRAFANA_UPTIME_WEBHOOK_URL      = module.uptime.webhook
+            MONITOR_KUBE_STATE_METRICS_HOST         = "http://kube-state-metrics"
+            MONITOR_KUBE_STATE_METRICS_PORT         = try(local.monitors["kube-state-metrics"].port, null)
+            MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null
+            MONITOR_PGADMIN_HOST                    = "http://pgadmin"
+            MONITOR_PGADMIN_PASSWORD                = var.monitors_enabled ? module.monitors[0].pgadmin_admin_password : null
+            MONITOR_PGADMIN_PORT                    = try(local.monitors["pgadmin"].port, null)
+            MONITOR_PGADMIN_SSL_MODE                = "disable"
+            MONITOR_POSTGRES_EXPORTER_HOST          = "http://postgres-exporter"
+            MONITOR_POSTGRES_EXPORTER_PORT          = try(local.monitors["postgres-exporter"].port, null)
+            MONITOR_POSTGRES_EXPORTER_SSL_MODE      = "disable"
+            MONITOR_PROMETHEUS_HOST                 = "http://prometheus"
+            MONITOR_PROMETHEUS_PORT                 = try(local.monitors["prometheus"].port, null)
+            MONITOR_QUEUE_REDIS_TARGET              = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
+            MONITOR_REDIS_EXPORTER_HOST             = "http://redis-exporter"
+            MONITOR_REDIS_EXPORTER_PORT             = try(local.monitors["redis-exporter"].port, null)
+            MONITOR_REDIS_INSIGHT_HOST              = "http://redis-insight"
+            MONITOR_REDIS_INSIGHT_PORT              = try(local.monitors["redis-insight"].port, null)
         }) : key => value if !contains(local.helm_keys_to_remove, key) && value != null
       })
     })

@@ -47,3 +47,11 @@ output "cluster_name" {
   description = "The name of the AKS cluster."
   value       = module.cluster.kubernetes.name
 }
+
+output "resource_group" {
+  description = "Resource Group that infrastructure was deployed to."
+  value = {
+    name     = module.network.resource_group.name
+    location = module.network.resource_group.location
+  }
+}

@@ -45,11 +45,19 @@ resource "azurerm_postgresql_flexible_server" "postgres" {
   }
 }
 
+resource "azurerm_postgresql_flexible_server_configuration" "extensions" {
+  name      = "azure.extensions"
+  server_id = azurerm_postgresql_flexible_server.postgres.id
+  value     = "dblink,pg_cron,uuid-ossp"
+}
+
 resource "azurerm_postgresql_flexible_server_database" "paragon" {
   name      = "paragon"
   server_id = azurerm_postgresql_flexible_server.postgres.id
   collation = "en_US.utf8"
   charset   = "UTF8"
+
+  depends_on = [azurerm_postgresql_flexible_server_configuration.extensions]
 }
 
 # resource "azurerm_postgresql_virtual_network_rule" "private_subnet_access" {
