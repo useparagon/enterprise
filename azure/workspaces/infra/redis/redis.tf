@@ -31,7 +31,7 @@ resource "azurerm_redis_cache" "redis" {
   capacity                      = var.redis_capacity
   family                        = var.redis_sku_name == "Premium" ? "P" : "C"
   minimum_tls_version           = "1.2"
-  non_ssl_port_enabled          = true # TODO restrict to just SSL
+  non_ssl_port_enabled          = !var.redis_ssl_only
   public_network_access_enabled = false
   redis_version                 = "6"
   sku_name                      = var.redis_sku_name

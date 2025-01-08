@@ -127,6 +127,12 @@ variable "redis_sku_name" {
   }
 }
 
+variable "redis_ssl_only" {
+  description = "Flag whether only SSL connections are allowed."
+  type        = bool
+  default     = true
+}
+
 # aks
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."

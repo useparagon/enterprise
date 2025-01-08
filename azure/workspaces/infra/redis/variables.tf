@@ -45,3 +45,9 @@ variable "redis_sku_name" {
     error_message = "The sku_name for the redis instance. It must be `Basic`, `Standard`, or `Premium`."
   }
 }
+
+variable "redis_ssl_only" {
+  description = "Flag whether only SSL connections are allowed."
+  type        = bool
+  default     = true
+}
