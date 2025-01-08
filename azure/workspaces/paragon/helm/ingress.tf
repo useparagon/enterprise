@@ -142,7 +142,6 @@ YAML
 
   depends_on = [
     helm_release.cert_manager,
-    time_sleep.wait,
-    # kubernetes_secret.cloudflare
+    time_sleep.wait
   ]
 }

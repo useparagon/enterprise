@@ -32,9 +32,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
   {{ end }}
 spec:
-  {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
   ingressClassName: {{ .Values.ingress.className }}
-  {{- end }}
   {{- if eq .Values.global.env.HOST_ENV "AZURE_K8" }}
   tls:
     - hosts:

@@ -57,7 +57,12 @@ locals {
       global = merge(
         nonsensitive(var.helm_values.global),
         {
-          env = { secretName = "paragon-secrets" }
+          env = {
+            HOST_ENV    = "AZURE_K8"
+            k8s_version = var.k8s_version
+            secretName  = "paragon-secrets"
+          },
+          paragon_version = var.helm_values.global.env["VERSION"]
         }
       )
     }
@@ -138,17 +143,6 @@ resource "helm_release" "paragon_on_prem" {
     local.microservice_values,
     local.secret_hash
   ]
-
-  # set version of paragon microservices
-  set {
-    name  = "global.paragon_version"
-    value = var.helm_values.global.env["VERSION"]
-  }
-
-  set {
-    name  = "global.env.k8s_version"
-    value = var.k8s_version
-  }
 
   depends_on = [
     helm_release.ingress,
@@ -231,17 +225,6 @@ resource "helm_release" "paragon_monitoring" {
       name  = "global.env.${set_sensitive.key}"
       value = set_sensitive.value
     }
-  }
-
-  # used to determine which version of paragon monitors to pull
-  set {
-    name  = "global.paragon_version"
-    value = var.helm_values.global.env["VERSION"]
-  }
-
-  set {
-    name  = "global.env.k8s_version"
-    value = var.k8s_version
   }
 
   depends_on = [
