@@ -30,7 +30,8 @@ resource "kubernetes_secret" "microservices" {
 
   lifecycle {
     ignore_changes = [
-      metadata[0].annotations
+      metadata[0].annotations,
+      metadata[0].labels
     ]
   }
 }

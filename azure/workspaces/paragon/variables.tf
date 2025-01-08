@@ -503,10 +503,8 @@ locals {
             WORKER_TRIGGERS_PRIVATE_URL    = try("http://worker-triggers:${local.microservices["worker-triggers"].port}", null)
             WORKER_WORKFLOWS_PRIVATE_URL   = try("http://worker-workflows:${local.microservices["worker-workflows"].port}", null)
 
-            MONITOR_BULL_EXPORTER_HOST = "http://bull-exporter"
-            MONITOR_BULL_EXPORTER_PORT = try(local.monitors["bull-exporter"].port, null)
-            # MONITOR_GRAFANA_AWS_ACCESS_ID           = var.monitors_enabled ? module.monitors[0].grafana_aws_access_key_id : null
-            # MONITOR_GRAFANA_AWS_SECRET_KEY          = var.monitors_enabled ? module.monitors[0].grafana_aws_secret_access_key : null
+            MONITOR_BULL_EXPORTER_HOST              = "http://bull-exporter"
+            MONITOR_BULL_EXPORTER_PORT              = try(local.monitors["bull-exporter"].port, null)
             MONITOR_GRAFANA_HOST                    = "http://grafana"
             MONITOR_GRAFANA_PORT                    = try(local.monitors["grafana"].port, null)
             MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD = var.monitors_enabled ? module.monitors[0].grafana_admin_password : null
@@ -519,10 +517,10 @@ locals {
             MONITOR_PGADMIN_HOST                    = "http://pgadmin"
             MONITOR_PGADMIN_PASSWORD                = var.monitors_enabled ? module.monitors[0].pgadmin_admin_password : null
             MONITOR_PGADMIN_PORT                    = try(local.monitors["pgadmin"].port, null)
-            MONITOR_PGADMIN_SSL_MODE                = "disable"
+            MONITOR_PGADMIN_SSL_MODE                = "require"
             MONITOR_POSTGRES_EXPORTER_HOST          = "http://postgres-exporter"
             MONITOR_POSTGRES_EXPORTER_PORT          = try(local.monitors["postgres-exporter"].port, null)
-            MONITOR_POSTGRES_EXPORTER_SSL_MODE      = "disable"
+            MONITOR_POSTGRES_EXPORTER_SSL_MODE      = "require"
             MONITOR_PROMETHEUS_HOST                 = "http://prometheus"
             MONITOR_PROMETHEUS_PORT                 = try(local.monitors["prometheus"].port, null)
             MONITOR_QUEUE_REDIS_TARGET              = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
