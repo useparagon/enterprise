@@ -6,22 +6,20 @@ resource "random_string" "postgres_root_username" {
   for_each = local.postgres_instances
 
   length  = 16
-  special = false
-  numeric = false
   lower   = true
   upper   = true
+  numeric = false
+  special = false
 }
 
 resource "random_password" "postgres_root_password" {
   for_each = local.postgres_instances
 
-  length    = 16
-  min_upper = 2
-  min_lower = 2
-  numeric   = true
-  special   = false
-  lower     = true
-  upper     = true
+  length  = 32
+  lower   = true
+  upper   = true
+  numeric = true
+  special = false
 }
 
 resource "random_string" "snapshot_identifier" {

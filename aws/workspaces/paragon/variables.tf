@@ -74,13 +74,6 @@ variable "excluded_microservices" {
   default     = []
 }
 
-# TODO determine how we want to handle this
-variable "helm_env" {
-  description = "Enviroment variables to pass to helm from `.env-helm`."
-  type        = string
-  default     = null
-}
-
 variable "ingress_scheme" {
   description = "Whether the load balancer is 'internet-facing' (public) or 'internal' (private)"
   type        = string
@@ -90,7 +83,7 @@ variable "ingress_scheme" {
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
-  default     = "1.30"
+  default     = "1.31"
 }
 
 variable "dns_provider" {
