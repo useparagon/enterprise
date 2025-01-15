@@ -48,16 +48,17 @@ module "postgres" {
 module "redis" {
   source = "./redis"
 
-  private_subnet  = module.network.private_subnet
-  public_subnet   = module.network.public_subnet
-  redis_capacity  = var.redis_capacity
-  redis_sku_name  = var.redis_sku_name
-  redis_ssl_only  = var.redis_ssl_only
-  redis_subnet    = module.network.redis_subnet
-  resource_group  = module.network.resource_group
-  tags            = local.default_tags
-  virtual_network = module.network.virtual_network
-  workspace       = local.workspace
+  private_subnet           = module.network.private_subnet
+  public_subnet            = module.network.public_subnet
+  redis_capacity           = var.redis_capacity
+  redis_multiple_instances = var.redis_multiple_instances
+  redis_sku_name           = var.redis_sku_name
+  redis_ssl_only           = var.redis_ssl_only
+  redis_subnet             = module.network.redis_subnet
+  resource_group           = module.network.resource_group
+  tags                     = local.default_tags
+  virtual_network          = module.network.virtual_network
+  workspace                = local.workspace
 }
 
 module "storage" {

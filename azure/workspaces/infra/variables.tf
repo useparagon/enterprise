@@ -136,6 +136,12 @@ variable "redis_sku_name" {
 variable "redis_ssl_only" {
   description = "Flag whether only SSL connections are allowed."
   type        = bool
+  default     = false
+}
+
+variable "redis_multiple_instances" {
+  description = "Whether or not to create multiple Redis instances."
+  type        = bool
   default     = true
 }
 
