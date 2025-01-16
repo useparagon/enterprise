@@ -35,6 +35,7 @@ resource "azurerm_redis_cache" "redis" {
   minimum_tls_version           = "1.2"
   non_ssl_port_enabled          = !var.redis_ssl_only
   public_network_access_enabled = false
+  redis_version                 = "6"
   sku_name                      = each.value.sku
   tags                          = merge(var.tags, { Name = "${var.workspace}-${each.key}" })
 
