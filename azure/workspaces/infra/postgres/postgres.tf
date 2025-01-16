@@ -36,7 +36,7 @@ resource "azurerm_postgresql_flexible_server" "postgres" {
   delegated_subnet_id           = var.private_subnet.id
   private_dns_zone_id           = azurerm_private_dns_zone.postgres.id
   public_network_access_enabled = false
-  tags                          = merge(var.tags, { Name = "${var.workspace}-postgres" })
+  tags                          = merge(var.tags, { Name = each.value.name })
 
   dynamic "high_availability" {
     for_each = each.value.ha ? [1] : []
