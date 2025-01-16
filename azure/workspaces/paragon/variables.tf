@@ -85,18 +85,6 @@ variable "k8s_version" {
   default     = "1.31"
 }
 
-# TODO support non-cloudflare DNS providers
-# variable "dns_provider" {
-#   description = "DNS provider to use."
-#   type        = string
-#   default     = "none"
-
-#   validation {
-#     condition     = var.dns_provider == "none" || var.dns_provider == "cloudflare" || var.dns_provider == "namecheap"
-#     error_message = "Only none, cloudflare or namecheap are currently supported."
-#   }
-# }
-
 variable "cloudflare_api_token" {
   description = "Cloudflare API token created at https://dash.cloudflare.com/profile/api-tokens. Requires Edit permissions on Zone `DNS`"
   type        = string
