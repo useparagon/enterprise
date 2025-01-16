@@ -21,7 +21,7 @@ variable "tags" {
 }
 
 variable "postgres_redundant" {
-  description = "Whether zone redundant HA should be enabled (location must support it)"
+  description = "Whether zone redundant HA should be enabled"
   type        = bool
 }
 

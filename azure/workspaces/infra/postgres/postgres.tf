@@ -34,7 +34,6 @@ resource "azurerm_postgresql_flexible_server" "postgres" {
   auto_grow_enabled             = true
   backup_retention_days         = 7
   delegated_subnet_id           = var.private_subnet.id
-  geo_redundant_backup_enabled  = each.value.ha
   private_dns_zone_id           = azurerm_private_dns_zone.postgres.id
   public_network_access_enabled = false
   tags                          = merge(var.tags, { Name = "${var.workspace}-postgres" })

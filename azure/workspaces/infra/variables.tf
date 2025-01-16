@@ -89,7 +89,7 @@ variable "cloudflare_tunnel_email_domain" {
 
 # postgres
 variable "postgres_redundant" {
-  description = "Whether zone redundant HA should be enabled (region must support it and many don't)"
+  description = "Whether zone redundant HA should be enabled"
   type        = bool
   default     = false
 }
