@@ -34,6 +34,12 @@ variable "organization" {
   type        = string
 }
 
+variable "environment" {
+  description = "Type of environment being deployed to."
+  type        = string
+  default     = "enterprise"
+}
+
 variable "ssh_whitelist" {
   description = "An optional list of IP addresses to whitelist SSH access."
   type        = string
@@ -198,13 +204,12 @@ variable "k8s_sku_tier" {
 
 locals {
   # hash of subscription ID to help ensure uniqueness of resources like bucket names
-  hash        = substr(sha256(var.azure_subscription_id), 0, 8)
-  environment = "enterprise"
-  workspace   = nonsensitive("paragon-${var.organization}-${local.hash}")
+  hash      = substr(sha256(var.azure_subscription_id), 0, 8)
+  workspace = nonsensitive("paragon-${var.organization}-${local.hash}")
 
   default_tags = {
     Name         = local.workspace
-    Environment  = local.environment
+    Environment  = var.environment
     Organization = var.organization
     Creator      = "Terraform"
   }
