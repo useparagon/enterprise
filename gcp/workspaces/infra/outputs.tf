@@ -12,11 +12,11 @@ output "bastion" {
   sensitive = true
 }
 
-# output "postgres" {
-#   description = "Connection info for Postgres."
-#   value       = module.postgres.postgres
-#   sensitive   = true
-# }
+output "postgres" {
+  description = "Connection info for Postgres."
+  value       = module.postgres.postgres
+  sensitive   = true
+}
 
 # output "logs_container" {
 #   description = "The bucket used to store system logs."

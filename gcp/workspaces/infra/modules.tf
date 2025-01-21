@@ -7,6 +7,17 @@ module "network" {
   workspace      = local.workspace
 }
 
+module "postgres" {
+  source = "./postgres"
+
+  disable_deletion_protection = var.disable_deletion_protection
+  gcp_project_id              = local.gcp_project_id
+  network                     = module.network.network
+  private_subnet              = module.network.private_subnet
+  region                      = var.region
+  workspace                   = local.workspace
+}
+
 module "bastion" {
   source = "./bastion"
 

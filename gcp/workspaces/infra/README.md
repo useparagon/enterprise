@@ -4,7 +4,9 @@ NOTE: The following APIs must be enabled for the project in the [GCP Console](ht
 
 - Identity and Access Management (IAM) API
 - Cloud Resource Manager API
+- Cloud SQL Admin API
 - Compute Engine API
+- Service Networking API
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -25,6 +27,7 @@ No providers.
 |------|--------|---------|
 | <a name="module_bastion"></a> [bastion](#module\_bastion) | ./bastion | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ./network | n/a |
+| <a name="module_postgres"></a> [postgres](#module\_postgres) | ./postgres | n/a |
 
 ## Resources
 
@@ -73,6 +76,7 @@ No resources.
 | Name | Description |
 |------|-------------|
 | <a name="output_bastion"></a> [bastion](#output\_bastion) | Bastion server connection info. |
+| <a name="output_postgres"></a> [postgres](#output\_postgres) | Connection info for Postgres. |
 | <a name="output_workspace"></a> [workspace](#output\_workspace) | The resource group that all resources are associated with. |
 <!-- END_TF_DOCS -->
 
