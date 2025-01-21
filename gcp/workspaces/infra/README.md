@@ -1,8 +1,10 @@
 # Paragon GCP Infrastructure
 
-NOTE: The following APIs must be enabled for the project in the [GCP Console](https://console.developers.google.com/apis/api/compute.googleapis.com/overview).
-- Compute Engine API
+NOTE: The following APIs must be enabled for the project in the [GCP Console](https://console.cloud.google.com/apis/library).
 
+- Identity and Access Management (IAM) API
+- Cloud Resource Manager API
+- Compute Engine API
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -21,6 +23,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_bastion"></a> [bastion](#module\_bastion) | ./bastion | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ./network | n/a |
 
 ## Resources
@@ -67,7 +70,10 @@ No resources.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_bastion"></a> [bastion](#output\_bastion) | Bastion server connection info. |
+| <a name="output_workspace"></a> [workspace](#output\_workspace) | The resource group that all resources are associated with. |
 <!-- END_TF_DOCS -->
 
 ## Updates
