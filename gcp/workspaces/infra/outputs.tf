@@ -18,30 +18,28 @@ output "postgres" {
   sensitive   = true
 }
 
-# output "logs_container" {
-#   description = "The bucket used to store system logs."
-#   value       = module.storage.blob.logs_container
-#   sensitive   = true
-# }
+output "logs_container" {
+  description = "The bucket used to store system logs."
+  value       = module.storage.storage.logs_bucket
+  sensitive   = true
+}
 
-# output "minio" {
-#   description = "MinIO server connection info."
-#   value = {
-#     public_bucket     = module.storage.blob.public_container
-#     private_bucket    = module.storage.blob.private_container
-#     microservice_user = module.storage.blob.minio_microservice_user
-#     microservice_pass = module.storage.blob.minio_microservice_pass
-#     root_user         = module.storage.blob.name
-#     root_password     = module.storage.blob.access_key
-#   }
-#   sensitive = true
-# }
+output "minio" {
+  description = "MinIO server connection info."
+  value = {
+    public_bucket     = module.storage.storage.public_bucket
+    private_bucket    = module.storage.storage.private_bucket
+    microservice_user = module.storage.storage.minio_microservice_user
+    microservice_pass = module.storage.storage.minio_microservice_pass
+  }
+  sensitive = true
+}
 
-# output "redis" {
-#   description = "Connection information for Redis."
-#   value       = module.redis.redis
-#   sensitive   = true
-# }
+output "redis" {
+  description = "Connection information for Redis."
+  value       = module.redis.redis
+  sensitive   = true
+}
 
 # output "cluster_name" {
 #   description = "The name of the AKS cluster."

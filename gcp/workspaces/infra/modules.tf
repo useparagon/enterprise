@@ -32,6 +32,15 @@ module "redis" {
   workspace          = local.workspace
 }
 
+module "storage" {
+  source = "./storage"
+
+  disable_deletion_protection = var.disable_deletion_protection
+  gcp_project_id              = local.gcp_project_id
+  region                      = var.region
+  workspace                   = local.workspace
+}
+
 module "bastion" {
   source = "./bastion"
 

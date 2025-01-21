@@ -30,6 +30,7 @@ No providers.
 | <a name="module_network"></a> [network](#module\_network) | ./network | n/a |
 | <a name="module_postgres"></a> [postgres](#module\_postgres) | ./postgres | n/a |
 | <a name="module_redis"></a> [redis](#module\_redis) | ./redis | n/a |
+| <a name="module_storage"></a> [storage](#module\_storage) | ./storage | n/a |
 
 ## Resources
 
@@ -78,7 +79,10 @@ No resources.
 | Name | Description |
 |------|-------------|
 | <a name="output_bastion"></a> [bastion](#output\_bastion) | Bastion server connection info. |
+| <a name="output_logs_container"></a> [logs\_container](#output\_logs\_container) | The bucket used to store system logs. |
+| <a name="output_minio"></a> [minio](#output\_minio) | MinIO server connection info. |
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | Connection info for Postgres. |
+| <a name="output_redis"></a> [redis](#output\_redis) | Connection information for Redis. |
 | <a name="output_workspace"></a> [workspace](#output\_workspace) | The resource group that all resources are associated with. |
 <!-- END_TF_DOCS -->
 
