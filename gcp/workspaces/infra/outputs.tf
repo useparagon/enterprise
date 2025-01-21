@@ -31,6 +31,8 @@ output "minio" {
     private_bucket    = module.storage.storage.private_bucket
     microservice_user = module.storage.storage.minio_microservice_user
     microservice_pass = module.storage.storage.minio_microservice_pass
+    root_user         = module.storage.storage.project_id
+    root_password     = module.storage.storage.private_key
   }
   sensitive = true
 }
