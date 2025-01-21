@@ -18,6 +18,17 @@ variable "private_subnet" {
 
 variable "region" {
   description = "The region where to host Google Cloud Organization resources."
+  type        = string
+}
+
+variable "postgres_multiple_instances" {
+  description = "Whether or not to create multiple Postgres instances. Used for higher volume installations."
+  type        = bool
+}
+
+variable "postgres_tier" {
+  description = "The instance type to use for Postgres."
+  type        = string
 }
 
 variable "disable_deletion_protection" {
@@ -26,18 +37,19 @@ variable "disable_deletion_protection" {
 }
 
 locals {
-  postgres_instances = {
+  postgres_instances = var.postgres_multiple_instances ? {
     cerberus = {
-      tier = "db-f1-micro"
+      tier = "db-custom-1-3840"
     },
     hermes = {
-      tier = "db-custom-2-7680" // e.g. "db-n1-standard-2"
-    },
-    pheme = {
-      tier = "db-f1-micro"
+      tier = var.postgres_tier
     },
     zeus = {
-      tier = "db-custom-2-7680" // e.g. "db-n1-standard-2"
+      tier = "db-custom-2-7680"
+    }
+    } : {
+    paragon = {
+      tier = var.postgres_tier
     }
   }
 }

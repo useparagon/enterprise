@@ -126,18 +126,6 @@ variable "cloudflare_tunnel_email_domain" {
 }
 
 # optional network restrictions
-variable "authorized_networks" {
-  description = "A list of authorized CIDR-formatted IP address ranges that can connect to this DB. Only applies to public IP instances."
-  type        = list(map(string))
-  default     = []
-}
-
-variable "ip_whitelist" {
-  description = "An optional list of IP addresses to whitelist access to for microservices with private acl."
-  type        = string
-  default     = ""
-}
-
 variable "ssh_whitelist" {
   description = "An optional list of IP addresses to whitelist ssh access."
   type        = string
@@ -154,7 +142,7 @@ variable "disable_deletion_protection" {
 variable "postgres_tier" {
   description = "The instance type to use for Postgres."
   type        = string
-  default     = "db-f1-micro"
+  default     = "db-custom-2-7680"
   # https://cloud.google.com/sql/docs/mysql/instance-settings#:~:text=see%20Instance%20Locations.-,Machine,-Type
 }
 
@@ -247,7 +235,5 @@ locals {
   }
 
   // get distinct values from comma-separated list, filter empty values and trim them
-  # // for `ip_whitelist`, if an ip doesn't contain a range at the end (e.g. `<IP_ADDRESS>/32`), then add `/32` to the end. `1.1.1.1` becomes `1.1.1.1/32`; `2.2.2.2/24` remains unchanged
-  # ip_whitelist  = distinct([for value in split(",", var.ip_whitelist) : "${trimspace(value)}${replace(value, "/", "") != value ? "" : "/32"}" if trimspace(value) != ""])
-  # ssh_whitelist = distinct([for value in split(",", var.ssh_whitelist) : "${trimspace(value)}${replace(value, "/", "") != value ? "" : "/32"}" if trimspace(value) != ""])
+  ssh_whitelist = distinct([for value in split(",", var.ssh_whitelist) : "${trimspace(value)}${replace(value, "/", "") != value ? "" : "/32"}" if trimspace(value) != ""])
 }

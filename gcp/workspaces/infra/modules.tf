@@ -13,6 +13,8 @@ module "postgres" {
   disable_deletion_protection = var.disable_deletion_protection
   gcp_project_id              = local.gcp_project_id
   network                     = module.network.network
+  postgres_multiple_instances = var.postgres_multiple_instances
+  postgres_tier               = var.postgres_tier
   private_subnet              = module.network.private_subnet
   region                      = var.region
   workspace                   = local.workspace
@@ -41,6 +43,24 @@ module "storage" {
   workspace                   = local.workspace
 }
 
+module "cluster" {
+  source = "./cluster"
+
+  gcp_project_id                  = local.gcp_project_id
+  k8s_max_node_count              = var.k8s_max_node_count
+  k8s_min_node_count              = var.k8s_min_node_count
+  k8s_ondemand_node_instance_type = var.k8s_ondemand_node_instance_type
+  k8s_spot_instance_percent       = var.k8s_spot_instance_percent
+  k8s_spot_node_instance_type     = var.k8s_spot_node_instance_type
+  k8s_version                     = var.k8s_version
+  network                         = module.network.network
+  private_subnet                  = module.network.private_subnet
+  region                          = var.region
+  region_zone                     = var.region_zone
+  region_zone_backup              = var.region_zone_backup
+  workspace                       = local.workspace
+}
+
 module "bastion" {
   source = "./bastion"
 
@@ -51,11 +71,12 @@ module "bastion" {
   cloudflare_tunnel_subdomain    = var.cloudflare_tunnel_subdomain
   cloudflare_tunnel_zone_id      = var.cloudflare_tunnel_zone_id
 
-  cluster_name   = "TODO"
+  cluster_name   = module.cluster.kubernetes.name
   gcp_project_id = local.gcp_project_id
   network        = module.network.network
   k8s_version    = var.k8s_version
   private_subnet = module.network.private_subnet
   region         = var.region
+  ssh_whitelist  = local.ssh_whitelist
   workspace      = local.workspace
 }
