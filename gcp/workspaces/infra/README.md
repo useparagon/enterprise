@@ -6,6 +6,7 @@ NOTE: The following APIs must be enabled for the project in the [GCP Console](ht
 - Cloud Resource Manager API
 - Cloud SQL Admin API
 - Compute Engine API
+- Google Cloud Memorystore for Redis API
 - Service Networking API
 
 <!-- BEGIN_TF_DOCS -->
@@ -28,6 +29,7 @@ No providers.
 | <a name="module_bastion"></a> [bastion](#module\_bastion) | ./bastion | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ./network | n/a |
 | <a name="module_postgres"></a> [postgres](#module\_postgres) | ./postgres | n/a |
+| <a name="module_redis"></a> [redis](#module\_redis) | ./redis | n/a |
 
 ## Resources
 

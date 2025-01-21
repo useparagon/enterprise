@@ -18,6 +18,20 @@ module "postgres" {
   workspace                   = local.workspace
 }
 
+module "redis" {
+  source = "./redis"
+
+  gcp_project_id     = local.gcp_project_id
+  multi_redis        = var.redis_multiple_instances
+  network            = module.network.network
+  private_subnet     = module.network.private_subnet
+  redis_memory_size  = var.redis_memory_size
+  region             = var.region
+  region_zone        = var.region_zone
+  region_zone_backup = var.region_zone_backup
+  workspace          = local.workspace
+}
+
 module "bastion" {
   source = "./bastion"
 
