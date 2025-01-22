@@ -1,10 +1,11 @@
 output "redis" {
   value = {
-    cache = {
-      host    = azurerm_redis_cache.redis.hostname
-      port    = azurerm_redis_cache.redis.non_ssl_port_enabled ? azurerm_redis_cache.redis.port : azurerm_redis_cache.redis.ssl_port
-      cluster = (azurerm_redis_cache.redis.replicas_per_master + azurerm_redis_cache.redis.replicas_per_primary + azurerm_redis_cache.redis.shard_count) > 0
-      ssl     = !azurerm_redis_cache.redis.non_ssl_port_enabled
+    for key, value in local.redis_instances :
+    key => {
+      host    = azurerm_redis_cache.redis[key].hostname # azurerm_private_endpoint.redis[key].private_dns_zone_group[0].name
+      port    = azurerm_redis_cache.redis[key].non_ssl_port_enabled ? azurerm_redis_cache.redis[key].port : azurerm_redis_cache.redis[key].ssl_port
+      ssl     = !azurerm_redis_cache.redis[key].non_ssl_port_enabled
+      cluster = value.cluster
     }
   }
   sensitive = true

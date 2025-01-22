@@ -49,5 +49,35 @@ variable "redis_sku_name" {
 variable "redis_ssl_only" {
   description = "Flag whether only SSL connections are allowed."
   type        = bool
-  default     = true
+}
+
+variable "redis_multiple_instances" {
+  description = "Whether or not to create multiple Redis instances."
+  type        = bool
+}
+
+locals {
+  redis_instances = var.redis_multiple_instances ? {
+    cache = {
+      cluster  = true
+      capacity = var.redis_capacity
+      sku      = var.redis_sku_name
+    }
+    queue = {
+      cluster  = false
+      capacity = 1
+      sku      = "Premium"
+    }
+    system = {
+      cluster  = false
+      capacity = 1
+      sku      = "Premium"
+    }
+    } : {
+    cache = {
+      cluster  = false
+      capacity = var.redis_capacity
+      sku      = var.redis_sku_name
+    }
+  }
 }
