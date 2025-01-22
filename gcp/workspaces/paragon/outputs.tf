@@ -27,3 +27,9 @@ output "uptime_webhook" {
   value       = module.uptime.webhook
   sensitive   = true
 }
+
+output "cluster" {
+  description = "TODO debugging"
+  value       = module.helm.cluster
+  sensitive   = true
+}
