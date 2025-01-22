@@ -49,7 +49,6 @@ variable "redis_sku_name" {
 variable "redis_ssl_only" {
   description = "Flag whether only SSL connections are allowed."
   type        = bool
-  default     = true
 }
 
 variable "redis_multiple_instances" {
