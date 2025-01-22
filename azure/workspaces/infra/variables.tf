@@ -89,13 +89,13 @@ variable "cloudflare_tunnel_email_domain" {
 
 # postgres
 variable "postgres_redundant" {
-  description = "Whether zone redundant HA should be enabled (region must support it and many don't)"
+  description = "Whether zone redundant HA should be enabled"
   type        = bool
   default     = false
 }
 
 variable "postgres_sku_name" {
-  description = "PostgreSQL SKU name"
+  description = "PostgreSQL SKU name (e.g. `B_Standard_B2s` or `GP_Standard_D2ds_v5`)"
   type        = string
   default     = "GP_Standard_D2ds_v5"
 }
@@ -104,6 +104,12 @@ variable "postgres_version" {
   description = "PostgreSQL version (14, 15 or 16)"
   type        = string
   default     = "14"
+}
+
+variable "postgres_multiple_instances" {
+  description = "Whether or not to create multiple Postgres instances. Used for higher volume installations."
+  type        = bool
+  default     = true
 }
 
 # redis

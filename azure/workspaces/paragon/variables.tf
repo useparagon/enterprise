@@ -24,11 +24,6 @@ variable "azure_tenant_id" {
 }
 
 # account
-variable "location" {
-  description = "Azure geographic region to deploy resources in."
-  type        = string
-}
-
 variable "organization" {
   description = "Name of organization to include in resource names."
   type        = string
@@ -88,17 +83,6 @@ variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
   default     = "1.31"
-}
-
-variable "dns_provider" {
-  description = "DNS provider to use."
-  type        = string
-  default     = "none"
-
-  validation {
-    condition     = var.dns_provider == "none" || var.dns_provider == "cloudflare" || var.dns_provider == "namecheap"
-    error_message = "Only none, cloudflare or namecheap are currently supported."
-  }
 }
 
 variable "cloudflare_api_token" {
@@ -164,16 +148,8 @@ variable "helm_yaml" {
 
 locals {
   # hash of subscription ID to help ensure uniqueness of resources like bucket names
-  hash        = substr(sha256(var.azure_subscription_id), 0, 8)
-  environment = "enterprise"
-  workspace   = nonsensitive("paragon-${var.organization}-${local.hash}")
-
-  default_tags = {
-    Name         = local.workspace
-    Environment  = local.environment
-    Organization = var.organization
-    Creator      = "Terraform"
-  }
+  hash      = substr(sha256(var.azure_subscription_id), 0, 8)
+  workspace = nonsensitive("paragon-${var.organization}-${local.hash}")
 
   infra_json_path = abspath(var.infra_json_path)
   infra_vars      = jsondecode(fileexists(local.infra_json_path) && var.infra_json == null ? file(local.infra_json_path) : var.infra_json)
@@ -331,7 +307,7 @@ locals {
       port       = config.port
       public_url = config.public_url
     }
-    if lookup(config, "public_url") != null
+    if lookup(config, "public_url", null) != null
   }
 
   helm_keys_to_remove = [

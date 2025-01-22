@@ -1,4 +1,6 @@
 resource "random_string" "postgres_root_username" {
+  for_each = local.postgres_instances
+
   length  = 16
   lower   = true
   upper   = true
@@ -7,6 +9,8 @@ resource "random_string" "postgres_root_username" {
 }
 
 resource "random_password" "postgres_root_password" {
+  for_each = local.postgres_instances
+
   length  = 32
   lower   = true
   upper   = true
@@ -15,26 +19,30 @@ resource "random_password" "postgres_root_password" {
 }
 
 resource "azurerm_postgresql_flexible_server" "postgres" {
-  name                = "${var.workspace}-postgres"
+  for_each = local.postgres_instances
+
+  name                = each.value.name
   location            = var.resource_group.location
   resource_group_name = var.resource_group.name
 
-  administrator_login    = random_string.postgres_root_username.result
-  administrator_password = random_password.postgres_root_password.result
+  administrator_login    = random_string.postgres_root_username[each.key].result
+  administrator_password = random_password.postgres_root_password[each.key].result
 
-  sku_name = var.postgres_sku_name
+  sku_name = each.value.sku
   version  = var.postgres_version
 
   auto_grow_enabled             = true
   backup_retention_days         = 7
   delegated_subnet_id           = var.private_subnet.id
-  geo_redundant_backup_enabled  = var.postgres_redundant
   private_dns_zone_id           = azurerm_private_dns_zone.postgres.id
   public_network_access_enabled = false
-  tags                          = merge(var.tags, { Name = "${var.workspace}-postgres" })
+  tags                          = merge(var.tags, { Name = each.value.name })
 
-  high_availability {
-    mode = var.postgres_redundant ? "ZoneRedundant" : "SameZone"
+  dynamic "high_availability" {
+    for_each = each.value.ha ? [1] : []
+    content {
+      mode = "ZoneRedundant"
+    }
   }
 
   lifecycle {
@@ -46,39 +54,20 @@ resource "azurerm_postgresql_flexible_server" "postgres" {
 }
 
 resource "azurerm_postgresql_flexible_server_configuration" "extensions" {
+  for_each = local.postgres_instances
+
   name      = "azure.extensions"
-  server_id = azurerm_postgresql_flexible_server.postgres.id
+  server_id = azurerm_postgresql_flexible_server.postgres[each.key].id
   value     = "dblink,pg_cron,uuid-ossp"
 }
 
 resource "azurerm_postgresql_flexible_server_database" "paragon" {
-  name      = "paragon"
-  server_id = azurerm_postgresql_flexible_server.postgres.id
+  for_each = local.postgres_instances
+
+  name      = each.value.db
+  server_id = azurerm_postgresql_flexible_server.postgres[each.key].id
   collation = "en_US.utf8"
   charset   = "UTF8"
 
   depends_on = [azurerm_postgresql_flexible_server_configuration.extensions]
 }
-
-# resource "azurerm_postgresql_virtual_network_rule" "private_subnet_access" {
-#   name                = "${azurerm_postgresql_flexible_server.postgres.name}-private-subnet-access"
-#   resource_group_name = var.resource_group.name
-#   server_name         = azurerm_postgresql_flexible_server.postgres.name
-
-#   subnet_id                            = var.private_subnet.id
-#   ignore_missing_vnet_service_endpoint = false
-
-#   depends_on = [azurerm_postgresql_flexible_server.postgres]
-# }
-
-# # Needed to allow Paragon migrations that use `dblink` to run
-# resource "azurerm_postgresql_firewall_rule" "allow_dblink" {
-#   name                = "allow_dblink"
-#   resource_group_name = var.resource_group.name
-#   server_name         = azurerm_postgresql_flexible_server.postgres.name
-
-#   start_ip_address = "0.0.0.0"
-#   end_ip_address   = "0.0.0.0"
-
-#   depends_on = [azurerm_postgresql_flexible_server.postgres]
-# }
