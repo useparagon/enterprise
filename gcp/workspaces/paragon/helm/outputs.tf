@@ -1,5 +1,5 @@
-output "cluster" {
-  value = data.google_container_cluster.cluster
+output "load_balancer" {
+  value = google_compute_address.loadbalancer.address
 }
 
 output "openobserve_email" {

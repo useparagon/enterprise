@@ -40,12 +40,12 @@ module "uptime" {
   microservices    = local.microservices
 }
 
-# module "dns" {
-#   source = "./dns"
+module "dns" {
+  source = "./dns"
 
-#   cloudflare_api_token = var.cloudflare_api_token
-#   cloudflare_zone_id   = var.cloudflare_zone_id
-#   domain               = var.domain
-#   ingress_loadbalancer = module.helm.load_balancer
-#   public_services      = local.public_services
-# }
+  cloudflare_api_token = var.cloudflare_api_token
+  cloudflare_zone_id   = var.cloudflare_zone_id
+  domain               = var.domain
+  ingress_loadbalancer = module.helm.load_balancer
+  public_services      = local.public_services
+}

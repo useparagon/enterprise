@@ -175,7 +175,7 @@ variable "k8s_version" {
 variable "k8s_min_node_count" {
   description = "Minimum number of node Kubernetes can scale down to."
   type        = number
-  default     = 3
+  default     = 2
 }
 
 variable "k8s_max_node_count" {
@@ -187,7 +187,7 @@ variable "k8s_max_node_count" {
 variable "k8s_spot_instance_percent" {
   description = "The percentage of spot instances to use for Kubernetes nodes."
   type        = number
-  default     = 75
+  default     = 80
   validation {
     condition     = var.k8s_spot_instance_percent >= 0 && var.k8s_spot_instance_percent <= 100
     error_message = "Value must be between 0 - 100."
@@ -197,13 +197,13 @@ variable "k8s_spot_instance_percent" {
 variable "k8s_ondemand_node_instance_type" {
   description = "The compute instance type to use for Kubernetes on demand nodes."
   type        = string
-  default     = "e2-standard-2"
+  default     = "e2-standard-4"
 }
 
 variable "k8s_spot_node_instance_type" {
   description = "The compute instance type to use for Kubernetes spot nodes."
   type        = string
-  default     = "e2-standard-2"
+  default     = "e2-standard-4"
 }
 
 locals {
