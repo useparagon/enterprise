@@ -17,6 +17,8 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_dns"></a> [dns](#module\_dns) | ./dns | n/a |
+| <a name="module_helm"></a> [helm](#module\_helm) | ./helm | n/a |
 | <a name="module_monitors"></a> [monitors](#module\_monitors) | ./monitors | n/a |
 | <a name="module_uptime"></a> [uptime](#module\_uptime) | ./uptime | n/a |
 
