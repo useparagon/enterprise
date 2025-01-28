@@ -21,6 +21,8 @@ subchart:
     enabled: true
   zeus:
     enabled: true
+  worker-actionkit:
+    enabled: true
   worker-actions:
     enabled: true
   worker-credentials:
