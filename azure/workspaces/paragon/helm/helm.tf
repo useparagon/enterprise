@@ -1,6 +1,6 @@
 locals {
 
-  all_microservices = ["account", "cerberus", "connect", "dashboard", "hades", "hermes", "minio", "passport", "pheme", "release", "zeus", "worker-actions", "worker-credentials", "worker-crons", "worker-deployments", "worker-proxy", "worker-triggers", "worker-workflows"]
+  all_microservices = ["account", "cerberus", "connect", "dashboard", "hades", "hermes", "minio", "passport", "pheme", "release", "zeus", "worker-actionkit", "worker-actions", "worker-credentials", "worker-crons", "worker-deployments", "worker-proxy", "worker-triggers", "worker-workflows"]
 
   subchart_values = yamlencode({
     subchart = {
