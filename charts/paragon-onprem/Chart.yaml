@@ -50,6 +50,10 @@ dependencies:
     repository: file://charts/zeus
     version: __PARAGON_VERSION__
     condition: subchart.zeus.enabled
+  - name: worker-actionkit
+    repository: file://charts/worker-actionkit
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-actionkit.enabled
   - name: worker-actions
     repository: file://charts/worker-actions
     version: __PARAGON_VERSION__

@@ -23,6 +23,8 @@ subchart:
     enabled: ${contains(keys(var.microservices), "release")}
   zeus:
     enabled: ${contains(keys(var.microservices), "zeus")}
+  worker-actionkit:
+    enabled: ${contains(keys(var.microservices), "worker-actionkit")}
   worker-actions:
     enabled: ${contains(keys(var.microservices), "worker-actions")}
   worker-credentials:
