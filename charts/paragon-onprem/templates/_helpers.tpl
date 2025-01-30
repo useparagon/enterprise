@@ -86,6 +86,12 @@ Zeus API endpoint URL.
 {{- printf "http://%s-zeus" .Release.Name -}}
 {{- end -}}
 {{/*
+worker-actionkit endpoint URL.
+*/}}
+{{- define "global.worker-actionkit.url" -}}
+{{- printf "http://%s-worker-actionkit" .Release.Name -}}
+{{- end -}}
+{{/*
 worker-actions endpoint URL.
 */}}
 {{- define "global.worker-actions.url" -}}

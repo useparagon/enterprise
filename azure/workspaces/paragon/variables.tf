@@ -217,6 +217,11 @@ locals {
       "port"             = try(local.helm_vars.global.env["ZEUS_PORT"], 1703)
       "public_url"       = try(local.helm_vars.global.env["ZEUS_PUBLIC_URL"], "https://zeus.${var.domain}")
     }
+    "worker-actionkit" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["WORKER_ACTIONKIT_PORT"], 1721)
+      "public_url"       = try(local.helm_vars.global.env["WORKER_ACTIONKIT_PUBLIC_URL"], "https://worker-actionkit.${var.domain}")
+    }
     "worker-actions" = {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["WORKER_ACTIONS_PORT"], 1712)
@@ -360,6 +365,7 @@ locals {
           PHEME_PUBLIC_URL     = try(local.microservices.pheme.public_url, null)
           ZEUS_PUBLIC_URL      = try(local.microservices.zeus.public_url, null)
 
+          WORKER_ACTIONKIT_PUBLIC_URL   = try(local.microservices["worker-actionkit"].public_url, null)
           WORKER_ACTIONS_PUBLIC_URL     = try(local.microservices["worker-actions"].public_url, null)
           WORKER_CREDENTIALS_PUBLIC_URL = try(local.microservices["worker-credentials"].public_url, null)
           WORKER_CRONS_PUBLIC_URL       = try(local.microservices["worker-crons"].public_url, null)
@@ -433,10 +439,19 @@ locals {
             MINIO_MODE              = "gateway-azure"
             MINIO_NGINX_PROXY       = "on"
             MINIO_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
-            # MINIO_REGION            = var.aws_region
-            MINIO_ROOT_PASSWORD = local.infra_vars.minio.value.root_password
-            MINIO_ROOT_USER     = local.infra_vars.minio.value.root_user
-            MINIO_SYSTEM_BUCKET = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
+            MINIO_ROOT_PASSWORD     = local.infra_vars.minio.value.root_password
+            MINIO_ROOT_USER         = local.infra_vars.minio.value.root_user
+            MINIO_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
+
+            CLOUD_STORAGE_MICROSERVICE_PASS = local.infra_vars.minio.value.microservice_pass
+            CLOUD_STORAGE_MICROSERVICE_USER = local.infra_vars.minio.value.microservice_user
+            CLOUD_STORAGE_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
+            CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
+            CLOUD_STORAGE_TYPE              = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "MINIO")
+
+            # TODO update with non-minio urls once supported
+            CLOUD_STORAGE_PUBLIC_URL  = coalesce(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null), try(local.microservices.minio.public_url, null), null)
+            CLOUD_STORAGE_PRIVATE_URL = try("http://minio:${local.microservices.minio.port}", null)
 
             ACCOUNT_PORT   = try(local.microservices.account.port, null)
             CERBERUS_PORT  = try(local.microservices.cerberus.port, null)
@@ -450,6 +465,7 @@ locals {
             RELEASE_PORT   = try(local.microservices.release.port, null)
             ZEUS_PORT      = try(local.microservices.zeus.port, null)
 
+            WORKER_ACTIONKIT_PORT   = try(local.microservices["worker-actionkit"].port, null)
             WORKER_ACTIONS_PORT     = try(local.microservices["worker-actions"].port, null)
             WORKER_CREDENTIALS_PORT = try(local.microservices["worker-credentials"].port, null)
             WORKER_CRONS_PORT       = try(local.microservices["worker-crons"].port, null)
@@ -471,6 +487,7 @@ locals {
             RELEASE_PRIVATE_URL   = try("http://release:${local.microservices.release.port}", null)
             ZEUS_PRIVATE_URL      = try("http://zeus:${local.microservices.zeus.port}", null)
 
+            WORKER_ACTIONKIT_PRIVATE_URL   = try("http://worker-actionkit:${local.microservices["worker-actionkit"].port}", null)
             WORKER_ACTIONS_PRIVATE_URL     = try("http://worker-actions:${local.microservices["worker-actions"].port}", null)
             WORKER_CREDENTIALS_PRIVATE_URL = try("http://worker-credentials:${local.microservices["worker-credentials"].port}", null)
             WORKER_CRONS_PRIVATE_URL       = try("http://worker-crons:${local.microservices["worker-crons"].port}", null)
