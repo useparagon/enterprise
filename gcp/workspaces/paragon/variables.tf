@@ -396,7 +396,7 @@ locals {
   default_redis_ssl = try(
     local.helm_vars.global.env["REDIS_SSL"],
     local.infra_vars.redis.value.cache.ssl,
-    "true"
+    "false"
   )
 
   default_redis_url = try(
