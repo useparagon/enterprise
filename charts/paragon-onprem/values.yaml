@@ -7,6 +7,8 @@ subchart:
     enabled: true
   dashboard:
     enabled: true
+  flipt:
+    enabled: true
   hades:
     enabled: true
   hermes:
