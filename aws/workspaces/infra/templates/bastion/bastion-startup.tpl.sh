@@ -8,6 +8,10 @@ function writeLog() {
 writeLog "paragon setup starting as $(whoami) from $0"
 sudo mkdir -p /etc/apt/keyrings
 
+# unattended support
+export DEBIAN_FRONTEND=noninteractive
+sudo systemctl stop unattended-upgrades
+
 # install misc tools
 writeLog "installing misc tools"
 sudo apt-get update -y

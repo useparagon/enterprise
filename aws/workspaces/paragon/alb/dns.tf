@@ -13,7 +13,7 @@ resource "aws_route53_zone" "paragon" {
 }
 
 resource "aws_route53_record" "microservice" {
-  for_each = merge(var.microservices, var.public_monitors)
+  for_each = merge(var.public_microservices, var.public_monitors)
 
   zone_id = aws_route53_zone.paragon.zone_id
   name = replace(

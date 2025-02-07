@@ -1,4 +1,34 @@
 locals {
+  flipt_values = yamlencode({
+    flipt = {
+      flipt = {
+        extraEnvVars = [
+          for k, v in var.flipt_options : {
+            name  = k
+            value = v
+          }
+        ]
+      }
+    }
+  })
+
+  global_values = yamlencode(merge(
+    nonsensitive(var.helm_values),
+    {
+      global = merge(
+        nonsensitive(var.helm_values.global),
+        {
+          env = {
+            HOST_ENV    = "AWS_K8"
+            k8s_version = var.k8s_version
+            secretName  = "paragon-secrets"
+          },
+          paragon_version = var.helm_values.global.env["VERSION"]
+        }
+      )
+    }
+  ))
+
   supported_microservices_values = <<EOF
 subchart:
   account:
@@ -9,6 +39,8 @@ subchart:
     enabled: ${contains(keys(var.microservices), "connect")}
   dashboard:
     enabled: ${contains(keys(var.microservices), "dashboard")}
+  flipt:
+    enabled: ${contains(keys(var.microservices), "flipt")}
   hades:
     enabled: ${contains(keys(var.microservices), "hades")}
   hermes:
@@ -159,42 +191,9 @@ resource "helm_release" "paragon_on_prem" {
 
   values = [
     local.supported_microservices_values,
-
-    // map `var.helm_values` but remove `global.env`, as we'll map it below
-    yamlencode(merge(nonsensitive(var.helm_values), {
-      global = merge(nonsensitive(var.helm_values).global, {
-        env = {
-          secretName = "paragon-secrets"
-        }
-      })
-    }))
+    local.flipt_values,
+    local.global_values
   ]
-
-  # set version of paragon microservices
-  set {
-    name  = "global.paragon_version"
-    value = var.helm_values.global.env["VERSION"]
-  }
-
-  # used to set map the ingress to the public url of each microservice
-  dynamic "set" {
-    for_each = var.microservices
-
-    content {
-      name  = "${set.key}.ingress.host"
-      value = replace(replace(set.value.public_url, "https://", ""), "http://", "")
-    }
-  }
-
-  # configures whether the load balancer is 'internet-facing' (public) or 'internal' (private)
-  dynamic "set" {
-    for_each = var.microservices
-
-    content {
-      name  = "${set.key}.ingress.scheme"
-      value = var.ingress_scheme
-    }
-  }
 
   dynamic "set" {
     for_each = var.microservices
@@ -205,9 +204,29 @@ resource "helm_release" "paragon_on_prem" {
     }
   }
 
+  # used to set map the ingress to the public url of each microservice
+  dynamic "set" {
+    for_each = var.public_microservices
+
+    content {
+      name  = "${set.key}.ingress.host"
+      value = replace(replace(set.value.public_url, "https://", ""), "http://", "")
+    }
+  }
+
+  # configures whether the load balancer is 'internet-facing' (public) or 'internal' (private)
+  dynamic "set" {
+    for_each = var.public_microservices
+
+    content {
+      name  = "${set.key}.ingress.scheme"
+      value = var.ingress_scheme
+    }
+  }
+
   # configures the ssl cert to the load balancer
   dynamic "set" {
-    for_each = var.microservices
+    for_each = var.public_microservices
 
     content {
       name  = "${set.key}.ingress.acm_certificate_arn"
@@ -217,7 +236,7 @@ resource "helm_release" "paragon_on_prem" {
 
   # configures the load balancer name
   dynamic "set" {
-    for_each = var.microservices
+    for_each = var.public_microservices
 
     content {
       name  = "${set.key}.ingress.load_balancer_name"
@@ -227,7 +246,7 @@ resource "helm_release" "paragon_on_prem" {
 
   # configures load balancer bucket for logging
   dynamic "set" {
-    for_each = var.microservices
+    for_each = var.public_microservices
 
     content {
       name  = "${set.key}.ingress.logs_bucket"
@@ -258,13 +277,7 @@ resource "helm_release" "paragon_logging" {
 
   values = [
     local.supported_microservices_values,
-
-    // map `var.helm_values` but remove `global.env`, as we'll map it below
-    yamlencode(merge(nonsensitive(var.helm_values), {
-      global = merge(nonsensitive(var.helm_values).global, {
-        env = {}
-      })
-    }))
+    local.global_values
   ]
 
   set {
@@ -316,13 +329,7 @@ resource "helm_release" "paragon_monitoring" {
 
   values = [
     local.supported_microservices_values,
-
-    // map `var.helm_values` but remove `global.env`, as we'll map it below
-    yamlencode(merge(nonsensitive(var.helm_values), {
-      global = merge(nonsensitive(var.helm_values).global, {
-        env = {}
-      })
-    }))
+    local.global_values
   ]
 
   # used to load environment variables into microservices
@@ -342,12 +349,6 @@ resource "helm_release" "paragon_monitoring" {
       name  = "${set.key}.image.tag"
       value = var.monitor_version
     }
-  }
-
-  # used to determine which version of paragon monitors to pull
-  set {
-    name  = "global.paragon_version"
-    value = var.helm_values.global.env["VERSION"]
   }
 
   # used to set map the ingress to the public url of each microservice
