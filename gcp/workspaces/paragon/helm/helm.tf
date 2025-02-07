@@ -53,6 +53,19 @@ locals {
     }
   })
 
+  flipt_values = yamlencode({
+    flipt = {
+      flipt = {
+        extraEnvVars = [
+          for k, v in var.flipt_options : {
+            name  = k
+            value = v
+          }
+        ]
+      }
+    }
+  })
+
   global_values = yamlencode(merge(
     nonsensitive(var.helm_values),
     {
@@ -142,6 +155,7 @@ resource "helm_release" "paragon_on_prem" {
   values = [
     local.subchart_values,
     local.global_values,
+    local.flipt_values,
     local.microservice_values,
     local.public_microservice_values,
     local.secret_hash
