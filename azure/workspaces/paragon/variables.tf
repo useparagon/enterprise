@@ -356,7 +356,7 @@ locals {
           PLATFORM_ENV          = "enterprise"
           BRANCH                = "master"
           SENDGRID_API_KEY      = "SG.xxx"
-          SENDGRID_FROM_ADDRESS = "not-a-real@email.com"
+          EMAIL_FROM_ADDRESS    = "not-a-real@email.com"
 
           ACCOUNT_PUBLIC_URL   = try(local.microservices.account.public_url, null)
           CERBERUS_PUBLIC_URL  = try(local.microservices.cerberus.public_url, null)
