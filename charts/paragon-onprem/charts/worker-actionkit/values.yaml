@@ -24,7 +24,7 @@ resources:
 
 autoscaling:
   enabled: true
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
@@ -83,6 +83,7 @@ envKeys:
   - FACEBOOK_CLIENT_SECRET
   - FEATURE_FLAG_HTTP_AGENT_METRICS
   - FEATURE_FLAG_INTEGRATION_AXIOS_METRICS
+  - FEATURE_FLAG_PLATFORM_ENDPOINT
   - FEATURE_FLAG_SWAGGER_STATS
   - FEATURE_FLAG_THROTTLING_POLICIES_ENABLED
   - GIT_SHA
@@ -142,6 +143,7 @@ envKeys:
   - NETSUITE_CLIENT_ID
   - NETSUITE_CLIENT_SECRET
   - NODE_ENV
+  - NOTIFIER_STRATEGY
   - OUTLOOK_CLIENT_ID
   - OUTLOOK_CLIENT_SECRET
   - OUTREACH_CLIENT_ID
@@ -193,7 +195,6 @@ envKeys:
   - WORKER_ACTIONKIT_PRIVATE_URL
   - WORKER_ACTIONKIT_PUBLIC_URL
   - WORKER_ACTIONS_ACCESS_TOKEN
-  - WORKER_ACTIONS_PARALLEL_PROCESSING_COUNT
   - WORKER_ACTIONS_PORT
   - WORKER_ACTIONS_PRIVATE_URL
   - WORKER_SHARED_AUTOSCALER_ECS_ACCESS_KEY_ID
@@ -254,7 +255,7 @@ podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/scheme: "http"
   prometheus.io/path: "/stats/metrics"
-  prometheus.io/port: "1712"
+  prometheus.io/port: "1721"
 
 podSecurityContext:
   {}

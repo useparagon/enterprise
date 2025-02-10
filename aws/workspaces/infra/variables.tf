@@ -136,7 +136,7 @@ variable "eks_max_node_count" {
 variable "eks_admin_arns" {
   description = "Array of ARNs for IAM users or roles that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 # security
