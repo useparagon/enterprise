@@ -23,7 +23,7 @@ resources:
 
 autoscaling:
   enabled: true
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 2
   targetCPUUtilizationPercentage: 40
   targetMemoryUtilizationPercentage: 40
@@ -66,6 +66,7 @@ envKeys:
   - FACEBOOK_CLIENT_SECRET
   - FEATURE_FLAG_HTTP_AGENT_METRICS
   - FEATURE_FLAG_INTEGRATION_AXIOS_METRICS
+  - FEATURE_FLAG_PLATFORM_ENDPOINT
   - FEATURE_FLAG_SWAGGER_STATS
   - GIT_SHA
   - GONG_CLIENT_ID
@@ -109,6 +110,7 @@ envKeys:
   - NETSUITE_CLIENT_ID
   - NETSUITE_CLIENT_SECRET
   - NODE_ENV
+  - NOTIFIER_STRATEGY
   - OAUTH_STATE_ENCRYPTION_KEY
   - ONBOARDING_POSTGRES_DATABASE
   - ONBOARDING_POSTGRES_HOST

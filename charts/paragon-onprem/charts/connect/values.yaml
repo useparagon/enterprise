@@ -33,7 +33,7 @@ resources:
 
 autoscaling:
   enabled: true
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 4
   targetCPUUtilizationPercentage: 40
   targetMemoryUtilizationPercentage: 40
@@ -59,6 +59,7 @@ envKeys:
   - EMBASSY_PUBLIC_URL
   - FEATURE_FLAG_HTTP_AGENT_METRICS
   - FEATURE_FLAG_INTEGRATION_AXIOS_METRICS
+  - FEATURE_FLAG_PLATFORM_ENDPOINT
   - FEATURE_FLAG_SWAGGER_STATS
   - GIT_SHA
   - HOST_ENV
@@ -74,6 +75,7 @@ envKeys:
   - MICROSERVICES_OPENTELEMETRY_SAMPLE_RATE
   - MINIO_PUBLIC_URL
   - NODE_ENV
+  - NOTIFIER_STRATEGY
   - PARAGON_DOMAIN
   - PASSPORT_PRODUCTION_URL
   - PASSPORT_PUBLIC_URL

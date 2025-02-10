@@ -23,7 +23,7 @@ resources:
 
 autoscaling:
   enabled: true
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 2
   targetCPUUtilizationPercentage: 40
   targetMemoryUtilizationPercentage: 40
@@ -57,6 +57,7 @@ envKeys:
   - EMBASSY_PUBLIC_URL
   - FEATURE_FLAG_HTTP_AGENT_METRICS
   - FEATURE_FLAG_INTEGRATION_AXIOS_METRICS
+  - FEATURE_FLAG_PLATFORM_ENDPOINT
   - FEATURE_FLAG_SWAGGER_STATS
   - FEATURE_FLAG_THROTTLING_POLICIES_ENABLED
   - GIT_SHA
@@ -92,6 +93,7 @@ envKeys:
   - MINIO_PUBLIC_URL
   - MINIO_SYSTEM_BUCKET
   - NODE_ENV
+  - NOTIFIER_STRATEGY
   - PHEME_ACCESS_TOKEN
   - PHEME_PORT
   - PHEME_POSTGRES_DATABASE
