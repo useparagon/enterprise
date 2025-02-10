@@ -1,7 +1,4 @@
 locals {
-
-  all_microservices = ["account", "cerberus", "connect", "dashboard", "hades", "hermes", "minio", "passport", "pheme", "release", "zeus", "worker-actionkit", "worker-actions", "worker-credentials", "worker-crons", "worker-deployments", "worker-proxy", "worker-triggers", "worker-workflows"]
-
   subchart_values = yamlencode({
     subchart = {
       for microservice in keys(var.microservices) : microservice => {
@@ -12,6 +9,14 @@ locals {
 
   microservice_values = yamlencode({
     for microservice_name, microservice_config in var.microservices : microservice_name => {
+      env = {
+        SERVICE = microservice_name
+      }
+    }
+  })
+
+  public_microservice_values = yamlencode({
+    for microservice_name, microservice_config in var.public_microservices : microservice_name => {
       ingress = {
         className = "nginx"
         host      = replace(replace(microservice_config.public_url, "https://", ""), "http://", "")
@@ -22,9 +27,6 @@ locals {
         scheme = var.ingress_scheme
       }
       tls_secret = "${microservice_name}-secret"
-      env = {
-        SERVICE = microservice_name
-      }
     }
   })
 
@@ -48,6 +50,19 @@ locals {
         scheme = var.ingress_scheme
       }
       tls_secret = "${monitor_name}-secret"
+    }
+  })
+
+  flipt_values = yamlencode({
+    flipt = {
+      flipt = {
+        extraEnvVars = [
+          for k, v in var.flipt_options : {
+            name  = k
+            value = v
+          }
+        ]
+      }
     }
   })
 
@@ -140,7 +155,9 @@ resource "helm_release" "paragon_on_prem" {
   values = [
     local.subchart_values,
     local.global_values,
+    local.flipt_values,
     local.microservice_values,
+    local.public_microservice_values,
     local.secret_hash
   ]
 

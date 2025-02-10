@@ -1,0 +1,10 @@
+apiVersion: v2
+appVersion: v1.54.2
+description: Flipt is an open-source, self-hosted feature flag solution.
+home: https://flipt.io
+maintainers:
+- name: Flipt
+  url: https://github.com/flipt-io/helm-charts
+name: flipt
+type: application
+version: 0.79.1

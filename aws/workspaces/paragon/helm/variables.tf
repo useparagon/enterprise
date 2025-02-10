@@ -56,6 +56,12 @@ variable "helm_values" {
   sensitive   = true
 }
 
+variable "flipt_options" {
+  description = "Map of flipt configuration variables"
+  type        = map(any)
+  sensitive   = true
+}
+
 variable "acm_certificate_arn" {
   description = "The ARN of domain certificate."
   type        = string
@@ -63,6 +69,15 @@ variable "acm_certificate_arn" {
 
 variable "microservices" {
   description = "The microservices running within the system."
+  type = map(object({
+    port             = number
+    healthcheck_path = string
+    public_url       = string
+  }))
+}
+
+variable "public_microservices" {
+  description = "The microservices running within the system exposed to the load balancer"
   type = map(object({
     port             = number
     healthcheck_path = string

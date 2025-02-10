@@ -202,6 +202,11 @@ locals {
       "port"             = try(local.helm_vars.global.env["DASHBOARD_PORT"], 1704)
       "public_url"       = try(local.helm_vars.global.env["DASHBOARD_PUBLIC_URL"], "https://dashboard.${var.domain}")
     }
+    "flipt" = {
+      "healthcheck_path" = "/health"
+      "port"             = try(local.helm_vars.global.env["FLIPT_PORT"], 1722)
+      "public_url"       = try(local.helm_vars.global.env["FLIPT_PUBLIC_URL"], null)
+    }
     "hades" = {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["HADES_PORT"], 1710)
@@ -285,6 +290,12 @@ locals {
     if !contains(var.excluded_microservices, microservice)
   }
 
+  public_microservices = {
+    for microservice, config in local.microservices :
+    microservice => config
+    if config.public_url != null && config.public_url != ""
+  }
+
   monitors = {
     "bull-exporter" = {
       "port"       = 9538
@@ -325,6 +336,8 @@ locals {
     monitor => config
     if lookup(config, "public_url", null) != null
   } : {}
+
+  public_services = merge(local.public_microservices, local.public_monitors)
 
   helm_keys_to_remove = [
     "POSTGRES_HOST",
@@ -462,7 +475,6 @@ locals {
             CERBERUS_PRIVATE_URL  = try("http://cerberus:${local.microservices.cerberus.port}", null)
             CONNECT_PRIVATE_URL   = try("http://connect:${local.microservices.connect.port}", null)
             DASHBOARD_PRIVATE_URL = try("http://dashboard:${local.microservices.dashboard.port}", null)
-            EMBASSY_PRIVATE_URL   = "http://embassy:1705"
             HADES_PRIVATE_URL     = try("http://hades:${local.microservices.hades.port}", null)
             HERMES_PRIVATE_URL    = try("http://hermes:${local.microservices.hermes.port}", null)
             MINIO_PRIVATE_URL     = try("http://minio:${local.microservices.minio.port}", null)
@@ -479,6 +491,8 @@ locals {
             WORKER_PROXY_PRIVATE_URL       = try("http://worker-proxy:${local.microservices["worker-proxy"].port}", null)
             WORKER_TRIGGERS_PRIVATE_URL    = try("http://worker-triggers:${local.microservices["worker-triggers"].port}", null)
             WORKER_WORKFLOWS_PRIVATE_URL   = try("http://worker-workflows:${local.microservices["worker-workflows"].port}", null)
+
+            FEATURE_FLAG_PLATFORM_ENDPOINT = "http://flipt:${local.microservices.flipt.port}"
 
             MONITOR_BULL_EXPORTER_HOST              = "http://bull-exporter"
             MONITOR_BULL_EXPORTER_PORT              = try(local.monitors["bull-exporter"].port, null)
@@ -513,4 +527,20 @@ locals {
   })
 
   monitor_version = var.monitor_version != null ? var.monitor_version : try(local.helm_values.global.env["VERSION"], "latest")
+
+  flipt_options = {
+    for key, value in merge(
+      # user overrides
+      local.helm_vars.global.env,
+      {
+        FLIPT_CACHE_ENABLED             = "true"
+        FLIPT_STORAGE_GIT_POLL_INTERVAL = "30s"
+        FLIPT_STORAGE_GIT_REF           = "main"
+        FLIPT_STORAGE_GIT_REPOSITORY    = "https://github.com/useparagon/feature-flags.git"
+        FLIPT_STORAGE_READ_ONLY         = "true"
+        FLIPT_STORAGE_TYPE              = "git"
+    }) :
+    key => value
+    if key != null && startswith(key, "FLIPT_") && value != null && value != ""
+  }
 }

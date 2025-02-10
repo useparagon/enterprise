@@ -13,8 +13,8 @@ variable "acm_certificate_arn" {
   type        = string
 }
 
-variable "microservices" {
-  description = "The microservices running within the system."
+variable "public_microservices" {
+  description = "The microservices running within the system exposed to the load balancer"
   type = map(object({
     port             = number
     healthcheck_path = string
