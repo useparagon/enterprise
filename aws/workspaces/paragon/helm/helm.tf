@@ -276,7 +276,6 @@ resource "helm_release" "paragon_logging" {
   timeout          = 900 # 15 minutes
 
   values = [
-    local.supported_microservices_values,
     local.global_values
   ]
 
@@ -328,7 +327,6 @@ resource "helm_release" "paragon_monitoring" {
   timeout          = 900 # 15 minutes
 
   values = [
-    local.supported_microservices_values,
     local.global_values
   ]
 
