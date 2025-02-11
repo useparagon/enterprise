@@ -330,7 +330,7 @@ locals {
   ]
 
   default_redis_cluster = try(
-    local.helm_vars.global.env["REDIS_CLSUTER"],
+    local.helm_vars.global.env["REDIS_CLUSTER"],
     local.infra_vars.redis.value.cache.cluster,
     "false"
   )
@@ -343,8 +343,8 @@ locals {
 
   default_redis_url = try(
     local.helm_vars.global.env["REDIS_URL"],
-    "redis://${local.helm_vars.global.env["REDIS_HOST"]}:${local.helm_vars.global.env["REDIS_PORT"]}",
-    "redis://${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}"
+    "${local.helm_vars.global.env["REDIS_HOST"]}:${local.helm_vars.global.env["REDIS_PORT"]}",
+    "${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}"
   )
 
   helm_values = merge(local.helm_vars, {
@@ -352,11 +352,11 @@ locals {
       env = merge(local.helm_vars.global.env, {
         for key, value in merge({
           // default values, can be overridden by `values.yaml -> global.env`
-          NODE_ENV              = "production"
-          PLATFORM_ENV          = "enterprise"
-          BRANCH                = "master"
-          SENDGRID_API_KEY      = "SG.xxx"
-          EMAIL_FROM_ADDRESS    = "not-a-real@email.com"
+          NODE_ENV           = "production"
+          PLATFORM_ENV       = "enterprise"
+          BRANCH             = "main"
+          SENDGRID_API_KEY   = "SG.xxx"
+          EMAIL_FROM_ADDRESS = "not-a-real@email.com"
 
           ACCOUNT_PUBLIC_URL   = try(local.microservices.account.public_url, null)
           CERBERUS_PUBLIC_URL  = try(local.microservices.cerberus.public_url, null)
@@ -425,16 +425,16 @@ locals {
 
             CACHE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.cache.cluster, local.default_redis_cluster)
             CACHE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.cache.ssl, local.default_redis_ssl)
-            CACHE_REDIS_URL                = try("redis://${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}", local.default_redis_url)
+            CACHE_REDIS_URL                = try("${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}", local.default_redis_url)
             QUEUE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.queue.cluster, local.default_redis_cluster)
             QUEUE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.queue.ssl, local.default_redis_ssl)
-            QUEUE_REDIS_URL                = try("redis://${local.infra_vars.redis.value.queue.host}:${local.infra_vars.redis.value.queue.port}", local.default_redis_url)
+            QUEUE_REDIS_URL                = try("${local.infra_vars.redis.value.queue.host}:${local.infra_vars.redis.value.queue.port}", local.default_redis_url)
             SYSTEM_REDIS_CLUSTER_ENABLED   = try(local.infra_vars.redis.value.system.cluster, local.default_redis_cluster)
             SYSTEM_REDIS_TLS_ENABLED       = try(local.infra_vars.redis.value.system.ssl, local.default_redis_ssl)
-            SYSTEM_REDIS_URL               = try("redis://${local.infra_vars.redis.value.system.host}:${local.infra_vars.redis.value.system.port}", local.default_redis_url)
+            SYSTEM_REDIS_URL               = try("${local.infra_vars.redis.value.system.host}:${local.infra_vars.redis.value.system.port}", local.default_redis_url)
             WORKFLOW_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.workflow.cluster, local.default_redis_cluster)
             WORKFLOW_REDIS_TLS_ENABLED     = try(local.infra_vars.redis.value.workflow.ssl, local.default_redis_ssl)
-            WORKFLOW_REDIS_URL             = try("redis://${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
+            WORKFLOW_REDIS_URL             = try("${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
 
             MINIO_BROWSER           = "off"
             MINIO_INSTANCE_COUNT    = "1"
