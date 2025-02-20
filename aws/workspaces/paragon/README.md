@@ -1,5 +1,7 @@
 # Paragon AWS Deployment
 
+See [setup-policy.json](../../setup-policy.json) for permissions that are required to execute this. Note that `<AWS_ACCOUNT_ID>` must be replaced to match target account.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

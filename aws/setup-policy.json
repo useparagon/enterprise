@@ -1,0 +1,162 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ServicePermissions",
+            "Effect": "Allow",
+            "Action": [
+                "acm:*",
+                "application-autoscaling:*",
+                "autoscaling:*",
+                "batch:*",
+                "cloudfront:*",
+                "cloudtrail:*",
+                "cloudwatch:*",
+                "config:*",
+                "dynamodb:*",
+                "ebs:*",
+                "ec2:*",
+                "eks:*",
+                "elasticache:*",
+                "elasticfilesystem:*",
+                "elasticloadbalancing:*",
+                "es:*",
+                "events:*",
+                "glacier:*",
+                "kms:*",
+                "logs:*",
+                "rds:*",
+                "resource-groups:*",
+                "route53:*",
+                "s3:*",
+                "secretsmanager:*",
+                "ses:*",
+                "shield:*",
+                "ssm:*",
+                "sts:*",
+                "tag:*",
+                "waf-regional:*",
+                "waf:*",
+                "wafv2:*"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalAccount": "<AWS_ACCOUNT_ID>"
+                }
+            }
+        },
+        {
+            "Sid": "PassAnyParagonRole",
+            "Effect": "Allow",
+            "Action": [
+                "iam:PassRole"
+            ],
+            "Resource": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/*paragon*"
+        },
+        {
+            "Sid": "IAMPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "iam:AddClientIDToOpenIDConnectProvider",
+                "iam:AddRoleToInstanceProfile",
+                "iam:AddUserToGroup",
+                "iam:AttachGroupPolicy",
+                "iam:AttachRolePolicy",
+                "iam:AttachUserPolicy",
+                "iam:ChangePassword",
+                "iam:CreateAccessKey",
+                "iam:CreateAccountAlias",
+                "iam:CreateGroup",
+                "iam:CreateInstanceProfile",
+                "iam:CreateLoginProfile",
+                "iam:CreateOpenIDConnectProvider",
+                "iam:CreatePolicy",
+                "iam:CreatePolicyVersion",
+                "iam:CreateRole",
+                "iam:CreateServiceSpecificCredential",
+                "iam:CreateUser",
+                "iam:DeleteAccessKey",
+                "iam:DeleteAccountAlias",
+                "iam:DeleteGroup",
+                "iam:DeleteGroupPolicy",
+                "iam:DeleteInstanceProfile",
+                "iam:DeleteLoginProfile",
+                "iam:DeleteOpenIDConnectProvider",
+                "iam:DeletePolicy",
+                "iam:DeletePolicyVersion",
+                "iam:DeleteRole",
+                "iam:DeleteRolePermissionsBoundary",
+                "iam:DeleteRolePolicy",
+                "iam:DeleteServiceLinkedRole",
+                "iam:DeleteServiceSpecificCredential",
+                "iam:DeleteUser",
+                "iam:DeleteUserPermissionsBoundary",
+                "iam:DeleteUserPolicy",
+                "iam:DetachGroupPolicy",
+                "iam:DetachRolePolicy",
+                "iam:DetachUserPolicy",
+                "iam:Get*",
+                "iam:List*",
+                "iam:PutGroupPolicy",
+                "iam:PutRolePermissionsBoundary",
+                "iam:PutRolePolicy",
+                "iam:PutUserPermissionsBoundary",
+                "iam:PutUserPolicy",
+                "iam:RemoveClientIDFromOpenIDConnectProvider",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:RemoveUserFromGroup",
+                "iam:ResetServiceSpecificCredential",
+                "iam:SetDefaultPolicyVersion",
+                "iam:Tag*",
+                "iam:Untag*",
+                "iam:UpdateAccessKey",
+                "iam:UpdateAssumeRolePolicy",
+                "iam:UpdateGroup",
+                "iam:UpdateLoginProfile",
+                "iam:UpdateOpenIDConnectProviderThumbprint",
+                "iam:UpdateRole",
+                "iam:UpdateRoleDescription",
+                "iam:UpdateServiceSpecificCredential",
+                "iam:UpdateUser"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "ServiceLinkedRolePermissions",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateServiceLinkedRole"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "iam:AWSServiceName": [
+                        "autoscaling.amazonaws.com",
+                        "batch.amazonaws.com",
+                        "config.amazonaws.com",
+                        "dynamodb.application-autoscaling.amazonaws.com",
+                        "ebs.amazonaws.com",
+                        "ec2scheduled.amazonaws.com",
+                        "eks-fargate.amazonaws.com",
+                        "eks-nodegroup.amazonaws.com",
+                        "eks.amazonaws.com",
+                        "elasticache.amazonaws.com",
+                        "elasticache.application-autoscaling.amazonaws.com",
+                        "elasticloadbalancing.amazonaws.com",
+                        "es.amazonaws.com",
+                        "glacier.amazonaws.com",
+                        "kms.amazonaws.com",
+                        "logs.amazonaws.com",
+                        "rds.amazonaws.com",
+                        "resource-groups.amazonaws.com",
+                        "shield.amazonaws.com",
+                        "ssm.amazonaws.com",
+                        "transitgateway.amazonaws.com"
+                    ],
+                    "aws:PrincipalAccount": "<AWS_ACCOUNT_ID>"
+                }
+            }
+        }
+    ]
+}
