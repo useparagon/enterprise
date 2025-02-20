@@ -138,9 +138,16 @@ locals {
     http_put_response_hop_limit = 2
   }
 
+  # when using an assumed role the role itself must be used instead of the current identity arn
+  # so convert identity arn (e.g. arn:aws:sts::123456789:assumed-role/ParagonAssumedRole/SessionName)
+  # to role arn (e.g. arn:aws:iam::123456789:role/ParagonAssumedRole)
+  is_assumed_role    = can(regex("assumed-role", data.aws_caller_identity.current.arn))
+  assumed_role_parts = split("/", replace(replace(data.aws_caller_identity.current.arn, ":sts:", ":iam:"), ":assumed-role/", ":role/"))
+  caller_arn         = local.is_assumed_role ? format("%s/%s", local.assumed_role_parts[0], local.assumed_role_parts[1]) : data.aws_caller_identity.current.arn
+
   # include current user as EKS admin
   eks_admin_arns = distinct(compact(concat(
     var.eks_admin_arns,
-    [data.aws_caller_identity.current.arn]
+    [local.caller_arn]
   )))
 }

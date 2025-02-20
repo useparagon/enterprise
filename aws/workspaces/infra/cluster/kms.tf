@@ -1,7 +1,7 @@
 locals {
   key_administrators = distinct(compact(concat(
     coalesce(var.eks_admin_arns, []),
-    [var.kms_admin_role != null ? var.kms_admin_role : data.aws_caller_identity.current.arn]
+    [var.kms_admin_role != null ? var.kms_admin_role : local.caller_arn]
   )))
 }
 
