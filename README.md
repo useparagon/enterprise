@@ -41,7 +41,8 @@ There are a few prerequisites that are required to be able to fully deploy Parag
 
 - a Paragon license key
 - a domain name that the Paragon microservices can be reached at (e.g. `paragon.example.com`)
-- a [SendGrid account](https://sendgrid.com/) to send emails
+- access to add DNS records for the domain name above
+- an SMTP provider such as [SendGrid](https://sendgrid.com/)
 - a [Docker account](https://www.docker.com/) that has been given read access to our private repositories
 - admin credentials for your Cloud Service Provider for provisioning resources
 
@@ -90,4 +91,79 @@ terraform plan
 terraform apply
 ```
 
-# TODO include values.yaml instructions
+## Direct Helm Deployment
+
+It is highly recommended that all deployments use our Terraform scripts to provision the infrastructure and deploy the Helm charts. Since the infrastructure requirements and configuration may change without warning between releases it could be difficult to reconcile those changes with your installation if not using our Terraform. However if you must deploy the charts to an existing Kubernetes cluster without using Terraform then here are some useful tips.
+
+### Prerequisites
+
+Ensure the following infrastructure components are in place:
+
+- A Kubernetes cluster (AWS EKS, Azure AKS or GCP GKE)
+- Postgres database
+- Redis cluster
+- Domain name for accessing Paragon microservices (e.g., `paragon.example.com`)
+- SMTP provider (e.g. SendGrid)
+- Docker account with read access to Paragon's private repositories
+
+### Environment Variables
+
+Each chart has its own environment variables defined in the `envKeys` section of the `values.yaml` file. Documenting all possible variables, values and their relevance is beyond the scope of this document. However the defaults for each can be found in the Terraform `variables.tf` for the corresponding provider [aws](./aws/workspaces/paragon/variables.tf), [azure](./azure/workspaces/paragon/variables.tf) or [gcp](./gcp/workspaces/paragon/variables.tf).
+
+While the charts define the `envKeys` on the pod they default to expecting the values to be in a Kubernetes secret using:
+
+```
+secretName: "paragon-secrets"
+```
+
+#### Required Variables
+
+Because Paragon is highly customizable for various workloads the variables that are required can differ by deployment. Some that are required and can be set to fixed installation specific values are:
+
+- `BRANCH` = "main"
+- `HOST_ENV` = \<cloud provider: "AWS_K8", "AZURE_K8" or "GCP_K8">
+- `LICENSE` = \<your paragon license key>
+- `NODE_ENV` = "production"
+- `ORGANIZATION` = \<your company name>
+- `PARAGON_DOMAIN` = \<your paragon domain>
+- `PLATFORM_ENV` = "enterprise"
+
+#### Variable Conventions
+
+Most of the environment variables that are required are for locating the infrastructure resources defined above or the other microservices.
+
+Each PostgreSQL database requires variables that follow this format:
+- `<service>_POSTGRES_DATABASE`
+- `<service>_POSTGRES_HOST`
+- `<service>_POSTGRES_PORT`
+- `<service>_POSTGRES_PASSWORD`
+- `<service>_POSTGRES_USERNAME`
+
+Each Redis cluster requires variables that follow this format:
+- `<service>_REDIS_URL`
+- `<service>_REDIS_CLUSTER_ENABLED`
+- `<service>_REDIS_TLS_ENABLED`
+
+Each Paragon microservice requires variables that follow this format:
+- `<service>_PORT`
+- `<service>_PRIVATE_URL`
+- `<service>_PUBLIC_URL`
+
+### Helm Deployment
+
+1. **Add the Paragon Helm repository**:
+
+    ```bash
+    helm repo add paragon ./charts
+    helm repo update
+    ```
+
+2. **Create a `values.yaml` file**:
+
+    Create a `values.yaml` file with the necessary configurations defined above or otherwise required by the charts.
+
+3. **Deploy the Helm charts**:
+
+    ```bash
+    helm install paragon paragon/paragon -f values.yaml
+    ```
