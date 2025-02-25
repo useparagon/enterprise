@@ -50,7 +50,7 @@ resource "aws_s3_bucket_versioning" "cdn" {
 
 resource "aws_s3_bucket_acl" "cdn" {
   bucket = aws_s3_bucket.cdn.id
-  acl    = "private"
+  acl    = "public-read"
 
   depends_on = [
     aws_s3_bucket_ownership_controls.cdn
@@ -58,28 +58,34 @@ resource "aws_s3_bucket_acl" "cdn" {
 }
 
 resource "aws_s3_bucket_public_access_block" "cdn" {
-  bucket = aws_s3_bucket.cdn.bucket
+  bucket = aws_s3_bucket.cdn.id
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
-# data "aws_iam_policy_document" "cdn" {
-#   statement {
-#     sid       = "AllowAnonymousReads"
-#     actions   = ["s3:GetObjectVersion", "s3:GetObject"]
-#     effect    = "Allow"
-#     resources = ["${aws_s3_bucket.cdn.arn}/*"]
-#     principals {
-#       type        = "*"
-#       identifiers = ["*"]
-#     }
-#   }
-# }
+resource "aws_s3_bucket_policy" "cdn" {
+  bucket = aws_s3_bucket.cdn.id
 
-# resource "aws_s3_bucket_policy" "cdn" {
-#   bucket = aws_s3_bucket.cdn.id
-#   policy = data.aws_iam_policy_document.cdn.json
-# }
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "AllowAnonymousReads",
+        "Effect" : "Allow",
+        "Principal" : "*",
+        "Action" : [
+          "s3:GetObjectVersion",
+          "s3:GetObject"
+        ],
+        "Resource" : "arn:aws:s3:::${aws_s3_bucket.cdn.id}/*"
+      }
+    ]
+  })
+
+  depends_on = [
+    aws_s3_bucket_public_access_block.cdn
+  ]
+}
