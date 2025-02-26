@@ -447,15 +447,23 @@ locals {
             MINIO_ROOT_USER         = local.infra_vars.minio.value.root_user
             MINIO_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
 
-            CLOUD_STORAGE_MICROSERVICE_PASS = local.infra_vars.minio.value.microservice_pass
-            CLOUD_STORAGE_MICROSERVICE_USER = local.infra_vars.minio.value.microservice_user
+            CLOUD_STORAGE_MICROSERVICE_PASS = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "AZURE") == "AZURE" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
+            CLOUD_STORAGE_MICROSERVICE_USER = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "AZURE") == "AZURE" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
             CLOUD_STORAGE_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
             CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
-            CLOUD_STORAGE_TYPE              = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "MINIO")
+            CLOUD_STORAGE_TYPE              = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "AZURE")
 
-            # TODO update with non-minio urls once supported
-            CLOUD_STORAGE_PUBLIC_URL  = coalesce(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null), try(local.microservices.minio.public_url, null), null)
-            CLOUD_STORAGE_PRIVATE_URL = try("http://minio:${local.microservices.minio.port}", null)
+            CLOUD_STORAGE_PUBLIC_URL = coalesce(
+              try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+              try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "AZURE") == "AZURE" ? "https://${local.infra_vars.minio.value.root_user}.blob.core.windows.net" : null,
+              try(local.microservices.minio.public_url, null), null
+            )
+            # TODO: In the future, we should use a private link to access the storage account so traffic stays within the VPC. This affects costs and performance.
+            CLOUD_STORAGE_PRIVATE_URL = coalesce(
+              try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+              try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "AZURE") == "AZURE" ? "https://${local.infra_vars.minio.value.root_user}.blob.core.windows.net" : null,
+              try(local.microservices.minio.public_url, null), null
+            )
 
             ACCOUNT_PORT   = try(local.microservices.account.port, null)
             CERBERUS_PORT  = try(local.microservices.cerberus.port, null)
