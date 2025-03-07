@@ -1,3 +1,9 @@
+variable "enabled" {
+  description = "Enable DNS module"
+  type        = bool
+  default     = true
+}
+
 variable "cloudflare_api_token" {
   description = "Cloudflare API token created at https://dash.cloudflare.com/profile/api-tokens. Requires Edit permissions on Zone `DNS`"
   type        = string
@@ -17,12 +23,4 @@ variable "domain" {
 variable "ingress_loadbalancer" {
   description = "The Ingress Load Balancer for our Microservices"
   type        = string
-}
-
-variable "public_services" {
-  description = "The services exposed to the public internet."
-  type = map(object({
-    port       = number
-    public_url = string
-  }))
 }

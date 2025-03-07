@@ -6,6 +6,7 @@ module "helm" {
   docker_password        = var.docker_password
   docker_registry_server = var.docker_registry_server
   docker_username        = var.docker_username
+  domain                 = var.domain
   flipt_options          = local.flipt_options
   helm_values            = local.helm_values
   ingress_scheme         = var.ingress_scheme
@@ -19,6 +20,7 @@ module "helm" {
   openobserve_password   = var.openobserve_password
   public_microservices   = local.public_microservices
   public_monitors        = local.public_monitors
+  public_services        = local.public_services
   region                 = var.region
   workspace              = local.workspace
 }
@@ -45,9 +47,9 @@ module "uptime" {
 module "dns" {
   source = "./dns"
 
+  enabled              = local.dns_enabled
   cloudflare_api_token = var.cloudflare_api_token
   cloudflare_zone_id   = var.cloudflare_zone_id
   domain               = var.domain
   ingress_loadbalancer = module.helm.load_balancer
-  public_services      = local.public_services
 }

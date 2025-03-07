@@ -3,9 +3,9 @@ output "nameservers" {
   value       = aws_route53_zone.paragon.name_servers
 }
 
-output "acm_certificate_arn" {
+output "certificate" {
   description = "The ARN of the ACM certificate."
-  value       = var.acm_certificate_arn == null ? module.acm_request_certificate[0].arn : var.acm_certificate_arn
+  value       = var.certificate == null ? module.acm_request_certificate[0].arn : var.certificate
 }
 
 output "alb_arn" {

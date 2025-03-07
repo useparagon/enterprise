@@ -15,14 +15,14 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/group.name: "{{ .Values.ingress.load_balancer_name | default "paragon" }}"
     alb.ingress.kubernetes.io/load-balancer-name: {{ .Values.ingress.load_balancer_name | default "paragon" }}
-    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.healthcheck_path | default "/api/health" }}
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.healthcheck_path | default "/healthz" }}
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
     alb.ingress.kubernetes.io/success-codes: '200'
     alb.ingress.kubernetes.io/healthy-threshold-count: '3'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.acm_certificate_arn }}
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificate }}
     alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
     {{- if hasKey .Values.ingress "ip_whitelist" }}
     alb.ingress.kubernetes.io/inbound-cidrs: {{ .Values.ingress.ip_whitelist }}
@@ -33,15 +33,18 @@ metadata:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
     {{- end }}
-    service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: {{ .Values.ingress.healthcheck_path | default "/api/health" }}
+    service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: {{ .Values.ingress.healthcheck_path | default "/healthz" }}
     service.beta.kubernetes.io/azure-load-balancer-type: "public"
   {{- else if eq .Values.global.env.HOST_ENV "GCP_K8" }}
   annotations:
     {{- if .Values.ingress.include_annotations }}
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: {{ .Values.ingress.className | default "gce" }}
+    kubernetes.io/ingress.global-static-ip-name: {{ .Values.ingress.loadBalancerName }}
+    ingress.gcp.kubernetes.io/pre-shared-cert: {{ .Values.ingress.certificate }}
+    kubernetes.io/ingress.allow-http: "true"
+    networking.gke.io/v1beta1.FrontendConfig: {{ .Values.ingress.frontendConfig }}
     {{- end }}
-    ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.healthcheck_path | default "/api/health" }}
+    ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.healthcheck_path | default "/healthz" }}
   {{ end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
@@ -51,10 +54,7 @@ spec:
         - {{ .Values.ingress.host }}
       secretName: {{ .Values.tls_secret }}
   {{- else if eq .Values.global.env.HOST_ENV "GCP_K8" }}
-  tls:
-    - hosts:
-        - {{ .Values.ingress.host }}
-      secretName: {{ .Values.tls_secret }}
+  loadBalancerIP: {{ .Values.ingress.loadBalancerIP }}
   {{- end }}
   rules:
     - host: {{ .Values.ingress.host }}

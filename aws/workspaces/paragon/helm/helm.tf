@@ -229,8 +229,8 @@ resource "helm_release" "paragon_on_prem" {
     for_each = var.public_microservices
 
     content {
-      name  = "${set.key}.ingress.acm_certificate_arn"
-      value = var.acm_certificate_arn
+      name  = "${set.key}.ingress.certificate"
+      value = var.certificate
     }
   }
 
@@ -374,8 +374,8 @@ resource "helm_release" "paragon_monitoring" {
     for_each = var.public_monitors
 
     content {
-      name  = "${set.key}.ingress.acm_certificate_arn"
-      value = var.acm_certificate_arn
+      name  = "${set.key}.ingress.certificate"
+      value = var.certificate
     }
   }
 
