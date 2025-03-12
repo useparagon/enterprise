@@ -29,7 +29,7 @@ variable "domain" {
   type        = string
 }
 
-variable "acm_certificate_arn" {
+variable "certificate" {
   description = "Optional ACM certificate ARN of an existing certificate to use with the load balancer."
   type        = string
   default     = null

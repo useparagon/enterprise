@@ -1,13 +1,14 @@
 module "gke" {
   source  = "terraform-google-modules/kubernetes-engine/google"
-  version = "35.0.1"
+  version = "36.0.2"
 
   name = "${var.workspace}-cluster"
 
   create_service_account     = true
+  default_max_pods_per_node  = 20
   filestore_csi_driver       = false
   horizontal_pod_autoscaling = true
-  http_load_balancing        = false
+  http_load_balancing        = true
   ip_range_pods              = "ip-pods-secondary-range"
   ip_range_services          = "ip-services-secondary-range"
   kubernetes_version         = var.k8s_version
@@ -15,13 +16,14 @@ module "gke" {
   network_policy             = false
   project_id                 = var.gcp_project_id
   region                     = var.region
+  remove_default_node_pool   = true
   subnetwork                 = var.private_subnet.name
   zones                      = [var.region_zone, var.region_zone_backup]
 
   node_pools = flatten([
     var.k8s_spot_instance_percent < 100 ? [
       {
-        name                 = "default-node-pool"
+        name                 = "ondemand-node-pool"
         auto_repair          = true
         auto_upgrade         = true
         disk_size_gb         = 100
@@ -74,7 +76,7 @@ module "gke" {
 
   node_pools_labels = {
     all = {}
-    default-node-pool = {
+    ondemand-node-pool = {
       "useparagon.com/capacityType" = "ondemand"
     }
     spot-node-pool = {
@@ -89,9 +91,9 @@ module "gke" {
   node_pools_taints = {
     all = []
 
-    default-node-pool = [
+    ondemand-node-pool = [
       {
-        key    = "default-node-pool"
+        key    = "ondemand-node-pool"
         value  = true
         effect = "PREFER_NO_SCHEDULE"
       },

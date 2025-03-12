@@ -1,129 +1,96 @@
-resource "kubernetes_secret" "microservices" {
-  for_each = var.microservices
+locals {
+  unique_domains = distinct([
+    for service in values(var.public_services) :
+    replace(replace(service.public_url, "https://", ""), "http://", "")
+  ])
+}
 
-  metadata {
-    name      = "${each.key}-secret"
-    namespace = kubernetes_namespace.paragon.id
-  }
+resource "google_compute_managed_ssl_certificate" "cert" {
+  name = "${var.workspace}-certificate"
 
-  lifecycle {
-    ignore_changes = [
-      metadata[0].annotations,
-      metadata[0].labels
-    ]
+  managed {
+    domains = local.unique_domains
   }
 }
 
-resource "helm_release" "cert_manager" {
-  name       = "cert-manager"
-  namespace  = kubernetes_namespace.paragon.id
-  chart      = "cert-manager"
-  repository = "https://charts.jetstack.io"
+resource "google_compute_global_address" "loadbalancer" {
+  name = "${var.workspace}-loadbalancer"
+}
 
-  force_update     = false
-  create_namespace = false
+resource "google_compute_region_url_map" "frontend_config" {
+  name     = "${var.workspace}-frontend-config"
+  region   = var.region
+  provider = google-beta
 
-  set {
-    name  = "installCRDs"
-    value = true
+  default_url_redirect {
+    redirect_response_code = "MOVED_PERMANENTLY_DEFAULT"
+    https_redirect         = true
+    strip_query            = false
   }
 }
 
-# ingress controller
-resource "google_compute_address" "loadbalancer" {
-  name = "${var.workspace}-ingress"
+resource "kubectl_manifest" "frontend_config" {
+  yaml_body = yamlencode({
+    apiVersion = "networking.gke.io/v1beta1"
+    kind       = "FrontendConfig"
+    metadata = {
+      name      = google_compute_region_url_map.frontend_config.name
+      namespace = kubernetes_namespace.paragon.id
+    }
+    spec = {
+      redirect_to_https = {
+        enabled = true
+      }
+    }
+  })
 }
 
-resource "helm_release" "ingress" {
-  name       = "ingress-nginx"
-  namespace  = kubernetes_namespace.paragon.id
-  repository = "https://kubernetes.github.io/ingress-nginx"
-  chart      = "ingress-nginx"
-  version    = "4.12.0"
-
-  set {
-    name  = "service.type"
-    value = "ClusterIP"
-  }
-
-  set {
-    name  = "controller.replicaCount"
-    value = "2"
-  }
-
-  set {
-    name  = "controller.service.type"
-    value = "LoadBalancer"
-  }
-
-  set {
-    name  = "controller.service.loadBalancerIP"
-    value = google_compute_address.loadbalancer.address
-  }
-
-  set {
-    name  = "rbac.create"
-    value = true
-  }
-
-  set {
-    name  = "podSecurityPolicy.enabled"
-    value = true
-  }
-
-  set {
-    name  = "controller.publishService.enabled"
-    value = true
-  }
-
-  set {
-    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/azure-load-balancer-health-probe-request-path"
-    value = "/healthz"
-  }
-
-  set {
-    name  = "controller.config.proxy-buffers-number"
-    value = "8"
-  }
-
-  set {
-    name  = "controller.config.proxy-buffer-size"
-    value = "16k"
-  }
+# single ingress for all services to reduce the number of load balancers which
+# keeps costs down and reduces the number of public IPs required in GCP quotas
+resource "kubectl_manifest" "ingress" {
+  yaml_body = yamlencode({
+    apiVersion = "networking.k8s.io/v1"
+    kind       = "Ingress"
+    metadata = {
+      name      = "shared-ingress"
+      namespace = kubernetes_namespace.paragon.id
+      annotations = {
+        "kubernetes.io/ingress.allow-http"            = "true"
+        "kubernetes.io/ingress.class"                 = var.ingress_scheme == "internal" ? "gce-internal" : "gce"
+        "kubernetes.io/ingress.global-static-ip-name" = google_compute_global_address.loadbalancer.name
+        "networking.gke.io/v1beta1.FrontendConfig"    = google_compute_region_url_map.frontend_config.name
+        "ingress.gcp.kubernetes.io/pre-shared-cert"   = google_compute_managed_ssl_certificate.cert.name
+        "ingress.kubernetes.io/healthcheck-path"      = "/healthz"
+      }
+    }
+    spec = {
+      ingressClassName = var.ingress_scheme == "internal" ? "gce-internal" : "gce"
+      loadBalancerIP   = google_compute_global_address.loadbalancer.address
+      rules = [
+        for name, svc in var.public_services : {
+          host = replace(svc.public_url, "https://", "")
+          http = {
+            paths = [{
+              path     = "/"
+              pathType = "Prefix"
+              backend = {
+                service = {
+                  name = name
+                  port = {
+                    number = svc.port
+                  }
+                }
+              }
+            }]
+          }
+        }
+      ]
+    }
+  })
 
   depends_on = [
-    helm_release.cert_manager,
-    kubernetes_secret.microservices,
-  ]
-}
-
-resource "time_sleep" "wait" {
-  create_duration = "60s"
-
-  depends_on = [helm_release.ingress]
-}
-
-resource "kubectl_manifest" "certificate_issuer" {
-  yaml_body = <<YAML
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-  namespace: ${kubernetes_namespace.paragon.id}
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: enterprise@useparagon.com
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
-YAML
-
-  depends_on = [
-    helm_release.cert_manager,
-    time_sleep.wait
+    helm_release.paragon_on_prem,
+    helm_release.paragon_monitoring,
+    helm_release.paragon_logging
   ]
 }

@@ -1,4 +1,6 @@
 locals {
+  namespace = "paragon"
+
   subchart_values = yamlencode({
     subchart = {
       for microservice in keys(var.microservices) : microservice => {
@@ -18,15 +20,19 @@ locals {
   public_microservice_values = yamlencode({
     for microservice_name, microservice_config in var.public_microservices : microservice_name => {
       ingress = {
-        className = "nginx"
-        host      = replace(replace(microservice_config.public_url, "https://", ""), "http://", "")
-        annotations = {
-          "kubernetes.io/ingress.class"    = "nginx"
-          "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
-        }
-        scheme = var.ingress_scheme
+        enabled = false
+        # values below would only be needed if per service load balancers are desired
+        # certificate      = google_compute_managed_ssl_certificate.cert.name
+        # className        = var.ingress_scheme == "internal" ? "gce-internal" : "gce"
+        # host             = replace(microservice_config.public_url, "https://", "")
+        # frontendConfig   = google_compute_region_url_map.frontend_config.name
+        # loadBalancerIP   = google_compute_global_address.loadbalancer.address
+        # loadBalancerName = google_compute_global_address.loadbalancer.name
+        # scheme           = var.ingress_scheme
       }
-      tls_secret = "${microservice_name}-secret"
+      service = {
+        type = "NodePort"
+      }
     }
   })
 
@@ -41,15 +47,19 @@ locals {
   public_monitor_values = yamlencode({
     for monitor_name, monitor_config in var.public_monitors : monitor_name => {
       ingress = {
-        className = "nginx"
-        host      = replace(replace(monitor_config.public_url, "https://", ""), "http://", "")
-        annotations = {
-          "kubernetes.io/ingress.class"    = "nginx"
-          "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
-        }
-        scheme = var.ingress_scheme
+        enabled = false
+        # values below would only be needed if per service load balancers are desired
+        # certificate      = google_compute_managed_ssl_certificate.cert.name
+        # className        = var.ingress_scheme == "internal" ? "gce-internal" : "gce"
+        # host             = replace(replace(monitor_config.public_url, "https://", ""), "http://", "")
+        # frontendConfig   = google_compute_region_url_map.frontend_config.name
+        # loadBalancerIP   = google_compute_global_address.loadbalancer.address
+        # loadBalancerName = google_compute_global_address.loadbalancer.name
+        # scheme           = var.ingress_scheme
       }
-      tls_secret = "${monitor_name}-secret"
+      service = {
+        type = "NodePort"
+      }
     }
   })
 
@@ -162,10 +172,8 @@ resource "helm_release" "paragon_on_prem" {
   ]
 
   depends_on = [
-    helm_release.ingress,
     kubernetes_secret.docker_login,
-    kubernetes_secret.paragon_secrets,
-    kubernetes_secret.microservices
+    kubernetes_secret.paragon_secrets
   ]
 }
 
@@ -207,9 +215,8 @@ resource "helm_release" "paragon_logging" {
   }
 
   depends_on = [
-    helm_release.ingress,
     kubernetes_secret.docker_login,
-    kubernetes_secret.microservices
+    kubernetes_secret.paragon_secrets
   ]
 }
 
@@ -245,9 +252,8 @@ resource "helm_release" "paragon_monitoring" {
   }
 
   depends_on = [
-    helm_release.ingress,
     helm_release.paragon_on_prem,
     kubernetes_secret.docker_login,
-    kubernetes_secret.microservices
+    kubernetes_secret.paragon_secrets
   ]
 }

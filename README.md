@@ -80,6 +80,79 @@ After the infrastructure has been provisioned the output will be used as input t
 terraform output -json > ../paragon/.secure/infra-output.json
 ```
 
+This will produce an `infra-output.json` file that will generally follow the schema below. If the `infra` workspace is not being used to provision the infrastructure then a comparable JSON file will have to be created to be consumed by the `paragon` workspace. e.g.
+
+```json
+{
+  "cluster_name": {
+    "value": "<kubernetes-cluster-name>"
+  },
+  "logs_container": {
+    "value": "<logs-bucket-name>"
+  },
+  "minio": {
+    "value": {
+      "microservice_pass": "<service-password>",
+      "microservice_user": "<service-username>",
+      "private_bucket": "<private-bucket-name>",
+      "public_bucket": "<private-bucket-name>",
+      "root_password": "<iam-password>",
+      "root_user": "<iam-username>"
+    }
+  },
+  "postgres": {
+    "value": {
+      "cerberus": {
+        "database": "cerberus",
+        "host": "<host-endpoint-or-ip>",
+        "password": "<password>",
+        "port": "5432",
+        "user": "<password>"
+      },
+      "hermes": {
+        "database": "hermes",
+        "host": "<host-endpoint-or-ip>",
+        "password": "<password>",
+        "port": "5432",
+        "user": "<password>"
+      },
+      "zeus": {
+        "database": "zeus",
+        "host": "<host-endpoint-or-ip>",
+        "password": "<password>",
+        "port": "5432",
+        "user": "<password>"
+      }
+    }
+  },
+  "redis": {
+    "value": {
+      "cache": {
+        "cluster": true,
+        "host": "<host-endpoint-or-ip>",
+        "port": 6379,
+        "ssl": false
+      },
+      "queue": {
+        "cluster": false,
+        "host": "<host-endpoint-or-ip>",
+        "port": 6379,
+        "ssl": false
+      },
+      "system": {
+        "cluster": false,
+        "host": "<host-endpoint-or-ip>",
+        "port": 6379,
+        "ssl": false
+      }
+    }
+  },
+  "workspace": {
+    "value": "<resource-naming-prefix>"
+  }
+}
+```
+
 ### Paragon Deployment
 
 Once the infrastructure has been setup then standard Terraform commands can be used within the `<provider>/workspace/paragon` directory to provision the necessary resources. See the `paragon` README for your cloud provider more details and any required variables.
@@ -161,6 +234,12 @@ Each Paragon microservice requires variables that follow this format:
 2. **Create a `values.yaml` file**:
 
     Create a `values.yaml` file with the necessary configurations defined above or otherwise required by the charts.
+
+    The `paragon` Terraform workspace can be used to produce most of the `values.yaml` file even if not being used to apply it. This command will output the global yaml values.
+
+    ```bash
+    echo "yamlencode(yamldecode(nonsensitive(jsonencode(local.helm_values))))" | terraform console
+    ```
 
 3. **Deploy the Helm charts**:
 

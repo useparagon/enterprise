@@ -118,9 +118,9 @@ variable "excluded_microservices" {
 }
 
 variable "ingress_scheme" {
-  description = "Whether the load balancer is 'internet-facing' (public) or 'internal' (private)"
+  description = "Whether the load balancer is 'external' (public) or 'internal' (private)"
   type        = string
-  default     = "internet-facing"
+  default     = "external"
 }
 
 variable "k8s_version" {
@@ -217,6 +217,8 @@ locals {
     organization = var.organization
     creator      = "terraform"
   }
+
+  dns_enabled = var.ingress_scheme != "internal" && var.cloudflare_api_token != null && var.cloudflare_zone_id != null
 
   infra_json_path = abspath(var.infra_json_path)
   infra_vars      = jsondecode(fileexists(local.infra_json_path) && var.infra_json == null ? file(local.infra_json_path) : var.infra_json)
