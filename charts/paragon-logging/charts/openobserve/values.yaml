@@ -30,7 +30,7 @@ credsJson: ""
 
 ingress:
   enabled: false
-  # acm_certificate_arn: 'arn:aws:acm:<region>:<account>:certificate/<uuid>'
+  # certificate: 'arn:aws:acm:<region>:<account>:certificate/<uuid>'
   # className: ''
   # host: openobserve.<domain>.paragon.so
   # healthcheck_path: /healthz

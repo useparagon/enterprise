@@ -62,7 +62,7 @@ variable "flipt_options" {
   sensitive   = true
 }
 
-variable "acm_certificate_arn" {
+variable "certificate" {
   description = "The ARN of domain certificate."
   type        = string
 }

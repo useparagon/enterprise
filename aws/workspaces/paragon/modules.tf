@@ -1,7 +1,7 @@
 module "alb" {
   source = "./alb"
 
-  acm_certificate_arn      = var.acm_certificate_arn
+  certificate              = var.certificate
   cloudflare_dns_api_token = var.cloudflare_dns_api_token
   cloudflare_zone_id       = var.cloudflare_zone_id
   dns_provider             = var.dns_provider
@@ -16,7 +16,7 @@ module "alb" {
 module "helm" {
   source = "./helm"
 
-  acm_certificate_arn    = module.alb.acm_certificate_arn
+  certificate            = module.alb.certificate
   aws_region             = var.aws_region
   cluster_name           = local.cluster_name
   docker_email           = var.docker_email

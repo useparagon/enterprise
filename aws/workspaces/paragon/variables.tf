@@ -29,7 +29,7 @@ variable "domain" {
   type        = string
 }
 
-variable "acm_certificate_arn" {
+variable "certificate" {
   description = "Optional ACM certificate ARN of an existing certificate to use with the load balancer."
   type        = string
   default     = null
@@ -467,6 +467,24 @@ locals {
             MINIO_ROOT_PASSWORD     = local.infra_vars.minio.value.root_password
             MINIO_ROOT_USER         = local.infra_vars.minio.value.root_user
             MINIO_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
+
+            CLOUD_STORAGE_MICROSERVICE_PASS = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3") == "S3" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
+            CLOUD_STORAGE_MICROSERVICE_USER = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3") == "S3" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
+            CLOUD_STORAGE_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
+            CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
+            CLOUD_STORAGE_TYPE              = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3")
+
+            CLOUD_STORAGE_PUBLIC_URL = coalesce(
+              try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+              try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3") == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+              try(local.microservices.minio.public_url, null), null
+            )
+            # TODO: In the future, we should use a private link to access the storage account so traffic stays within the VPC. This affects costs and performance.
+            CLOUD_STORAGE_PRIVATE_URL = coalesce(
+              try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+              try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3") == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+              try(local.microservices.minio.public_url, null), null
+            )
 
             ACCOUNT_PORT   = try(local.microservices.account.port, null)
             CERBERUS_PORT  = try(local.microservices.cerberus.port, null)

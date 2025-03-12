@@ -42,6 +42,7 @@ envKeys:
   - ARMORCLAD_USERNAME
   - ASANA_CLIENT_ID
   - ASANA_CLIENT_SECRET
+  - AWS_REGION
   - AZURE_DEVOPS_CLIENT_ID
   - AZURE_DEVOPS_CLIENT_SECRET
   - BAMBOO_HR_APPLICATION_KEY
@@ -267,12 +268,8 @@ securityContext:
   # runAsNonRoot: true
   # runAsUser: 1000
 
-# service:
-#   type: ClusterIP
-#   port: 80
-
 ingress:
-  acm_certificate_arn: ''
+  certificate: ''
   enabled: true
   className: ''
   host: chart-example.local

@@ -1,5 +1,5 @@
 output "load_balancer" {
-  value = google_compute_address.loadbalancer.address
+  value = google_compute_global_address.loadbalancer.address
 }
 
 output "openobserve_email" {

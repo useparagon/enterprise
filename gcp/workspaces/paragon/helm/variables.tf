@@ -33,6 +33,11 @@ variable "docker_email" {
   type        = string
 }
 
+variable "domain" {
+  description = "The domain used for the application. Used to generate an SSL certificate and associates CNAMEs."
+  type        = string
+}
+
 variable "openobserve_email" {
   description = "OpenObserve admin login email."
   type        = string
@@ -106,8 +111,16 @@ variable "public_monitors" {
   }))
 }
 
+variable "public_services" {
+  description = "The services exposed to the public internet."
+  type = map(object({
+    port       = number
+    public_url = string
+  }))
+}
+
 variable "ingress_scheme" {
-  description = "Whether the load balancer is 'internet-facing' (public) or 'internal' (private)"
+  description = "Whether the load balancer is 'external' (public) or 'internal' (private)"
   type        = string
 }
 
