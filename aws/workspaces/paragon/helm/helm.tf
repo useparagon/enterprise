@@ -404,6 +404,11 @@ resource "helm_release" "paragon_monitoring" {
     value = var.k8s_version
   }
 
+  set {
+    name  = "global.env.MONITOR_GRAFANA_ALB_ARN"
+    value = data.aws_lb.load_balancer.arn_suffix
+  }
+
   depends_on = [
     helm_release.ingress,
     helm_release.paragon_on_prem,
