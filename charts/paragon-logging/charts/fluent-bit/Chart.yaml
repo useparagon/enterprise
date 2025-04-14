@@ -3,4 +3,4 @@ name: fluent-bit
 description: Fast and lightweight log processor and forwarder or Linux, OSX and BSD
 type: application
 version: __PARAGON_VERSION__
-appVersion: 3.0.7
+appVersion: 3.2.10

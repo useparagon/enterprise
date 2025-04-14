@@ -25,8 +25,8 @@ autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 10
-  targetCPUUtilizationPercentage: 70
-  targetMemoryUtilizationPercentage: 70
+  targetCPUUtilizationPercentage: 40
+  targetMemoryUtilizationPercentage: 40
 
 secretName: "paragon-secrets"
 

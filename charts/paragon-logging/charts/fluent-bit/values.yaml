@@ -7,12 +7,10 @@ kind: DaemonSet
 replicaCount: 1
 
 image:
-  repository: cr.fluentbit.io/fluent/fluent-bit
-  # Overrides the image tag whose default is {{ .Chart.AppVersion }}
-  # Set to "-" to not use the default value
-  tag:
-  digest:
+  repository: fluent/fluent-bit
   pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: '3.2.10'
 
 testFramework:
   enabled: false
@@ -198,13 +196,13 @@ readinessProbe:
     path: /api/v1/health
     port: http
 
-resources: {}
-#   limits:
-#     cpu: 100m
-#     memory: 128Mi
-#   requests:
-#     cpu: 100m
-#     memory: 128Mi
+resources:
+  limits:
+    cpu: 0.5
+    memory: 256Mi
+  requests:
+    cpu: 0.1
+    memory: 64Mi
 
 ## only available if kind is Deployment
 ingress:
@@ -304,7 +302,7 @@ minReadySeconds:
 ##
 terminationGracePeriodSeconds:
 
-priorityClassName: ""
+priorityClassName: "system-node-critical"
 
 envKeys:
   - ZO_ROOT_USER_EMAIL
@@ -393,6 +391,8 @@ config:
         Tag kube.*
         Mem_Buf_Limit 20MB
         Skip_Long_Lines On
+        Buffer_Chunk_Size 64KB
+        Buffer_Max_Size 64KB
 
     [INPUT]
         Name systemd
@@ -409,6 +409,7 @@ config:
         Keep_Log Off
         K8S-Logging.Parser On
         K8S-Logging.Exclude On
+        Buffer_Size 512KB
 
     [FILTER]
         Name    grep
@@ -416,6 +417,11 @@ config:
         Logical_Op or
         Exclude $kubernetes['labels']['app.kubernetes.io/name'] fluent-bit
         Exclude $kubernetes['labels']['app.kubernetes.io/name'] openobserve
+
+    [FILTER]
+        Name modify
+        Match kube.*
+        Remove req_query_*
 
   ## https://docs.fluentbit.io/manual/pipeline/outputs
   outputs: |
