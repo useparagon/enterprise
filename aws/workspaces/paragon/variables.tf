@@ -187,6 +187,11 @@ locals {
       "port"             = try(local.helm_vars.global.env["ACCOUNT_PORT"], 1708)
       "public_url"       = try(local.helm_vars.global.env["ACCOUNT_PUBLIC_URL"], "https://account.${var.domain}")
     }
+    "cache-replay" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["CACHE_REPLAY_PORT"], 1724)
+      "public_url"       = try(local.helm_vars.global.env["CACHE_REPLAY_PUBLIC_URL"], "https://cache-replay.${var.domain}")
+    }
     "cerberus" = {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["CERBERUS_PORT"], 1700)
@@ -487,6 +492,7 @@ locals {
             )
 
             ACCOUNT_PORT   = try(local.microservices.account.port, null)
+            CACHE_REPLAY_PORT   = try(local.microservices["cache-replay"].port, null)
             CERBERUS_PORT  = try(local.microservices.cerberus.port, null)
             CONNECT_PORT   = try(local.microservices.connect.port, null)
             DASHBOARD_PORT = try(local.microservices.dashboard.port, null)
@@ -508,6 +514,7 @@ locals {
             WORKER_WORKFLOWS_PORT   = try(local.microservices["worker-workflows"].port, null)
 
             ACCOUNT_PRIVATE_URL   = try("http://account:${local.microservices.account.port}", null)
+            CACHE_REPLAY_PRIVATE_URL   = try("http://cache-replay:${local.microservices["cache-replay"].port}", null)
             CERBERUS_PRIVATE_URL  = try("http://cerberus:${local.microservices.cerberus.port}", null)
             CONNECT_PRIVATE_URL   = try("http://connect:${local.microservices.connect.port}", null)
             DASHBOARD_PRIVATE_URL = try("http://dashboard:${local.microservices.dashboard.port}", null)

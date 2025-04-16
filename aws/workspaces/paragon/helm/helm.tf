@@ -33,6 +33,8 @@ locals {
 subchart:
   account:
     enabled: ${contains(keys(var.microservices), "account")}
+  cache-replay:
+    enabled: ${contains(keys(var.microservices), "cache-replay")}
   cerberus:
     enabled: ${contains(keys(var.microservices), "cerberus")}
   connect:
