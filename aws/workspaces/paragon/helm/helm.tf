@@ -18,11 +18,14 @@ locals {
       global = merge(
         nonsensitive(var.helm_values.global),
         {
-          env = {
-            HOST_ENV    = "AWS_K8"
-            k8s_version = var.k8s_version
-            secretName  = "paragon-secrets"
-          },
+          env = merge(
+            nonsensitive(var.helm_values.global.env),
+            {
+              HOST_ENV    = "AWS_K8"
+              k8s_version = var.k8s_version
+              secretName  = "paragon-secrets"
+            }
+          ),
           paragon_version = var.helm_values.global.env["VERSION"]
         }
       )
@@ -33,6 +36,8 @@ locals {
 subchart:
   account:
     enabled: ${contains(keys(var.microservices), "account")}
+  cache-replay:
+    enabled: ${contains(keys(var.microservices), "cache-replay")}
   cerberus:
     enabled: ${contains(keys(var.microservices), "cerberus")}
   connect:
@@ -72,6 +77,11 @@ subchart:
   worker-workflows:
     enabled: ${contains(keys(var.microservices), "worker-workflows")}
 EOF
+
+  # changes to secrets should trigger redeploy
+  secret_hash = yamlencode({
+    secret_hash = sha256(jsonencode(nonsensitive(var.helm_values)))
+  })
 }
 
 # creates the `paragon` namespace
@@ -192,7 +202,8 @@ resource "helm_release" "paragon_on_prem" {
   values = [
     local.supported_microservices_values,
     local.flipt_values,
-    local.global_values
+    local.global_values,
+    local.secret_hash
   ]
 
   dynamic "set" {
@@ -285,7 +296,7 @@ resource "helm_release" "paragon_logging" {
   }
 
   set {
-    name  = "global.env.ZO_S3_BUCKET_NAME"
+    name  = "global.secrets.ZO_S3_BUCKET_NAME"
     value = var.logs_bucket
   }
 
@@ -295,12 +306,12 @@ resource "helm_release" "paragon_logging" {
   }
 
   set {
-    name  = "global.env.ZO_ROOT_USER_EMAIL"
+    name  = "global.secrets.ZO_ROOT_USER_EMAIL"
     value = local.openobserve_email
   }
 
   set_sensitive {
-    name  = "global.env.ZO_ROOT_USER_PASSWORD"
+    name  = "global.secrets.ZO_ROOT_USER_PASSWORD"
     value = local.openobserve_password
   }
 
@@ -327,17 +338,9 @@ resource "helm_release" "paragon_monitoring" {
   timeout          = 900 # 15 minutes
 
   values = [
-    local.global_values
+    local.global_values,
+    local.secret_hash
   ]
-
-  # used to load environment variables into microservices
-  dynamic "set_sensitive" {
-    for_each = nonsensitive(merge(var.helm_values.global.env))
-    content {
-      name  = "global.env.${set_sensitive.key}"
-      value = set_sensitive.value
-    }
-  }
 
   # set image tag to pull
   dynamic "set" {

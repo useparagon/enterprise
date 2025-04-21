@@ -304,7 +304,7 @@ terminationGracePeriodSeconds:
 
 priorityClassName: "system-node-critical"
 
-envKeys:
+secretKeys:
   - ZO_ROOT_USER_EMAIL
   - ZO_ROOT_USER_PASSWORD
 
@@ -434,8 +434,8 @@ config:
         Retry_Limit False
         Path /api/default
         Suppress_Type_Name On
-        HTTP_User {{ .Values.global.env.ZO_ROOT_USER_EMAIL }}
-        HTTP_Passwd {{ .Values.global.env.ZO_ROOT_USER_PASSWORD }}
+        HTTP_User {{ .Values.global.secrets.ZO_ROOT_USER_EMAIL }}
+        HTTP_Passwd {{ .Values.global.secrets.ZO_ROOT_USER_PASSWORD }}
 
   ## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/upstream-servers
   ## This configuration is deprecated, please use `extraFiles` instead.

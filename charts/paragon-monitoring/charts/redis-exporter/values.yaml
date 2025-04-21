@@ -93,5 +93,9 @@ affinity:
           values:
           - spot
 
+secretName: "paragon-secrets"
+
+secretKeys: {}
+
 envKeys:
  - MONITOR_REDIS_EXPORTER_PORT
