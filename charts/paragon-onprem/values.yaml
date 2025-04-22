@@ -1,6 +1,8 @@
 subchart:
   account:
     enabled: true
+  cache-replay:
+    enabled: true
   cerberus:
     enabled: true
   connect:

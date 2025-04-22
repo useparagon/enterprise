@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 2
+replicaCount: 0
 
 image:
   repository: useparagon/cache-replay
@@ -23,9 +23,9 @@ resources:
     memory: 2048Mi
 
 autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 10
+  enabled: false
+  minReplicas: 0
+  maxReplicas: 0
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
