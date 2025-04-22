@@ -71,23 +71,32 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
-            {{- $globalEnv := .Values.global.env -}}
-            {{- $overrideEnv := .Values.env -}}
+            {{- /* Handle environment variables */}}
+            {{- if and .Values.envKeys (kindIs "slice" .Values.envKeys) }}
             {{- range $key := .Values.envKeys }}
+            {{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
             - name: {{ $key }}
-              {{- if $.Values.secretName }}
+              value: {{ index $.Values.env $key | quote }}
+            {{- else if and $.Values.global.env (kindIs "map" $.Values.global.env) (hasKey $.Values.global.env $key) }}
+            - name: {{ $key }}
+              value: {{ index $.Values.global.env $key | quote }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- /* Handle secrets */}}
+            {{- if and .Values.secretKeys (kindIs "slice" .Values.secretKeys) }}
+            {{- range $key := .Values.secretKeys }}
+            - name: {{ $key }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Values.secretName }}
+                  name: {{- if and $.Values.secrets (kindIs "map" $.Values.secrets) (hasKey $.Values.secrets $key) }}
+                         {{ $.Values.secretName }}-{{ $.Chart.Name }}
+                       {{- else }}
+                         {{ $.Values.secretName }}
+                       {{- end }}
                   key: {{ $key }}
                   optional: true
-              {{- else if hasKey $overrideEnv $key }}
-              value: {{ get $overrideEnv $key | quote }}
-              {{- else if hasKey $globalEnv $key }}
-              value: {{ get $globalEnv $key | quote }}
-              {{- else }}
-              value: ""
-              {{- end }}
+            {{- end }}
             {{- end }}
           volumeMounts:
             - name: minio
