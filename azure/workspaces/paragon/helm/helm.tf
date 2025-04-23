@@ -62,6 +62,25 @@ locals {
             value = v
           }
         ]
+        persistence = var.feature_flags_content != null ? {
+          enabled = true
+        } : {}
+        extraVolumes = var.feature_flags_content != null ? [
+          {
+            name = "feature-flags-content"
+            configMap = {
+              name = kubernetes_config_map.feature_flag_content[0].metadata[0].name
+            }
+          }
+        ] : []
+        extraVolumeMounts = var.feature_flags_content != null ? [
+          {
+            name      = "feature-flags-content"
+            mountPath = "/var/opt/flipt/production/features.yml"
+            subPath   = "features.yml"
+            readOnly  = true
+          }
+        ] : []
       }
     }
   })
@@ -97,6 +116,19 @@ resource "kubernetes_namespace" "paragon" {
     annotations = {
       name = "paragon"
     }
+  }
+}
+
+resource "kubernetes_config_map" "feature_flag_content" {
+  count = var.feature_flags_content != null ? 1 : 0
+
+  metadata {
+    name      = "feature-flags-content"
+    namespace = kubernetes_namespace.paragon.id
+  }
+
+  data = {
+    "features.yml" = var.feature_flags_content
   }
 }
 
@@ -165,7 +197,8 @@ resource "helm_release" "paragon_on_prem" {
     helm_release.ingress,
     kubernetes_secret.docker_login,
     kubernetes_secret.paragon_secrets,
-    kubernetes_secret.microservices
+    kubernetes_secret.microservices,
+    kubernetes_config_map.feature_flag_content
   ]
 }
 
