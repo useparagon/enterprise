@@ -10,6 +10,10 @@ dependencies:
     repository: file://charts/account
     version: __PARAGON_VERSION__
     condition: subchart.account.enabled
+  - name: cache-replay
+    repository: file://charts/cache-replay
+    version: __PARAGON_VERSION__
+    condition: subchart.cache-replay.enabled
   - name: cerberus
     repository: file://charts/cerberus
     version: __PARAGON_VERSION__
