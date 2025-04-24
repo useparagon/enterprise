@@ -118,7 +118,7 @@ variable "excluded_microservices" {
 }
 
 variable "feature_flags" {
-  description = "Optional base64 encoded feature flags YAML content."
+  description = "Optional path to feature flags YAML file."
   type        = string
   default     = null
 }
@@ -617,7 +617,7 @@ locals {
 
   monitor_version = var.monitor_version != null ? var.monitor_version : try(local.helm_values.global.env["VERSION"], "latest")
 
-  feature_flags_content = var.feature_flags != null ? base64decode(var.feature_flags) : null
+  feature_flags_content = var.feature_flags != null ? file(var.feature_flags) : null
 
   flipt_options = {
     for key, value in merge(
