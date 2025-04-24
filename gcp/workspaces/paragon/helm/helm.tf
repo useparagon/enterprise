@@ -82,11 +82,14 @@ locals {
       global = merge(
         nonsensitive(var.helm_values.global),
         {
-          env = {
-            HOST_ENV    = "GCP_K8"
-            k8s_version = var.k8s_version
-            secretName  = "paragon-secrets"
-          },
+          env = merge(
+            nonsensitive(var.helm_values.global.env),
+            {
+              HOST_ENV    = "GCP_K8"
+              k8s_version = var.k8s_version
+              secretName  = "paragon-secrets"
+            }
+          ),
           paragon_version = var.helm_values.global.env["VERSION"]
         }
       )
@@ -95,7 +98,7 @@ locals {
 
   # changes to secrets should trigger redeploy
   secret_hash = yamlencode({
-    secret_hash = sha256(jsonencode(nonsensitive(var.helm_values.global.env)))
+    secret_hash = sha256(jsonencode(nonsensitive(var.helm_values)))
   })
 }
 
@@ -200,17 +203,17 @@ resource "helm_release" "paragon_logging" {
   }
 
   set {
-    name  = "global.env.ZO_S3_BUCKET_NAME"
+    name  = "global.secrets.ZO_S3_BUCKET_NAME"
     value = var.logs_bucket
   }
 
   set {
-    name  = "global.env.ZO_ROOT_USER_EMAIL"
+    name  = "global.secrets.ZO_ROOT_USER_EMAIL"
     value = local.openobserve_email
   }
 
   set_sensitive {
-    name  = "global.env.ZO_ROOT_USER_PASSWORD"
+    name  = "global.secrets.ZO_ROOT_USER_PASSWORD"
     value = local.openobserve_password
   }
 
@@ -241,15 +244,6 @@ resource "helm_release" "paragon_monitoring" {
     local.public_monitor_values,
     local.secret_hash
   ]
-
-  # used to load environment variables into microservices
-  dynamic "set_sensitive" {
-    for_each = nonsensitive(merge(var.helm_values.global.env))
-    content {
-      name  = "global.env.${set_sensitive.key}"
-      value = set_sensitive.value
-    }
-  }
 
   depends_on = [
     helm_release.paragon_on_prem,
