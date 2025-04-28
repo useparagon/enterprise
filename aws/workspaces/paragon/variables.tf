@@ -181,6 +181,8 @@ locals {
   helm_yaml_path = abspath(var.helm_yaml_path)
   helm_vars      = yamldecode(fileexists(local.helm_yaml_path) && var.helm_yaml == null ? file(local.helm_yaml_path) : var.helm_yaml)
 
+  cloud_storage_type = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3")
+
   all_microservices = {
     "account" = {
       "healthcheck_path" = "/healthz"
@@ -287,7 +289,7 @@ locals {
   microservices = {
     for microservice, config in local.all_microservices :
     microservice => config
-    if !contains(var.excluded_microservices, microservice)
+    if !contains(var.excluded_microservices, microservice) && !(microservice == "minio" && local.cloud_storage_type == "S3")
   }
 
   public_microservices = {
@@ -492,20 +494,20 @@ locals {
         WORKFLOW_REDIS_URL             = try("${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
 
         # Cloud Storage configurations
-        CLOUD_STORAGE_MICROSERVICE_PASS = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3") == "S3" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
-        CLOUD_STORAGE_MICROSERVICE_USER = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3") == "S3" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
+        CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
+        CLOUD_STORAGE_MICROSERVICE_USER = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
         CLOUD_STORAGE_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
         CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
-        CLOUD_STORAGE_TYPE              = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3")
+        CLOUD_STORAGE_TYPE              = local.cloud_storage_type
 
         CLOUD_STORAGE_PUBLIC_URL = coalesce(
           try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
-          try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3") == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+          local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
           try(local.microservices.minio.public_url, null), null
         )
         CLOUD_STORAGE_PRIVATE_URL = coalesce(
           try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
-          try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3") == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+          local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
           try(local.microservices.minio.public_url, null), null
         )
 
