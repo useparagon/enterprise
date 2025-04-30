@@ -188,7 +188,6 @@ podAnnotations:
   prometheus.io/path: "/stats/metrics"
   prometheus.io/port: "1710"
 
-
 podSecurityContext:
   {}
   # fsGroup: 2000
