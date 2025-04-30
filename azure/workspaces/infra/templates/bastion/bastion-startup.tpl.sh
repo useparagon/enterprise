@@ -8,6 +8,10 @@ function writeLog() {
 writeLog "paragon setup starting as $(whoami) from $0"
 sudo mkdir -p /etc/apt/keyrings
 
+# enable timestamps in shell history
+export HISTTIMEFORMAT="%F %T "
+echo 'export HISTTIMEFORMAT="%F %T "' >> /home/ubuntu/.bashrc
+
 # unattended support
 export DEBIAN_FRONTEND=noninteractive
 sudo systemctl stop unattended-upgrades
@@ -120,9 +124,30 @@ else
     writeLog "skipped cloudflare tunnel"
 fi
 
+# Create and configure aliases file
+writeLog "configuring aliases for ubuntu"
+cat > /home/ubuntu/.bash_aliases << 'EOF'
+# Kubernetes aliases
+alias k=kubectl
+alias kg="kubectl get"
+alias kd="kubectl describe"
+alias kl="kubectl logs"
+alias kx="kubectl exec -it"
+alias ksec="kubectl get secret -n paragon paragon-secrets -o jsonpath='{.data}' | jq -r 'to_entries[] | \"\(.key): \(.value | @base64d)\"' | sort"
+alias kw="watch kubectl get pods"
+alias kwf="watch -- 'kubectl get pods | grep -v fluent'"
+
+# Common aliases
+alias ll="ls -hal"
+alias hi="history | grep"
+EOF
+
+# Ensure proper permissions
+chown ubuntu:ubuntu /home/ubuntu/.bash_aliases
+chmod 644 /home/ubuntu/.bash_aliases
+
 # configure az, aks and kubectl
 writeLog "configuring k8s tools as ubuntu"
-echo "alias k=kubectl" > /home/ubuntu/.bash_aliases && chown ubuntu:ubuntu /home/ubuntu/.bash_aliases
 sudo -u ubuntu az login --service-principal -u ${client_id} -p ${client_secret} --tenant ${tenant_id}
 sudo -u ubuntu az account set --subscription ${subscription_id}
 sudo -u ubuntu az aks get-credentials --overwrite-existing --resource-group ${resource_group} --name ${cluster_name}
