@@ -6,6 +6,7 @@ module "helm" {
   docker_password        = var.docker_password
   docker_registry_server = var.docker_registry_server
   docker_username        = var.docker_username
+  feature_flags_content  = local.feature_flags_content
   flipt_options          = local.flipt_options
   helm_values            = local.helm_values
   ingress_scheme         = var.ingress_scheme

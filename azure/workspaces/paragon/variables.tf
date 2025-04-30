@@ -73,6 +73,12 @@ variable "excluded_microservices" {
   default     = []
 }
 
+variable "feature_flags" {
+  description = "Optional path to feature flags YAML file."
+  type        = string
+  default     = null
+}
+
 variable "ingress_scheme" {
   description = "Whether the load balancer is 'internet-facing' (public) or 'internal' (private)"
   type        = string
@@ -168,6 +174,11 @@ locals {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["ACCOUNT_PORT"], 1708)
       "public_url"       = try(local.helm_vars.global.env["ACCOUNT_PUBLIC_URL"], "https://account.${var.domain}")
+    }
+    "cache-replay" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["CACHE_REPLAY_PORT"], 1724)
+      "public_url"       = try(local.helm_vars.global.env["CACHE_REPLAY_PUBLIC_URL"], "https://cache-replay.${var.domain}")
     }
     "cerberus" = {
       "healthcheck_path" = "/healthz"
@@ -363,6 +374,7 @@ locals {
 
         # Service ports
         ACCOUNT_PORT            = try(local.microservices.account.port, null)
+        CACHE_REPLAY_PORT       = try(local.microservices["cache-replay"].port, null)
         CERBERUS_PORT           = try(local.microservices.cerberus.port, null)
         CONNECT_PORT            = try(local.microservices.connect.port, null)
         DASHBOARD_PORT          = try(local.microservices.dashboard.port, null)
@@ -384,6 +396,7 @@ locals {
 
         # Service Private URLs
         ACCOUNT_PRIVATE_URL            = try("http://account:${local.microservices.account.port}", null)
+        CACHE_REPLAY_PRIVATE_URL       = try("http://cache-replay:${local.microservices["cache-replay"].port}", null)
         CERBERUS_PRIVATE_URL           = try("http://cerberus:${local.microservices.cerberus.port}", null)
         CONNECT_PRIVATE_URL            = try("http://connect:${local.microservices.connect.port}", null)
         DASHBOARD_PRIVATE_URL          = try("http://dashboard:${local.microservices.dashboard.port}", null)
@@ -539,17 +552,22 @@ locals {
 
   monitor_version = var.monitor_version != null ? var.monitor_version : try(local.helm_values.global.env["VERSION"], "latest")
 
+  feature_flags_content = var.feature_flags != null ? file(var.feature_flags) : null
+
   flipt_options = {
     for key, value in merge(
       # user overrides
       local.helm_vars.global.env,
       {
         FLIPT_CACHE_ENABLED             = "true"
+        FLIPT_LOG_GRPC_LEVEL            = "warn"
+        FLIPT_LOG_LEVEL                 = "warn"
         FLIPT_STORAGE_GIT_POLL_INTERVAL = "30s"
         FLIPT_STORAGE_GIT_REF           = "main"
-        FLIPT_STORAGE_GIT_REPOSITORY    = "https://github.com/useparagon/feature-flags.git"
+        FLIPT_STORAGE_GIT_REPOSITORY    = local.feature_flags_content != null ? null : "https://github.com/useparagon/feature-flags.git"
+        FLIPT_STORAGE_LOCAL_PATH        = local.feature_flags_content != null ? "/var/opt/flipt" : null
         FLIPT_STORAGE_READ_ONLY         = "true"
-        FLIPT_STORAGE_TYPE              = "git"
+        FLIPT_STORAGE_TYPE              = local.feature_flags_content != null ? "local" : "git"
     }) :
     key => value
     if key != null && startswith(key, "FLIPT_") && value != null && value != ""
