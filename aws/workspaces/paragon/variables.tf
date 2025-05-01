@@ -466,6 +466,7 @@ locals {
         ADMIN_BASIC_AUTH_PASSWORD = local.helm_vars.global.env["LICENSE"]
 
         # Feature flags
+        FEATURE_FLAG_PLATFORM_ENABLED  = "true"
         FEATURE_FLAG_PLATFORM_ENDPOINT = "http://flipt:${local.microservices.flipt.port}"
 
         # Database configurations

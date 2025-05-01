@@ -53,8 +53,9 @@ resource "helm_release" "cert_manager" {
 
 # ingress controller
 resource "azurerm_public_ip" "ingress" {
-  name = "AKS-Ingress-Controller"
+  count = var.ingress_scheme == "internal" ? 0 : 1
 
+  name                = "AKS-Ingress-Controller"
   allocation_method   = "Static"
   domain_name_label   = var.workspace
   location            = var.resource_group.location
@@ -84,9 +85,20 @@ resource "helm_release" "ingress" {
     value = "LoadBalancer"
   }
 
-  set {
-    name  = "controller.service.loadBalancerIP"
-    value = azurerm_public_ip.ingress.ip_address
+  dynamic "set" {
+    for_each = var.ingress_scheme == "internal" ? [] : [1]
+    content {
+      name  = "controller.service.loadBalancerIP"
+      value = azurerm_public_ip.ingress[0].ip_address
+    }
+  }
+
+  dynamic "set" {
+    for_each = var.ingress_scheme == "internal" ? [1] : []
+    content {
+      name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/azure-load-balancer-internal"
+      value = "true"
+    }
   }
 
   set {

@@ -1,5 +1,5 @@
 output "load_balancer" {
-  value = azurerm_public_ip.ingress.fqdn
+  value = var.ingress_scheme == "internal" ? "" : azurerm_public_ip.ingress[0].fqdn
 }
 
 output "openobserve_email" {
