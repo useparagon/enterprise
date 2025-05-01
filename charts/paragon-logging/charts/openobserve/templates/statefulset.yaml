@@ -8,7 +8,7 @@ metadata:
     {{- include "openobserve.labels" . | nindent 4 }}
 spec:
   serviceName: {{ include "openobserve.fullname" . }}
-  replicas: 1
+  replicas: {{ .Values.replicaCount | default 1 }}
   selector:
     matchLabels:
       {{- include "openobserve.selectorLabels" . | nindent 6 }}

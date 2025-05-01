@@ -143,6 +143,7 @@ envKeys:
   - EMBASSY_PUBLIC_URL
   - FEATURE_FLAG_HTTP_AGENT_METRICS
   - FEATURE_FLAG_INTEGRATION_AXIOS_METRICS
+  - FEATURE_FLAG_PLATFORM_ENABLED
   - FEATURE_FLAG_PLATFORM_ENDPOINT
   - FEATURE_FLAG_SWAGGER_STATS
   - GIT_SHA
@@ -232,6 +233,5 @@ affinity:
           operator: In
           values:
           - spot
-
 
 tls_secret: ''
