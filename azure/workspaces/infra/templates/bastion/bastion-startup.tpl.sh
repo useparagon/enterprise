@@ -148,7 +148,7 @@ kls() {
 }
 
 # Common aliases
-alias ll="ls -hal"
+alias ll="ls -Ahl"
 alias hi="history | grep"
 EOF
 
