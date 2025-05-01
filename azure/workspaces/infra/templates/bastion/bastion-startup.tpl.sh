@@ -137,6 +137,16 @@ alias ksec="kubectl get secret -n paragon paragon-secrets -o jsonpath='{.data}' 
 alias kw="watch kubectl get pods"
 alias kwf="watch -- 'kubectl get pods | grep -v fluent'"
 
+kls() {
+  local name=$1
+  if [ -z "$name" ]; then
+    echo "Usage: kls <service-name>"
+    return 1
+  fi
+  shift
+  kubectl logs -n paragon -l app.kubernetes.io/name="$name" --all-containers=true --prefix=true "$@"
+}
+
 # Common aliases
 alias ll="ls -hal"
 alias hi="history | grep"
