@@ -42,3 +42,6 @@ main.tf
 
 # only keep the top level charts
 **/paragon/charts
+
+# ignore IDE files
+.idea

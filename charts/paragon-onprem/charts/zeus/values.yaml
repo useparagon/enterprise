@@ -19,7 +19,7 @@ resources:
     cpu: 0.5
     memory: 1024Mi
   requests:
-    cpu: 0.25
+    cpu: 0.5
     memory: 1024Mi
 
 autoscaling:
