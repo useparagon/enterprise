@@ -568,7 +568,7 @@ locals {
         MONITOR_REDIS_INSIGHT_PORT              = try(local.monitors["redis-insight"].port, null)
         }, {
         for key, value in local.helm_vars.global.env :
-        key => value if value != null && !contains(local.helm_keys_to_remove, key)
+        key => value if value != null && !contains(local.helm_keys_to_remove, key) && !startswith(key, "FLIPT_")
       })
     })
   })
@@ -579,8 +579,6 @@ locals {
 
   flipt_options = {
     for key, value in merge(
-      # user overrides
-      local.helm_vars.global.env,
       {
         FLIPT_CACHE_ENABLED             = "true"
         FLIPT_LOG_GRPC_LEVEL            = "warn"
@@ -591,7 +589,10 @@ locals {
         FLIPT_STORAGE_LOCAL_PATH        = local.feature_flags_content != null ? "/var/opt/flipt" : null
         FLIPT_STORAGE_READ_ONLY         = "true"
         FLIPT_STORAGE_TYPE              = local.feature_flags_content != null ? "local" : "git"
-    }) :
+      },
+      # user overrides
+      local.helm_vars.global.env
+    ) :
     key => value
     if key != null && startswith(key, "FLIPT_") && value != null && value != ""
   }
