@@ -8,6 +8,12 @@ Account endpoint URL.
 {{- printf "http://%s-account" .Release.Name -}}
 {{- end -}}
 {{/*
+cache-replay endpoint URL.
+*/}}
+{{- define "global.cache-replay.url" -}}
+{{- printf "http://%s-cache-replay" .Release.Name -}}
+{{- end -}}
+{{/*
 Cerberus endpoint URL.
 */}}
 {{- define "global.cerberus.url" -}}

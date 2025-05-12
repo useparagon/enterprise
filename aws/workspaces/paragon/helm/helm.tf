@@ -10,6 +10,25 @@ locals {
         ]
       }
     }
+    persistence = var.feature_flags_content != null ? {
+      enabled = true
+    } : {}
+    extraVolumes = var.feature_flags_content != null ? [
+      {
+        name = "feature-flags-content"
+        configMap = {
+          name = kubernetes_config_map.feature_flag_content[0].metadata[0].name
+        }
+      }
+    ] : []
+    extraVolumeMounts = var.feature_flags_content != null ? [
+      {
+        name      = "feature-flags-content"
+        mountPath = "/var/opt/flipt/production/features.yml"
+        subPath   = "features.yml"
+        readOnly  = true
+      }
+    ] : []
   })
 
   global_values = yamlencode(merge(
@@ -18,11 +37,14 @@ locals {
       global = merge(
         nonsensitive(var.helm_values.global),
         {
-          env = {
-            HOST_ENV    = "AWS_K8"
-            k8s_version = var.k8s_version
-            secretName  = "paragon-secrets"
-          },
+          env = merge(
+            nonsensitive(var.helm_values.global.env),
+            {
+              HOST_ENV    = "AWS_K8"
+              k8s_version = var.k8s_version
+              secretName  = "paragon-secrets"
+            }
+          ),
           paragon_version = var.helm_values.global.env["VERSION"]
         }
       )
@@ -33,6 +55,8 @@ locals {
 subchart:
   account:
     enabled: ${contains(keys(var.microservices), "account")}
+  cache-replay:
+    enabled: ${contains(keys(var.microservices), "cache-replay")}
   cerberus:
     enabled: ${contains(keys(var.microservices), "cerberus")}
   connect:
@@ -72,6 +96,11 @@ subchart:
   worker-workflows:
     enabled: ${contains(keys(var.microservices), "worker-workflows")}
 EOF
+
+  # changes to secrets should trigger redeploy
+  secret_hash = yamlencode({
+    secret_hash = sha256(jsonencode(nonsensitive(var.helm_values)))
+  })
 }
 
 # creates the `paragon` namespace
@@ -82,6 +111,19 @@ resource "kubernetes_namespace" "paragon" {
     annotations = {
       name = "paragon"
     }
+  }
+}
+
+resource "kubernetes_config_map" "feature_flag_content" {
+  count = var.feature_flags_content != null ? 1 : 0
+
+  metadata {
+    name      = "feature-flags-content"
+    namespace = kubernetes_namespace.paragon.id
+  }
+
+  data = {
+    "features.yml" = var.feature_flags_content
   }
 }
 
@@ -192,7 +234,8 @@ resource "helm_release" "paragon_on_prem" {
   values = [
     local.supported_microservices_values,
     local.flipt_values,
-    local.global_values
+    local.global_values,
+    local.secret_hash
   ]
 
   dynamic "set" {
@@ -258,7 +301,8 @@ resource "helm_release" "paragon_on_prem" {
     helm_release.ingress,
     kubernetes_secret.docker_login,
     kubernetes_secret.paragon_secrets,
-    kubernetes_storage_class_v1.gp3_encrypted
+    kubernetes_storage_class_v1.gp3_encrypted,
+    kubernetes_config_map.feature_flag_content
   ]
 }
 
@@ -294,13 +338,23 @@ resource "helm_release" "paragon_logging" {
     value = var.aws_region
   }
 
-  set {
-    name  = "global.env.ZO_ROOT_USER_EMAIL"
+  set_sensitive {
+    name  = "fluent-bit.secrets.ZO_ROOT_USER_EMAIL"
     value = local.openobserve_email
   }
 
   set_sensitive {
-    name  = "global.env.ZO_ROOT_USER_PASSWORD"
+    name  = "fluent-bit.secrets.ZO_ROOT_USER_PASSWORD"
+    value = local.openobserve_password
+  }
+
+  set_sensitive {
+    name  = "openobserve.secrets.ZO_ROOT_USER_EMAIL"
+    value = local.openobserve_email
+  }
+
+  set_sensitive {
+    name  = "openobserve.secrets.ZO_ROOT_USER_PASSWORD"
     value = local.openobserve_password
   }
 
@@ -327,17 +381,9 @@ resource "helm_release" "paragon_monitoring" {
   timeout          = 900 # 15 minutes
 
   values = [
-    local.global_values
+    local.global_values,
+    local.secret_hash
   ]
-
-  # used to load environment variables into microservices
-  dynamic "set_sensitive" {
-    for_each = nonsensitive(merge(var.helm_values.global.env))
-    content {
-      name  = "global.env.${set_sensitive.key}"
-      value = set_sensitive.value
-    }
-  }
 
   # set image tag to pull
   dynamic "set" {

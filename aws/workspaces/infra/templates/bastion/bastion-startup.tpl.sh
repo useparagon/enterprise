@@ -8,6 +8,10 @@ function writeLog() {
 writeLog "paragon setup starting as $(whoami) from $0"
 sudo mkdir -p /etc/apt/keyrings
 
+# enable timestamps in shell history
+export HISTTIMEFORMAT="%F %T "
+echo 'export HISTTIMEFORMAT="%F %T "' >> /home/ubuntu/.bashrc
+
 # unattended support
 export DEBIAN_FRONTEND=noninteractive
 sudo systemctl stop unattended-upgrades
@@ -141,8 +145,39 @@ done
 $(eksctl get iamidentitymapping --cluster ${cluster_name} --arn arn:aws:iam::${aws_account_id}:role/${bastion_role} || eksctl create iamidentitymapping --cluster ${cluster_name} --arn arn:aws:iam::${aws_account_id}:role/${bastion_role} --group system:masters --username ${bastion_role})
 kubectl config set-context --current --namespace=paragon
 
+# Create and configure aliases file
+writeLog "configuring aliases for ubuntu"
+cat > /home/ubuntu/.bash_aliases << 'EOF'
+# Kubernetes aliases
+alias k=kubectl
+alias kg="kubectl get"
+alias kd="kubectl describe"
+alias kl="kubectl logs"
+alias kx="kubectl exec -it"
+alias ksec="kubectl get secret -n paragon paragon-secrets -o jsonpath='{.data}' | jq -r 'to_entries[] | \"\(.key): \(.value | @base64d)\"' | sort"
+alias kw="watch kubectl get pods"
+alias kwf="watch -- 'kubectl get pods | grep -v fluent'"
+
+kls() {
+  local name=$1
+  if [ -z "$name" ]; then
+    echo "Usage: kls <service-name>"
+    return 1
+  fi
+  shift
+  kubectl logs -n paragon -l app.kubernetes.io/name="$name" --all-containers=true --prefix=true "$@"
+}
+
+# Common aliases
+alias ll="ls -Ahl"
+alias hi="history | grep"
+EOF
+
+# Ensure proper permissions
+chown ubuntu:ubuntu /home/ubuntu/.bash_aliases
+chmod 644 /home/ubuntu/.bash_aliases
+
 writeLog "configuring k8s tools as ubuntu"
-echo "alias k=kubectl" > /home/ubuntu/.bash_aliases && chown ubuntu:ubuntu /home/ubuntu/.bash_aliases
 sudo -u ubuntu aws configure set region ${aws_region}
 sudo -u ubuntu aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name}
 sudo -u ubuntu kubectl config set-context --current --namespace=paragon

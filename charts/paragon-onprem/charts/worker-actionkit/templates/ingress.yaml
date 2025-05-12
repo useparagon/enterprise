@@ -33,7 +33,9 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-busy-buffers: 256k
     {{- end }}
     service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: {{ .Values.ingress.healthcheck_path | default "/healthz" }}
-    service.beta.kubernetes.io/azure-load-balancer-type: "public"
+    {{- if eq (default "internet-facing" .Values.ingress.scheme) "internal" }}
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    {{- end }}
   {{- else if eq .Values.global.env.HOST_ENV "GCP_K8" }}
   annotations:
     {{- if .Values.ingress.include_annotations }}

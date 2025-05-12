@@ -21,7 +21,9 @@ testFramework:
     tag: latest
     digest:
 
-imagePullSecrets: []
+imagePullSecrets:
+  - name: docker-cfg
+
 nameOverride: "fluent-bit"
 fullnameOverride: "fluent-bit"
 
@@ -102,7 +104,6 @@ service:
   externalIPs: []
   # externalIPs:
   #  - 2.2.2.2
-
 
 serviceMonitor:
   enabled: false
@@ -201,8 +202,8 @@ resources:
     cpu: 0.5
     memory: 256Mi
   requests:
-    cpu: 0.1
-    memory: 64Mi
+    cpu: 0.2
+    memory: 100Mi
 
 ## only available if kind is Deployment
 ingress:
@@ -304,9 +305,7 @@ terminationGracePeriodSeconds:
 
 priorityClassName: "system-node-critical"
 
-envKeys:
-  - ZO_ROOT_USER_EMAIL
-  - ZO_ROOT_USER_PASSWORD
+secrets: {}
 
 env: []
 #  - name: FOO
@@ -389,10 +388,10 @@ config:
         Path /var/log/containers/*.log
         multiline.parser docker, cri
         Tag kube.*
-        Mem_Buf_Limit 20MB
+        Mem_Buf_Limit 50MB
         Skip_Long_Lines On
-        Buffer_Chunk_Size 64KB
-        Buffer_Max_Size 64KB
+        Buffer_Chunk_Size 128KB
+        Buffer_Max_Size 128KB
 
     [INPUT]
         Name systemd
@@ -409,7 +408,7 @@ config:
         Keep_Log Off
         K8S-Logging.Parser On
         K8S-Logging.Exclude On
-        Buffer_Size 512KB
+        Buffer_Size 1MB
 
     [FILTER]
         Name    grep
@@ -431,11 +430,12 @@ config:
         Host openobserve
         Port 5080
         Index paragon
-        Retry_Limit False
+        Retry_Limit 10
         Path /api/default
         Suppress_Type_Name On
-        HTTP_User {{ .Values.global.env.ZO_ROOT_USER_EMAIL }}
-        HTTP_Passwd {{ .Values.global.env.ZO_ROOT_USER_PASSWORD }}
+        HTTP_User {{ .Values.secrets.ZO_ROOT_USER_EMAIL }}
+        HTTP_Passwd {{ .Values.secrets.ZO_ROOT_USER_PASSWORD }}
+        Buffer_Size 1MB
 
   ## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/upstream-servers
   ## This configuration is deprecated, please use `extraFiles` instead.

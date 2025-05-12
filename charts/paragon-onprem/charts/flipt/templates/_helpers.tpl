@@ -30,7 +30,6 @@ Create a fully qualified name for the migration job
 {{- include "flipt.fullname" . | trunc 53 | trimSuffix "-" }}-migration
 {{- end }}
 
-
 {{/*
 Create chart name and version as used by the chart label.
 */}}
