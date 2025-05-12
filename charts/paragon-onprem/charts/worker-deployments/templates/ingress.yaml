@@ -8,8 +8,11 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "worker-deployments.labels" . | nindent 4 }}
-  {{- if eq .Values.global.env.HOST_ENV "AWS_K8" }}
   annotations:
+    {{- if .Values.ingress.annotations }}
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- end }}
+    {{- if eq .Values.global.env.HOST_ENV "AWS_K8" }}
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificate }}
@@ -29,31 +32,25 @@ metadata:
     {{- if hasKey .Values.ingress "ip_whitelist" }}
     alb.ingress.kubernetes.io/inbound-cidrs: {{ .Values.ingress.ip_whitelist }}
     {{- end }}
-  {{- else if eq .Values.global.env.HOST_ENV "AZURE_K8" }}
-  annotations:
-    {{- if .Values.ingress.include_annotations }}
+    {{- else if eq .Values.global.env.HOST_ENV "AZURE_K8" }}
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
     nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
     nginx.ingress.kubernetes.io/proxy-busy-buffers: 256k
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    {{- end }}
     service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: {{ .Values.ingress.healthcheck_path | default "/healthz" }}
     {{- if eq (default "internet-facing" .Values.ingress.scheme) "internal" }}
     service.beta.kubernetes.io/azure-load-balancer-internal: "true"
     {{- end }}
-  {{- else if eq .Values.global.env.HOST_ENV "GCP_K8" }}
-  annotations:
-    {{- if .Values.ingress.include_annotations }}
+    {{- else if eq .Values.global.env.HOST_ENV "GCP_K8" }}
     kubernetes.io/ingress.class: {{ .Values.ingress.className | default "gce" }}
     ingress.gcp.kubernetes.io/pre-shared-cert: {{ .Values.ingress.certificate }}
+    ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.healthcheck_path | default "/healthz" }}
     kubernetes.io/ingress.allow-http: "true"
     kubernetes.io/ingress.global-static-ip-name: {{ .Values.ingress.loadBalancerName }}
     networking.gke.io/v1beta1.FrontendConfig: {{ .Values.ingress.frontendConfig }}
     {{- end }}
-    ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.healthcheck_path | default "/healthz" }}
-  {{ end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- if eq .Values.global.env.HOST_ENV "AZURE_K8" }}
