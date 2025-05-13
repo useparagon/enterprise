@@ -80,7 +80,6 @@ ingress:
   className: ''
   host: chart-example.local
   healthcheck_path: /minio/health/live
-  include_annotations: true
 
 nodeSelector: {}
 

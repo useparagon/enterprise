@@ -68,7 +68,6 @@ ingress:
   className: ''
   host: chart-example.local
   healthcheck_path: /api/health
-  include_annotations: true
 
 nodeSelector: {}
 
