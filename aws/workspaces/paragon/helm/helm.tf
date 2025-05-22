@@ -9,26 +9,26 @@ locals {
           }
         ]
       }
-    }
-    persistence = var.feature_flags_content != null ? {
-      enabled = true
-    } : {}
-    extraVolumes = var.feature_flags_content != null ? [
-      {
-        name = "feature-flags-content"
-        configMap = {
-          name = kubernetes_config_map.feature_flag_content[0].metadata[0].name
+      persistence = var.feature_flags_content != null ? {
+        enabled = true
+      } : {}
+      extraVolumes = var.feature_flags_content != null ? [
+        {
+          name = "feature-flags-content"
+          configMap = {
+            name = kubernetes_config_map.feature_flag_content[0].metadata[0].name
+          }
         }
-      }
-    ] : []
-    extraVolumeMounts = var.feature_flags_content != null ? [
-      {
-        name      = "feature-flags-content"
-        mountPath = "/var/opt/flipt/production/features.yml"
-        subPath   = "features.yml"
-        readOnly  = true
-      }
-    ] : []
+      ] : []
+      extraVolumeMounts = var.feature_flags_content != null ? [
+        {
+          name      = "feature-flags-content"
+          mountPath = "/var/opt/flipt/production/features.yml"
+          subPath   = "features.yml"
+          readOnly  = true
+        }
+      ] : []
+    }
   })
 
   global_values = yamlencode(merge(
