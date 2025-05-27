@@ -535,8 +535,8 @@ locals {
         MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
         MONITOR_GRAFANA_SERVER_DOMAIN           = try(local.monitors["grafana"].public_url, null)
         MONITOR_GRAFANA_UPTIME_WEBHOOK_URL      = module.uptime.webhook
-        HEALTH_CHECKER_HOST             = "http://health-checker"
-        HEALTH_CHECKER_PORT             = try(local.monitors["health-checker"].port, null)
+        HEALTH_CHECKER_HOST                     = "http://health-checker"
+        HEALTH_CHECKER_PORT                     = try(local.monitors["health-checker"].port, null)
         MONITOR_KUBE_STATE_METRICS_HOST         = "http://kube-state-metrics"
         MONITOR_KUBE_STATE_METRICS_PORT         = try(local.monitors["kube-state-metrics"].port, null)
         MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null
