@@ -274,6 +274,11 @@ locals {
       "port"             = try(local.helm_vars.global.env["HADES_PORT"], 1710)
       "public_url"       = try(local.helm_vars.global.env["HADES_PUBLIC_URL"], "https://hades.${var.domain}")
     }
+    "health-checker" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["HEALTH_CHECKER_PORT"], 1733)
+      "public_url"       = try(local.helm_vars.global.env["HEALTH_CHECKER_PUBLIC_URL"], "https://health-checker.${var.domain}")
+    }
     "hermes" = {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["HERMES_PORT"], 1702)
@@ -448,6 +453,7 @@ locals {
         CONNECT_PORT            = try(local.microservices.connect.port, null)
         DASHBOARD_PORT          = try(local.microservices.dashboard.port, null)
         HADES_PORT              = try(local.microservices.hades.port, null)
+        HEALTH_CHECKER_PORT     = try(local.microservices["health-checker"].port, null)
         HERMES_PORT             = try(local.microservices.hermes.port, null)
         MINIO_PORT              = try(local.microservices.minio.port, null)
         PASSPORT_PORT           = try(local.microservices.passport.port, null)
@@ -471,6 +477,7 @@ locals {
         DASHBOARD_PRIVATE_URL          = try("http://dashboard:${local.microservices.dashboard.port}", null)
         EMBASSY_PRIVATE_URL            = "http://embassy:1705"
         HADES_PRIVATE_URL              = try("http://hades:${local.microservices.hades.port}", null)
+        HEALTH_CHECKER_PRIVATE_URL     = try("http://health-checker:${local.microservices["health-checker"].port}", null)
         HERMES_PRIVATE_URL             = try("http://hermes:${local.microservices.hermes.port}", null)
         MINIO_PRIVATE_URL              = try("http://minio:${local.microservices.minio.port}", null)
         PASSPORT_PRIVATE_URL           = try("http://passport:${local.microservices.passport.port}", null)
@@ -492,6 +499,7 @@ locals {
         CONNECT_PUBLIC_URL            = try(local.microservices.connect.public_url, null)
         DASHBOARD_PUBLIC_URL          = try(local.microservices.dashboard.public_url, null)
         HADES_PUBLIC_URL              = try(local.microservices.hades.public_url, null)
+        HEALTH_CHECKER_PUBLIC_URL     = try(local.microservices["health-checker"].public_url, null)
         HERMES_PUBLIC_URL             = try(local.microservices.hermes.public_url, null)
         MINIO_PUBLIC_URL              = try(local.microservices.minio.public_url, null)
         PASSPORT_PUBLIC_URL           = try(local.microservices.passport.public_url, null)
@@ -597,6 +605,8 @@ locals {
         MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
         MONITOR_GRAFANA_SERVER_DOMAIN           = try(local.monitors["grafana"].public_url, null)
         MONITOR_GRAFANA_UPTIME_WEBHOOK_URL      = module.uptime.webhook
+        HEALTH_CHECKER_HOST                     = "http://health-checker"
+        HEALTH_CHECKER_PORT                     = try(local.monitors["health-checker"].port, null)
         MONITOR_KUBE_STATE_METRICS_HOST         = "http://kube-state-metrics"
         MONITOR_KUBE_STATE_METRICS_PORT         = try(local.monitors["kube-state-metrics"].port, null)
         MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null

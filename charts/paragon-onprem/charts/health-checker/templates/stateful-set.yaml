@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "health-checker.fullname" . }}
+  labels:
+    {{- include "health-checker.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "health-checker.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "health-checker.fullname" . }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "health-checker.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "health-checker.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          lifecycle:
+            # need to sleep for `deregistration_delay` + 5s to prevent downtime on deployments
+            # https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/1719#issuecomment-743452334
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - sleep 35
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          env:
+            {{- /* Handle environment variables */}}
+            {{- if and .Values.envKeys (kindIs "slice" .Values.envKeys) }}
+            {{- range $key := .Values.envKeys }}
+            {{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
+            - name: {{ $key }}
+              value: {{ index $.Values.env $key | quote }}
+            {{- else if and $.Values.global.env (kindIs "map" $.Values.global.env) (hasKey $.Values.global.env $key) }}
+            - name: {{ $key }}
+              value: {{ index $.Values.global.env $key | quote }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- /* Handle secrets */}}
+            {{- if and .Values.secretKeys (kindIs "slice" .Values.secretKeys) }}
+            {{- range $key := .Values.secretKeys }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{- if and $.Values.secrets (kindIs "map" $.Values.secrets) (hasKey $.Values.secrets $key) }}
+                         {{ $.Values.secretName }}-{{ $.Chart.Name }}
+                       {{- else }}
+                         {{ $.Values.secretName }}
+                       {{- end }}
+                  key: {{ $key }}
+                  optional: true
+            {{- end }}
+            {{- end }}
+          volumeMounts:
+            - name: health-checker
+              mountPath: /var/lib/health-checker
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: health-checker
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        {{- if eq .Values.global.env.HOST_ENV "AWS_K8" }}
+        storageClassName: gp3
+        {{- end }}
