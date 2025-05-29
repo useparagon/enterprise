@@ -40,9 +40,10 @@ module "monitors" {
 module "uptime" {
   source = "./uptime"
 
-  uptime_api_token = var.uptime_api_token
-  uptime_company   = coalesce(var.uptime_company, var.organization)
-  microservices    = local.public_microservices
+  uptime_api_token            = var.uptime_api_token
+  uptime_company              = coalesce(var.uptime_company, var.organization)
+  microservices               = local.public_microservices
+  health-checker-microservice = local.all_microservices.health-checker
 }
 
 module "dns" {

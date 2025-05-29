@@ -13,6 +13,8 @@ subchart:
     enabled: true
   hades:
     enabled: true
+  health-checker:
+    enabled: true
   hermes:
     enabled: true
   minio:

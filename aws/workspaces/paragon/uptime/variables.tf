@@ -26,6 +26,11 @@ variable "microservices" {
   type        = map(any)
 }
 
+variable "health-checker-microservice" {
+  description = "The information about the health-checker microservice"
+  type        = map(any)
+}
+
 locals {
   enabled = var.uptime_api_token != null
 }
