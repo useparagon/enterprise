@@ -46,6 +46,7 @@ module "uptime" {
 module "dns" {
   source = "./dns"
 
+  enabled              = local.dns_enabled
   cloudflare_api_token = var.cloudflare_api_token
   cloudflare_zone_id   = var.cloudflare_zone_id
   domain               = var.domain

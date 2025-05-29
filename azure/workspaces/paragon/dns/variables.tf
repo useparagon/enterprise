@@ -1,3 +1,9 @@
+variable "enabled" {
+  description = "Enable DNS module"
+  type        = bool
+  default     = true
+}
+
 variable "cloudflare_api_token" {
   description = "Cloudflare API token created at https://dash.cloudflare.com/profile/api-tokens. Requires Edit permissions on Zone `DNS`"
   type        = string

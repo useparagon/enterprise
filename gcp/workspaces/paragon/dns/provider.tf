@@ -8,5 +8,5 @@ terraform {
 }
 
 provider "cloudflare" {
-  api_token = var.cloudflare_api_token
+  api_token = var.enabled ? var.cloudflare_api_token : "placeholder_0apiTokencloudflareonprem100"
 }
