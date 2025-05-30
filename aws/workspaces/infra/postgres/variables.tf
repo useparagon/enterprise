@@ -48,6 +48,16 @@ variable "rds_multiple_instances" {
   type        = bool
 }
 
+variable "rds_restore_from_snapshot" {
+  description = "Specifies that RDS instances should be restored from a snapshot."
+  type        = bool
+}
+
+variable "rds_final_snapshot_enabled" {
+  description = "Specifies that RDS instances should perform a final snapshot before being deleted."
+  type        = bool
+}
+
 locals {
   postgres_instances = var.rds_multiple_instances ? {
     cerberus = {
