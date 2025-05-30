@@ -23,6 +23,8 @@ resource "random_password" "postgres_root_password" {
 }
 
 resource "random_string" "snapshot_identifier" {
+  count = var.rds_final_snapshot_enabled ? 1 : 0
+
   length  = 8
   numeric = false
   special = false
@@ -83,14 +85,21 @@ resource "aws_db_parameter_group" "postgres" {
   }
 }
 
+data "aws_db_snapshot" "postgres" {
+  for_each = var.rds_restore_from_snapshot ? local.postgres_instances : {}
+
+  db_instance_identifier = each.value.name
+  most_recent            = true
+}
+
 resource "aws_db_instance" "postgres" {
   for_each = local.postgres_instances
 
   identifier = each.value.name
   db_name    = each.value.db
   port       = "5432"
-  username   = random_string.postgres_root_username[each.key].result
-  password   = random_password.postgres_root_password[each.key].result
+  username   = var.rds_restore_from_snapshot ? null : random_string.postgres_root_username[each.key].result
+  password   = var.rds_restore_from_snapshot ? null : random_string.postgres_root_password[each.key].result
 
   engine               = "postgres"
   engine_version       = var.rds_postgres_version
@@ -113,9 +122,10 @@ resource "aws_db_instance" "postgres" {
 
   db_subnet_group_name      = aws_db_subnet_group.postgres.id
   deletion_protection       = !var.disable_deletion_protection
-  final_snapshot_identifier = "${each.value.name}-${random_string.snapshot_identifier.result}"
+  snapshot_identifier       = var.rds_restore_from_snapshot ? data.aws_db_snapshot.postgres[each.key].id : null
+  skip_final_snapshot       = !var.rds_final_snapshot_enabled
+  final_snapshot_identifier = var.rds_final_snapshot_enabled ? "${each.value.name}-${random_string.snapshot_identifier[0].result}" : null
   publicly_accessible       = false
-  skip_final_snapshot       = false
   storage_encrypted         = true
   vpc_security_group_ids    = [aws_security_group.postgres.id]
 
