@@ -27,3 +27,8 @@ output "uptime_webhook" {
   value       = module.uptime.webhook
   sensitive   = true
 }
+
+output "load_balancer" {
+  description = "Location of the load balancer"
+  value       = module.helm.load_balancer
+}
