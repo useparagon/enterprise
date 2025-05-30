@@ -15,6 +15,16 @@ output "redis" {
   sensitive   = true
 }
 
+output "kafka" {
+  description = "Connection info for Kafka."
+  value = var.managed_sync_enabled ? {
+    cluster_bootstrap_brokers          = module.kafka[0].msk_cluster_bootstrap_brokers
+    cluster_bootstrap_brokers_tls      = module.kafka[0].msk_cluster_bootstrap_brokers_tls
+    cluster_bootstrap_brokers_sasl_iam = module.kafka[0].msk_cluster_bootstrap_brokers_sasl_iam
+  } : {}
+  sensitive = true
+}
+
 output "logs_bucket" {
   description = "The bucket used to store system logs."
   value       = module.storage.s3.logs_bucket

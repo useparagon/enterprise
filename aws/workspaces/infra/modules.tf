@@ -60,6 +60,20 @@ module "storage" {
   app_bucket_expiration = var.app_bucket_expiration
 }
 
+module "kafka" {
+  source = "./kafka"
+  count  = var.managed_sync_enabled ? 1 : 0
+
+  workspace         = local.workspace
+  force_destroy     = var.disable_deletion_protection
+  msk_kafka_version = var.msk_kafka_version
+  msk_instance_type = var.msk_instance_type
+
+  private_subnet = module.network.private_subnet
+  vpc_id         = module.network.vpc.id
+  logs_bucket    = module.storage.s3.logs_bucket
+}
+
 module "bastion" {
   source = "./bastion"
 

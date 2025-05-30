@@ -229,6 +229,24 @@ variable "cloudflare_tunnel_email_domain" {
   default     = "useparagon.com"
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+  default     = false
+}
+
+variable "msk_kafka_version" {
+  description = "The Kafka version for the MSK cluster."
+  type        = string
+  default     = "4.0.0"
+}
+
+variable "msk_instance_type" {
+  description = "The instance type for the MSK cluster."
+  type        = string
+  default     = "kafka.t3.small"
+}
+
 locals {
   # hash of account ID to help ensure uniqueness of resources like S3 bucket names
   hash        = substr(sha256(data.aws_caller_identity.current.account_id), 0, 8)
