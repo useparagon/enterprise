@@ -31,6 +31,7 @@ module "postgres" {
   rds_restore_from_snapshot   = var.rds_restore_from_snapshot
   rds_final_snapshot_enabled  = var.rds_final_snapshot_enabled
   disable_deletion_protection = var.disable_deletion_protection
+  managed_sync_enabled        = var.managed_sync_enabled
 
   vpc                = module.network.vpc
   public_subnet      = module.network.public_subnet
@@ -46,6 +47,7 @@ module "redis" {
   elasticache_node_type          = var.elasticache_node_type
   elasticache_multi_az           = var.elasticache_multi_az
   elasticache_multiple_instances = var.elasticache_multiple_instances
+  managed_sync_enabled           = var.managed_sync_enabled
 
   vpc            = module.network.vpc
   public_subnet  = module.network.public_subnet
