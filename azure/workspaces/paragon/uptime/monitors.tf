@@ -32,7 +32,7 @@ resource "betteruptime_monitor" "monitor" {
   request_timeout       = 15  # seconds
   ssl_expiration        = 14  # days
   team_wait             = 180 # seconds
-  url                   = var.health-checker-microservice.public_url
+  url                   = var.health_checker_microservice.public_url
 
   call  = true
   email = true

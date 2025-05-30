@@ -40,8 +40,7 @@ module "uptime" {
 
   uptime_api_token            = var.uptime_api_token
   uptime_company              = coalesce(var.uptime_company, var.organization)
-  microservices               = var.ingress_scheme == "internal" ? {} : local.public_microservices
-  health-checker-microservice = local.all_microservices.health-checker
+  health_checker_microservice = local.all_microservices.health-checker
 }
 
 module "dns" {
