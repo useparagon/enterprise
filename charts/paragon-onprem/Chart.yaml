@@ -30,6 +30,10 @@ dependencies:
     repository: file://charts/hades
     version: __PARAGON_VERSION__
     condition: subchart.hades.enabled
+  - name: health-checker
+    repository: file://charts/health-checker
+    version: __PARAGON_VERSION__
+    condition: subchart.health-checker.enabled
   - name: hermes
     repository: file://charts/hermes
     version: __PARAGON_VERSION__
