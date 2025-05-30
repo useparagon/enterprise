@@ -521,6 +521,7 @@ locals {
         CLOUD_STORAGE_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
         CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
         CLOUD_STORAGE_TYPE              = local.cloud_storage_type
+        CLOUD_STORAGE_REGION            = var.aws_region
 
         CLOUD_STORAGE_PUBLIC_URL = coalesce(
           try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
