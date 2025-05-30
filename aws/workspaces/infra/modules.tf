@@ -58,6 +58,7 @@ module "storage" {
   workspace             = local.workspace
   force_destroy         = var.disable_deletion_protection
   app_bucket_expiration = var.app_bucket_expiration
+  managed_sync_enabled  = var.managed_sync_enabled
 }
 
 module "kafka" {

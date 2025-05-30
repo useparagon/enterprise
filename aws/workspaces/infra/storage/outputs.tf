@@ -5,6 +5,7 @@ output "s3" {
     private_bucket          = aws_s3_bucket.app.bucket
     public_bucket           = aws_s3_bucket.cdn.bucket
     logs_bucket             = aws_s3_bucket.logs.bucket
+    managed_sync_bucket     = var.managed_sync_enabled ? aws_s3_bucket.managed_sync[0].bucket : null
     minio_microservice_user = random_string.minio_microservice_user.result
     minio_microservice_pass = random_password.minio_microservice_pass.result
   }
