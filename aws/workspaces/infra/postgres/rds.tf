@@ -99,7 +99,7 @@ resource "aws_db_instance" "postgres" {
   db_name    = each.value.db
   port       = "5432"
   username   = var.rds_restore_from_snapshot ? null : random_string.postgres_root_username[each.key].result
-  password   = var.rds_restore_from_snapshot ? null : random_string.postgres_root_password[each.key].result
+  password   = var.rds_restore_from_snapshot ? null : random_password.postgres_root_password[each.key].result
 
   engine               = "postgres"
   engine_version       = var.rds_postgres_version
