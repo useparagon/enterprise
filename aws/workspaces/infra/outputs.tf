@@ -18,9 +18,7 @@ output "redis" {
 output "kafka" {
   description = "Connection info for Kafka."
   value = var.managed_sync_enabled ? {
-    cluster_bootstrap_brokers          = module.kafka[0].msk_cluster_bootstrap_brokers
-    cluster_bootstrap_brokers_tls      = module.kafka[0].msk_cluster_bootstrap_brokers_tls
-    cluster_bootstrap_brokers_sasl_iam = module.kafka[0].msk_cluster_bootstrap_brokers_sasl_iam
+    cluster_bootstrap_brokers = split(",", module.kafka[0].cluster_bootstrap_brokers_sasl_scram)
   } : {}
   sensitive = true
 }
@@ -34,12 +32,13 @@ output "logs_bucket" {
 output "minio" {
   description = "MinIO server connection info."
   value = {
-    public_bucket     = module.storage.s3.public_bucket
-    private_bucket    = module.storage.s3.private_bucket
-    microservice_user = module.storage.s3.minio_microservice_user
-    microservice_pass = module.storage.s3.minio_microservice_pass
-    root_user         = module.storage.s3.access_key_id
-    root_password     = module.storage.s3.access_key_secret
+    public_bucket       = module.storage.s3.public_bucket
+    private_bucket      = module.storage.s3.private_bucket
+    managed_sync_bucket = module.storage.s3.managed_sync_bucket
+    microservice_user   = module.storage.s3.minio_microservice_user
+    microservice_pass   = module.storage.s3.minio_microservice_pass
+    root_user           = module.storage.s3.access_key_id
+    root_password       = module.storage.s3.access_key_secret
   }
   sensitive = true
 }

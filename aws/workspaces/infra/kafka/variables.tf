@@ -31,3 +31,8 @@ variable "msk_kafka_version" {
   description = "The Kafka version for the MSK cluster."
   type        = string
 }
+
+variable "msk_kafka_num_broker_nodes" {
+  description = "The number of broker nodes for the MSK cluster."
+  type        = number
+}

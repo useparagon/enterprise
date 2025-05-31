@@ -1,7 +1,19 @@
+resource "aws_kms_key" "kafka" {
+  description = "KMS for AWS MSK data encryption"
+  tags = {
+    Name = "${var.workspace}-msk"
+  }
+}
+
+resource "aws_kms_alias" "kafka_alias" {
+  name          = "alias/${var.workspace}-msk"
+  target_key_id = aws_kms_key.kafka.key_id
+}
+
 resource "aws_msk_cluster" "kafka" {
   cluster_name           = var.workspace
-  kafka_version          = "4.0.0"
-  number_of_broker_nodes = 3
+  kafka_version          = var.msk_kafka_version
+  number_of_broker_nodes = var.msk_kafka_num_broker_nodes
 
   broker_node_group_info {
     instance_type   = var.msk_instance_type
@@ -21,6 +33,7 @@ resource "aws_msk_cluster" "kafka" {
   }
 
   encryption_info {
+    encryption_at_rest_kms_key_arn = aws_kms_key.kafka.arn
     encryption_in_transit {
       client_broker = "TLS"
       in_cluster    = true
@@ -36,10 +49,20 @@ resource "aws_msk_cluster" "kafka" {
     }
   }
 
+  logging_info {
+    broker_logs {
+      cloudwatch_logs {
+        enabled   = true
+        log_group = aws_cloudwatch_log_group.kafka.name
+      }
+    }
+  }
+
   lifecycle {
     ignore_changes = [
       # Ignore changes to ebs_volume_size in favor of autoscaling policy
       broker_node_group_info[0].storage_info[0].ebs_storage_info[0].volume_size,
+      client_authentication[0].tls
     ]
   }
 }
@@ -56,12 +79,6 @@ log.retention.hours = 168
 num.partitions = 3
 default.replication.factor = 3
 min.insync.replicas = 2
-process.roles = broker,controller
-controller.quorum.voters = 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
-controller.listener.names = CONTROLLER
-listeners = PLAINTEXT://:9092,CONTROLLER://:9093
-listener.security.protocol.map = PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
-inter.broker.listener.name = PLAINTEXT
 PROPERTIES
 }
 
