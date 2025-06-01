@@ -29,6 +29,8 @@ module "helm" {
   ingress_scheme         = var.ingress_scheme
   k8s_version            = var.k8s_version
   logs_bucket            = local.logs_bucket
+  managed_sync_enabled   = var.managed_sync_enabled
+  managed_sync_version   = var.managed_sync_version
   microservices          = local.microservices
   monitor_version        = local.monitor_version
   monitors               = local.monitors
