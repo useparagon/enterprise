@@ -37,6 +37,8 @@ subchart:
     enabled: true
   worker-deployments:
     enabled: true
+  worker-eventlogs:
+    enabled: true
   worker-proxy:
     enabled: true
   worker-triggers:

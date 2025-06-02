@@ -41,6 +41,9 @@ locals {
     cerberus = {
       tier = "db-custom-1-3840"
     },
+    eventlogs = {
+      tier = "db-custom-2-7680"
+    },
     hermes = {
       tier = var.postgres_tier
     },

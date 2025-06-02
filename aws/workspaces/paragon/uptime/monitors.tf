@@ -17,7 +17,9 @@ data "betteruptime_policy" "escalation" {
 }
 
 resource "betteruptime_monitor" "monitor" {
-  pronounceable_name = "Enterprise ${var.uptime_company}"
+  for_each = local.enabled ? var.microservices : {}
+
+  pronounceable_name = "Enterprise ${var.uptime_company} - Microservice ${each.key}"
 
   check_frequency       = 30  # seconds
   confirmation_period   = 120 # seconds
@@ -32,7 +34,7 @@ resource "betteruptime_monitor" "monitor" {
   request_timeout       = 15  # seconds
   ssl_expiration        = 14  # days
   team_wait             = 180 # seconds
-  url                   = var.health_checker_microservice.public_url
+  url                   = "${each.value.public_url}${each.value.healthcheck_path}"
 
   call  = true
   email = true
