@@ -18,7 +18,7 @@ output "redis" {
 output "kafka" {
   description = "Connection info for Kafka."
   value = var.managed_sync_enabled ? {
-    cluster_bootstrap_brokers = split(",", module.kafka[0].cluster_bootstrap_brokers_sasl_scram)
+    cluster_bootstrap_brokers = module.kafka[0].cluster_bootstrap_brokers_sasl_scram
   } : {}
   sensitive = true
 }
