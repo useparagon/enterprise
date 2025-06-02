@@ -19,6 +19,10 @@ output "kafka" {
   description = "Connection info for Kafka."
   value = var.managed_sync_enabled ? {
     cluster_bootstrap_brokers = module.kafka[0].cluster_bootstrap_brokers_sasl_scram
+    cluster_username          = module.kafka[0].kafka_credentials.username
+    cluster_password          = module.kafka[0].kafka_credentials.password
+    cluster_mechanism         = module.kafka[0].kafka_credentials.mechanism
+    cluster_tls_enabled       = module.kafka[0].cluster_tls_enabled
   } : {}
   sensitive = true
 }

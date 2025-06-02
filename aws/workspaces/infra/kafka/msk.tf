@@ -10,6 +10,37 @@ resource "aws_kms_alias" "kafka_alias" {
   target_key_id = aws_kms_key.kafka.key_id
 }
 
+resource "random_string" "msk_username" {
+  length           = 16
+  special          = false
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+}
+
+resource "random_password" "msk_password" {
+  length           = 32
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+}
+
+resource "aws_secretsmanager_secret" "msk_credentials" {
+  name       = "AmazonMSK_${var.workspace}-credentials"
+  kms_key_id = aws_kms_key.kafka.key_id
+}
+
+resource "aws_secretsmanager_secret_version" "msk_credentials" {
+  secret_id = aws_secretsmanager_secret.msk_credentials.id
+  secret_string = jsonencode({
+    username  = random_string.msk_username.result
+    password  = random_password.msk_password.result
+    mechanism = "SCRAM-SHA-512"
+  })
+}
+
+resource "aws_msk_scram_secret_association" "kafka" {
+  cluster_arn     = aws_msk_cluster.kafka.arn
+  secret_arn_list = [aws_secretsmanager_secret.msk_credentials.arn]
+}
+
 resource "aws_msk_cluster" "kafka" {
   cluster_name           = var.workspace
   kafka_version          = var.msk_kafka_version
@@ -39,13 +70,9 @@ resource "aws_msk_cluster" "kafka" {
       in_cluster    = true
     }
   }
-
   client_authentication {
     sasl {
       scram = true
-    }
-    tls {
-      certificate_authority_arns = []
     }
   }
 
@@ -77,8 +104,8 @@ auto.create.topics.enable = true
 delete.topic.enable = true
 log.retention.hours = 168
 num.partitions = 3
-default.replication.factor = 3
-min.insync.replicas = 2
+default.replication.factor = ${ceil(var.msk_kafka_num_broker_nodes / 2)}
+min.insync.replicas = ${ceil(var.msk_kafka_num_broker_nodes / 2)}
 PROPERTIES
 }
 

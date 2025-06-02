@@ -28,6 +28,11 @@ output "cluster_bootstrap_brokers_sasl_scram" {
   value       = aws_msk_cluster.kafka.bootstrap_brokers_sasl_scram
 }
 
+output "cluster_tls_enabled" {
+  description = "Whether TLS is enabled for the MSK cluster"
+  value       = true
+}
+
 output "zookeeper_connect_string" {
   description = "A comma separated list of one or more DNS names (or IPs) and SASL IAM port pairs kafka brokers suitable to bootstrap connectivity to the kafka cluster"
   value       = aws_msk_cluster.kafka.zookeeper_connect_string
@@ -36,4 +41,12 @@ output "zookeeper_connect_string" {
 output "zookeeper_connect_string_tls" {
   description = "A comma separated list of one or more DNS names (or IPs) and SASL IAM port pairs kafka brokers suitable to bootstrap connectivity to the kafka cluster"
   value       = aws_msk_cluster.kafka.zookeeper_connect_string_tls
+}
+
+output "kafka_credentials" {
+  value = {
+    username  = random_string.msk_username.result
+    password  = random_password.msk_password.result
+    mechanism = "scram-sha-512"
+  }
 }

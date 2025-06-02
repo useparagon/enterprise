@@ -322,7 +322,7 @@ locals {
     }
     "worker-sync" = {
       "healthcheck_path" = "/healthz"
-      "port"             = try(local.helm_vars.global.env["SYNC_WORKER_HTTP_PORT"], 1801)
+      "port"             = try(local.helm_vars.global.env["SYNC_WORKER_HTTP_PORT"], 1802)
       "public_url"       = try(local.helm_vars.global.env["SYNC_WORKER_PUBLIC_URL"], "https://ms-worker-sync.${var.domain}")
     }
   }
@@ -616,18 +616,26 @@ locals {
           SYNC_WORKER_PUBLIC_URL = try(local.managed_sync_microservices["sync-worker"].public_url, null)
 
           CLOUD_STORAGE_MANAGED_SYNC_BUCKET = try(local.infra_vars.minio.value.managed_sync_bucket, "${local.workspace}-managed-sync")
+          CLOUD_STORAGE_PASS                = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
+          CLOUD_STORAGE_USER                = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
 
-          MANAGED_SYNC_KAFKA_BROKER_URLS = try(local.infra_vars.kafka.value.cluster_bootstrap_brokers, null)
+          MANAGED_SYNC_KAFKA_BROKER_URLS                       = try(local.infra_vars.kafka.value.cluster_bootstrap_brokers, null)
+          MANAGED_SYNC_KAFKA_SASL_USERNAME                     = try(local.infra_vars.kafka.value.cluster_username, null)
+          MANAGED_SYNC_KAFKA_SASL_PASSWORD                     = try(local.infra_vars.kafka.value.cluster_password, null)
+          MANAGED_SYNC_KAFKA_SASL_MECHANISM                    = try(local.infra_vars.kafka.value.cluster_mechanism, null)
+          MANAGED_SYNC_KAFKA_SSL_ENABLED                       = try(local.infra_vars.kafka.value.cluster_tls_enabled, null)
+          MANAGED_SYNC_KAFKA_TOPICS_DEFAULT_REPLICATION_FACTOR = 1
 
           MANAGED_SYNC_REDIS_URL             = try("${local.infra_vars.redis.value.managed_sync.host}:${local.infra_vars.redis.value.managed_sync.port}", local.default_redis_url)
           MANAGED_SYNC_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.managed_sync.cluster, local.default_redis_cluster)
           MANAGED_SYNC_REDIS_TLS_ENABLED     = try(local.infra_vars.redis.value.managed_sync.ssl, local.default_redis_ssl)
 
-          OPENFGA_POSTGRES_HOST     = try(local.infra_vars.postgres.value.managed_sync.host, local.infra_vars.postgres.value.paragon.host)
-          OPENFGA_POSTGRES_PORT     = try(local.infra_vars.postgres.value.managed_sync.port, local.infra_vars.postgres.value.paragon.port)
-          OPENFGA_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.managed_sync.user, local.infra_vars.postgres.value.paragon.user)
-          OPENFGA_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.managed_sync.password, local.infra_vars.postgres.value.paragon.password)
-          OPENFGA_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.managed_sync.database, local.infra_vars.postgres.value.paragon.database)
+          OPENFGA_POSTGRES_HOST        = try(local.infra_vars.postgres.value.managed_sync.host, local.infra_vars.postgres.value.paragon.host)
+          OPENFGA_POSTGRES_PORT        = try(local.infra_vars.postgres.value.managed_sync.port, local.infra_vars.postgres.value.paragon.port)
+          OPENFGA_POSTGRES_USERNAME    = try(local.infra_vars.postgres.value.managed_sync.user, local.infra_vars.postgres.value.paragon.user)
+          OPENFGA_POSTGRES_PASSWORD    = try(local.infra_vars.postgres.value.managed_sync.password, local.infra_vars.postgres.value.paragon.password)
+          OPENFGA_POSTGRES_DATABASE    = try(local.infra_vars.postgres.value.managed_sync.database, local.infra_vars.postgres.value.paragon.database)
+          OPENFGA_POSTGRES_SSL_ENABLED = true
 
           OPENFGA_HTTP_PORT           = 6200
           OPENFGA_GRPC_PORT           = 6201

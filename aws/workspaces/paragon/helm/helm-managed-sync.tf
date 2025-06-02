@@ -1,9 +1,10 @@
 resource "helm_release" "managed_sync" {
-  count = var.managed_sync_enabled && false ? 1 : 0
+  count = var.managed_sync_enabled ? 1 : 0
 
   name             = "paragon-managed-sync"
   description      = "Managed Sync"
-  chart            = "https://paragon-managed-sync-helm.s3.amazonaws.com"
+  repository       = "https://paragon-managed-sync-helm.s3.amazonaws.com"
+  chart            = "managed-sync"
   version          = var.managed_sync_version
   namespace        = kubernetes_namespace.paragon.id
   create_namespace = false
@@ -32,7 +33,7 @@ resource "helm_release" "managed_sync" {
     for_each = var.public_microservices
 
     content {
-      name  = "${set.key}.ingress.host"
+      name  = "${set.key}.common.ingress.host"
       value = replace(replace(set.value.public_url, "https://", ""), "http://", "")
     }
   }
@@ -42,7 +43,7 @@ resource "helm_release" "managed_sync" {
     for_each = var.public_microservices
 
     content {
-      name  = "${set.key}.ingress.scheme"
+      name  = "${set.key}.common.ingress.scheme"
       value = var.ingress_scheme
     }
   }
@@ -52,7 +53,7 @@ resource "helm_release" "managed_sync" {
     for_each = var.public_microservices
 
     content {
-      name  = "${set.key}.ingress.certificate"
+      name  = "${set.key}.common.ingress.certificate"
       value = var.certificate
     }
   }
@@ -62,7 +63,7 @@ resource "helm_release" "managed_sync" {
     for_each = var.public_microservices
 
     content {
-      name  = "${set.key}.ingress.load_balancer_name"
+      name  = "${set.key}.common.ingress.load_balancer_name"
       value = var.workspace
     }
   }
@@ -72,7 +73,7 @@ resource "helm_release" "managed_sync" {
     for_each = var.public_microservices
 
     content {
-      name  = "${set.key}.ingress.logs_bucket"
+      name  = "${set.key}.common.ingress.logs_bucket"
       value = var.logs_bucket
     }
   }
@@ -109,7 +110,7 @@ resource "helm_release" "managed_sync_openfga" {
 
   set_sensitive {
     name  = "datastore.uri"
-    value = "postgres://${var.helm_values.global.env.OPENFGA_POSTGRES_USERNAME}:${var.helm_values.global.env.OPENFGA_POSTGRES_PASSWORD}@${var.helm_values.global.env.OPENFGA_POSTGRES_HOST}:${var.helm_values.global.env.OPENFGA_POSTGRES_PORT}/${var.helm_values.global.env.OPENFGA_POSTGRES_DATABASE}?sslmode=prefer"
+    value = "postgres://${var.helm_values.global.env.OPENFGA_POSTGRES_USERNAME}:${var.helm_values.global.env.OPENFGA_POSTGRES_PASSWORD}@${var.helm_values.global.env.OPENFGA_POSTGRES_HOST}:${var.helm_values.global.env.OPENFGA_POSTGRES_PORT}/${var.helm_values.global.env.OPENFGA_POSTGRES_DATABASE}?sslmode=required"
   }
 
   set {
