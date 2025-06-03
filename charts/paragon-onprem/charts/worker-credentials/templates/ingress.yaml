@@ -61,7 +61,6 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.className | default "nginx" }}
   {{- if or (eq .Values.global.env.HOST_ENV "AZURE_K8") (not (or (eq .Values.global.env.HOST_ENV "AWS_K8") (eq .Values.global.env.HOST_ENV "GCP_K8"))) }}
-
   tls:
     - hosts:
         - {{ .Values.ingress.host }}
