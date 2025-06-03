@@ -81,7 +81,8 @@ resource "helm_release" "managed_sync" {
     helm_release.ingress,
     kubernetes_secret.docker_login,
     kubernetes_secret.paragon_secrets,
-    kubernetes_storage_class_v1.gp3_encrypted
+    kubernetes_storage_class_v1.gp3_encrypted,
+    helm_release.managed_sync_openfga
   ]
 }
 
@@ -109,7 +110,7 @@ resource "helm_release" "managed_sync_openfga" {
 
   set_sensitive {
     name  = "datastore.uri"
-    value = "postgres://${var.helm_values.global.env.OPENFGA_POSTGRES_USERNAME}:${var.helm_values.global.env.OPENFGA_POSTGRES_PASSWORD}@${var.helm_values.global.env.OPENFGA_POSTGRES_HOST}:${var.helm_values.global.env.OPENFGA_POSTGRES_PORT}/${var.helm_values.global.env.OPENFGA_POSTGRES_DATABASE}?sslmode=required"
+    value = "postgres://${var.helm_values.global.env.OPENFGA_POSTGRES_USERNAME}:${var.helm_values.global.env.OPENFGA_POSTGRES_PASSWORD}@${var.helm_values.global.env.OPENFGA_POSTGRES_HOST}:${var.helm_values.global.env.OPENFGA_POSTGRES_PORT}/${var.helm_values.global.env.OPENFGA_POSTGRES_DATABASE}?sslmode=prefer"
   }
 
   set {
