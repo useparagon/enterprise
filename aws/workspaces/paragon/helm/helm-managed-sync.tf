@@ -14,7 +14,6 @@ resource "helm_release" "managed_sync" {
   timeout          = 900 # 15 minutes
 
   values = [
-    local.supported_microservices_values,
     local.global_values,
     local.secret_hash
   ]

@@ -610,10 +610,8 @@ locals {
           key => value if value != null && !contains(local.helm_keys_to_remove, key) && !startswith(key, "FLIPT_")
         },
         var.managed_sync_enabled ? {
-          API_SYNC_HTTP_PORT     = try(local.managed_sync_microservices["api-sync"].port, null)
-          API_SYNC_PUBLIC_URL    = try(local.managed_sync_microservices["api-sync"].public_url, null)
-          SYNC_WORKER_HTTP_PORT  = try(local.managed_sync_microservices["sync-worker"].port, null)
-          SYNC_WORKER_PUBLIC_URL = try(local.managed_sync_microservices["sync-worker"].public_url, null)
+          API_SYNC_HTTP_PORT    = try(local.managed_sync_microservices["api-sync"].port, null)
+          WORKER_SYNC_HTTP_PORT = try(local.managed_sync_microservices["worker-sync"].port, null)
 
           CLOUD_STORAGE_MANAGED_SYNC_BUCKET = try(local.infra_vars.minio.value.managed_sync_bucket, "${local.workspace}-managed-sync")
           CLOUD_STORAGE_PASS                = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
