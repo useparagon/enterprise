@@ -78,6 +78,10 @@ dependencies:
     repository: file://charts/worker-deployments
     version: __PARAGON_VERSION__
     condition: subchart.worker-deployments.enabled
+  - name: worker-eventlogs
+    repository: file://charts/worker-eventlogs
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-eventlogs.enabled
   - name: worker-proxy
     repository: file://charts/worker-proxy
     version: __PARAGON_VERSION__

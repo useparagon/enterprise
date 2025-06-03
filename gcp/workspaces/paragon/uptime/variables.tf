@@ -21,8 +21,8 @@ variable "uptime_regions" {
   default     = ["as", "au", "eu", "us"]
 }
 
-variable "health_checker_microservice" {
-  description = "The information about the health-checker microservice"
+variable "microservices" {
+  description = "The microservices to create monitors for."
   type        = map(any)
 }
 
