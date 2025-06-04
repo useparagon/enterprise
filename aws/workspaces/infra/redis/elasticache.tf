@@ -63,7 +63,7 @@ resource "aws_elasticache_parameter_group" "redis" {
 resource "aws_elasticache_replication_group" "redis" {
   count = var.elasticache_multiple_instances ? (var.managed_sync_enabled ? 2 : 1) : 0
 
-  replication_group_id = "${var.workspace}-redis-${count.index == 1 ? "cache" : "sync"}"
+  replication_group_id = "${var.workspace}-redis-${count.index == 0 ? "cache" : "sync"}"
   description          = "Redis cluster for caching & workflows."
   apply_immediately    = true
   node_type            = local.redis_instances.cache.size
@@ -102,7 +102,7 @@ resource "aws_elasticache_replication_group" "redis" {
   }
 
   tags = {
-    Name    = "${var.workspace}-redis-${count.index == 1 ? "cache" : "sync"}"
+    Name    = "${var.workspace}-redis-${count.index == 0 ? "cache" : "sync"}"
     Cluster = "true"
   }
 }
