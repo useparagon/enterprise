@@ -127,6 +127,12 @@ variable "uptime_company" {
   default     = null
 }
 
+variable "health_checker_enabled" {
+  description = "Specifies that health checker is enabled."
+  type        = bool
+  default     = false
+}
+
 variable "openobserve_email" {
   description = "OpenObserve admin login email."
   type        = string
@@ -297,6 +303,11 @@ locals {
       "port"             = try(local.helm_vars.global.env["WORKER_DEPLOYMENTS_PORT"], 1718)
       "public_url"       = try(local.helm_vars.global.env["WORKER_DEPLOYMENTS_PUBLIC_URL"], "https://worker-deployments.${var.domain}")
     }
+    "worker-eventlogs" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["WORKER_EVENTLOGS_PORT"], 1723)
+      "public_url"       = try(local.helm_vars.global.env["WORKER_EVENTLOGS_PUBLIC_URL"], "https://worker-eventlogs.${var.domain}")
+    }
     "worker-proxy" = {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["WORKER_PROXY_PORT"], 1715)
@@ -339,6 +350,12 @@ locals {
     for microservice, config in local.microservices :
     microservice => config
     if config.public_url != null && config.public_url != ""
+  }
+
+  uptime_services = {
+    for microservice, config in local.public_microservices :
+    microservice => config
+    if var.ingress_scheme != "internal" && (microservice == "health-checker" || !var.health_checker_enabled)
   }
 
   monitors = {
@@ -443,6 +460,7 @@ locals {
           WORKER_CREDENTIALS_PORT = try(local.microservices["worker-credentials"].port, null)
           WORKER_CRONS_PORT       = try(local.microservices["worker-crons"].port, null)
           WORKER_DEPLOYMENTS_PORT = try(local.microservices["worker-deployments"].port, null)
+          WORKER_EVENTLOGS_PORT   = try(local.microservices["worker-eventlogs"].port, null)
           WORKER_PROXY_PORT       = try(local.microservices["worker-proxy"].port, null)
           WORKER_TRIGGERS_PORT    = try(local.microservices["worker-triggers"].port, null)
           WORKER_WORKFLOWS_PORT   = try(local.microservices["worker-workflows"].port, null)
@@ -466,6 +484,7 @@ locals {
           WORKER_CREDENTIALS_PRIVATE_URL = try("http://worker-credentials:${local.microservices["worker-credentials"].port}", null)
           WORKER_CRONS_PRIVATE_URL       = try("http://worker-crons:${local.microservices["worker-crons"].port}", null)
           WORKER_DEPLOYMENTS_PRIVATE_URL = try("http://worker-deployments:${local.microservices["worker-deployments"].port}", null)
+          WORKER_EVENTLOGS_PRIVATE_URL   = try("http://worker-eventlogs:${local.microservices["worker-eventlogs"].port}", null)
           WORKER_PROXY_PRIVATE_URL       = try("http://worker-proxy:${local.microservices["worker-proxy"].port}", null)
           WORKER_TRIGGERS_PRIVATE_URL    = try("http://worker-triggers:${local.microservices["worker-triggers"].port}", null)
           WORKER_WORKFLOWS_PRIVATE_URL   = try("http://worker-workflows:${local.microservices["worker-workflows"].port}", null)
@@ -488,6 +507,7 @@ locals {
           WORKER_CREDENTIALS_PUBLIC_URL = try(local.microservices["worker-credentials"].public_url, null)
           WORKER_CRONS_PUBLIC_URL       = try(local.microservices["worker-crons"].public_url, null)
           WORKER_DEPLOYMENTS_PUBLIC_URL = try(local.microservices["worker-deployments"].public_url, null)
+          WORKER_EVENTLOGS_PUBLIC_URL   = try(local.microservices["worker-eventlogs"].public_url, null)
           WORKER_PROXY_PUBLIC_URL       = try(local.microservices["worker-proxy"].public_url, null)
           WORKER_TRIGGERS_PUBLIC_URL    = try(local.microservices["worker-triggers"].public_url, null)
           WORKER_WORKFLOWS_PUBLIC_URL   = try(local.microservices["worker-workflows"].public_url, null)
@@ -506,26 +526,31 @@ locals {
           FEATURE_FLAG_PLATFORM_ENDPOINT = "http://flipt:${local.microservices.flipt.port}"
 
           # Database configurations
-          CERBERUS_POSTGRES_HOST     = try(local.infra_vars.postgres.value.cerberus.host, local.infra_vars.postgres.value.paragon.host)
-          CERBERUS_POSTGRES_PORT     = try(local.infra_vars.postgres.value.cerberus.port, local.infra_vars.postgres.value.paragon.port)
-          CERBERUS_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.cerberus.user, local.infra_vars.postgres.value.paragon.user)
-          CERBERUS_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.cerberus.password, local.infra_vars.postgres.value.paragon.password)
-          CERBERUS_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.cerberus.database, local.infra_vars.postgres.value.paragon.database)
-          HERMES_POSTGRES_HOST       = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
-          HERMES_POSTGRES_PORT       = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
-          HERMES_POSTGRES_USERNAME   = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
-          HERMES_POSTGRES_PASSWORD   = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
-          HERMES_POSTGRES_DATABASE   = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
-          PHEME_POSTGRES_HOST        = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
-          PHEME_POSTGRES_PORT        = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
-          PHEME_POSTGRES_USERNAME    = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
-          PHEME_POSTGRES_PASSWORD    = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
-          PHEME_POSTGRES_DATABASE    = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
-          ZEUS_POSTGRES_HOST         = try(local.infra_vars.postgres.value.zeus.host, local.infra_vars.postgres.value.paragon.host)
-          ZEUS_POSTGRES_PORT         = try(local.infra_vars.postgres.value.zeus.port, local.infra_vars.postgres.value.paragon.port)
-          ZEUS_POSTGRES_USERNAME     = try(local.infra_vars.postgres.value.zeus.user, local.infra_vars.postgres.value.paragon.user)
-          ZEUS_POSTGRES_PASSWORD     = try(local.infra_vars.postgres.value.zeus.password, local.infra_vars.postgres.value.paragon.password)
-          ZEUS_POSTGRES_DATABASE     = try(local.infra_vars.postgres.value.zeus.database, local.infra_vars.postgres.value.paragon.database)
+          CERBERUS_POSTGRES_HOST       = try(local.infra_vars.postgres.value.cerberus.host, local.infra_vars.postgres.value.paragon.host)
+          CERBERUS_POSTGRES_PORT       = try(local.infra_vars.postgres.value.cerberus.port, local.infra_vars.postgres.value.paragon.port)
+          CERBERUS_POSTGRES_USERNAME   = try(local.infra_vars.postgres.value.cerberus.user, local.infra_vars.postgres.value.paragon.user)
+          CERBERUS_POSTGRES_PASSWORD   = try(local.infra_vars.postgres.value.cerberus.password, local.infra_vars.postgres.value.paragon.password)
+          CERBERUS_POSTGRES_DATABASE   = try(local.infra_vars.postgres.value.cerberus.database, local.infra_vars.postgres.value.paragon.database)
+          EVENT_LOGS_POSTGRES_HOST     = try(local.infra_vars.postgres.value.eventlogs.host, local.infra_vars.postgres.value.paragon.host)
+          EVENT_LOGS_POSTGRES_PORT     = try(local.infra_vars.postgres.value.eventlogs.port, local.infra_vars.postgres.value.paragon.port)
+          EVENT_LOGS_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.eventlogs.user, local.infra_vars.postgres.value.paragon.user)
+          EVENT_LOGS_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.eventlogs.password, local.infra_vars.postgres.value.paragon.password)
+          EVENT_LOGS_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.eventlogs.database, local.infra_vars.postgres.value.paragon.database)
+          HERMES_POSTGRES_HOST         = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
+          HERMES_POSTGRES_PORT         = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
+          HERMES_POSTGRES_USERNAME     = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
+          HERMES_POSTGRES_PASSWORD     = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
+          HERMES_POSTGRES_DATABASE     = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
+          PHEME_POSTGRES_HOST          = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
+          PHEME_POSTGRES_PORT          = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
+          PHEME_POSTGRES_USERNAME      = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
+          PHEME_POSTGRES_PASSWORD      = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
+          PHEME_POSTGRES_DATABASE      = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
+          ZEUS_POSTGRES_HOST           = try(local.infra_vars.postgres.value.zeus.host, local.infra_vars.postgres.value.paragon.host)
+          ZEUS_POSTGRES_PORT           = try(local.infra_vars.postgres.value.zeus.port, local.infra_vars.postgres.value.paragon.port)
+          ZEUS_POSTGRES_USERNAME       = try(local.infra_vars.postgres.value.zeus.user, local.infra_vars.postgres.value.paragon.user)
+          ZEUS_POSTGRES_PASSWORD       = try(local.infra_vars.postgres.value.zeus.password, local.infra_vars.postgres.value.paragon.password)
+          ZEUS_POSTGRES_DATABASE       = try(local.infra_vars.postgres.value.zeus.database, local.infra_vars.postgres.value.paragon.database)
 
           # Redis configurations
           REDIS_URL = local.default_redis_url
@@ -586,8 +611,6 @@ locals {
           MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
           MONITOR_GRAFANA_SERVER_DOMAIN           = try(local.monitors["grafana"].public_url, null)
           MONITOR_GRAFANA_UPTIME_WEBHOOK_URL      = module.uptime.webhook
-          HEALTH_CHECKER_HOST                     = "http://health-checker"
-          HEALTH_CHECKER_PORT                     = try(local.monitors["health-checker"].port, null)
           MONITOR_KUBE_STATE_METRICS_HOST         = "http://kube-state-metrics"
           MONITOR_KUBE_STATE_METRICS_PORT         = try(local.monitors["kube-state-metrics"].port, null)
           MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null

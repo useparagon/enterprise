@@ -13,6 +13,8 @@ subchart:
     enabled: true
   hades:
     enabled: true
+  health-checker:
+    enabled: true
   hermes:
     enabled: true
   minio:
@@ -34,6 +36,8 @@ subchart:
   worker-crons:
     enabled: true
   worker-deployments:
+    enabled: true
+  worker-eventlogs:
     enabled: true
   worker-proxy:
     enabled: true
