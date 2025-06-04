@@ -54,6 +54,12 @@ locals {
       ha   = false
       sku  = "B_Standard_B1ms"
     }
+    eventlogs = {
+      name = "${var.workspace}-eventlogs"
+      db   = "eventlogs"
+      ha   = false
+      sku  = "B_Standard_B2s"
+    }
     hermes = {
       name = "${var.workspace}-hermes"
       db   = "hermes"

@@ -65,6 +65,11 @@ locals {
       size = "db.t4g.micro"
       db   = "cerberus"
     }
+    eventlogs = {
+      name = "${var.workspace}-eventlogs"
+      size = "db.t4g.small"
+      db   = "eventlogs"
+    }
     hermes = {
       name = "${var.workspace}-hermes"
       size = var.rds_instance_class
