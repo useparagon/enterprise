@@ -1,12 +1,4 @@
 namespace: paragon
-secrets:
-  paragon:
-    LICENSE: ""
-  dockerCfg:
-    docker_registry_server: "docker.io"
-    docker_username: ""
-    docker_password: ""
-    docker_email: "" 
 
 envKeys:
  - ACCOUNT_BILLING_SYNC_FREQUENCY
@@ -30,7 +22,6 @@ envKeys:
  - CDN_PUBLIC_URL
  - CERBERUS_PORT
  - CERBERUS_PRIVATE_URL
- - CHRONOS_PRIVATE_URL
  - CLOUD_STORAGE_PRIVATE_URL
  - CLOUD_STORAGE_PUBLIC_BUCKET
  - CLOUD_STORAGE_PUBLIC_URL
@@ -119,8 +110,6 @@ envKeys:
  - PHEME_PORT
  - PHEME_PRIVATE_URL
  - PLATFORM_ENV
- - PLATO_PORT
- - PLATO_PRIVATE_URL
  - POSTGRES_CONNECTION_IDLE_TIMEOUT_MILLIS
  - POSTGRES_CONNECTION_TIMEOUT_MILLIS
  - POSTGRES_IDLE_TRANSACTION_TIMEOUT_MILLIS
@@ -257,7 +246,7 @@ envKeys:
  - ZO_S3_REGION_NAME
  - ZO_S3_SERVER_URL
 
-secretsKeys:
+secretKeys:
  - ACCOUNT_ACCESS_TOKEN
  - ADMIN_BASIC_AUTH_PASSWORD
  - ADMIN_BASIC_AUTH_USERNAME
