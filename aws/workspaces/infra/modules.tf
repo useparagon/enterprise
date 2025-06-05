@@ -75,7 +75,6 @@ module "kafka" {
 
   private_subnet = module.network.private_subnet
   vpc_id         = module.network.vpc.id
-  logs_bucket    = module.storage.s3.logs_bucket
 }
 
 module "bastion" {

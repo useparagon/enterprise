@@ -89,6 +89,8 @@ subchart:
     enabled: ${contains(keys(var.microservices), "worker-crons")}
   worker-deployments:
     enabled: ${contains(keys(var.microservices), "worker-deployments")}
+  worker-eventlogs:
+    enabled: ${contains(keys(var.microservices), "worker-eventlogs")}
   worker-proxy:
     enabled: ${contains(keys(var.microservices), "worker-proxy")}
   worker-triggers:
