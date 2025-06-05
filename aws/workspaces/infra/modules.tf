@@ -28,6 +28,8 @@ module "postgres" {
   rds_multi_az                = var.rds_multi_az
   rds_multiple_instances      = var.rds_multiple_instances
   rds_postgres_version        = var.rds_postgres_version
+  rds_restore_from_snapshot   = var.rds_restore_from_snapshot
+  rds_final_snapshot_enabled  = var.rds_final_snapshot_enabled
   disable_deletion_protection = var.disable_deletion_protection
 
   vpc                = module.network.vpc

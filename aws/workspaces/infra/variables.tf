@@ -73,6 +73,18 @@ variable "rds_multi_az" {
   default     = true
 }
 
+variable "rds_restore_from_snapshot" {
+  description = "Specifies that RDS instances should be restored from a snapshot."
+  type        = bool
+  default     = false
+}
+
+variable "rds_final_snapshot_enabled" {
+  description = "Specifies that RDS instances should perform a final snapshot before being deleted."
+  type        = bool
+  default     = true
+}
+
 # elasticache
 variable "elasticache_node_type" {
   description = "The ElastiCache node type used for Redis."
