@@ -127,6 +127,16 @@ variable "k8s_version" {
   type        = string
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+}
+
+variable "managed_sync_version" {
+  description = "The version of the Managed Sync helm chart to install."
+  type        = string
+}
+
 locals {
   chart_names     = var.monitors_enabled ? ["paragon-logging", "paragon-monitoring", "paragon-onprem"] : ["paragon-logging", "paragon-onprem"]
   chart_directory = "../charts"
