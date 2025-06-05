@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # version of charts, must be semver and doesn't have to match Paragon appVersion
-version="2025.6.4"
+version="2025.6.5"
 provider=${1:-aws}
 
 # allow calling from other directories
@@ -21,7 +21,13 @@ echo "ℹ️ preparing: $provider"
 mkdir -p $destination
 
 # copy charts to provider destination
-rsync -aqv --delete $script_dir/charts/ $destination
+if [[ "$provider" == "k8s" ]]; then
+    # For k8s provider, copy everything including example.yaml and bootstrap
+    rsync -aqv --delete $script_dir/charts/ $destination
+else
+    # For terraform providers (aws, azure, gcp), exclude example.yaml and bootstrap
+    rsync -aqv --delete --exclude='example.yaml' --exclude='bootstrap/' $script_dir/charts/ $destination
+fi
 
 # update version using hash of chart folders
 charts=($destination/*/)

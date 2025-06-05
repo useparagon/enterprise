@@ -1,56 +1,176 @@
-# Bootstrap Helm Chart
+# Paragon Helm Charts Deployment Guide
 
-## Purpose
+## Overview
 
-This chart bootstraps the Paragon platform with required secrets and configuration. This duplicates functionality that would normally be handled by the `paragon` workspace when deploying to AWS, Azure or GCP with Terraform.
+This guide covers deploying Paragon using Helm charts directly on Kubernetes. This approach is an alternative to using Terraform workspaces for AWS, Azure, or GCP deployments.
 
-## Usage
+## Prerequisites
 
-1. **Create a `.secure/values.yaml` file:**
+- Kubernetes cluster with kubectl access
+- Helm 3.x installed
+- A default StorageClass configured in your cluster
+- Docker registry credentials for pulling Paragon images
 
-   ```yaml
-   namespace: paragon
+## Setup
 
-   dockerCfg:
-     docker_registry_server: "docker.io"
-     docker_username: "your-username"
-     docker_password: "your-password"
-     docker_email: "your-email@example.com"
+### 1. Prepare Charts
 
-   env:
-     AWS_REGION: "us-east-1"
-     NODE_ENV: "production"
-     # ...add more environment variables as needed
+First, prepare the charts for Kubernetes deployment:
 
-   secrets:
-     LICENSE: "your-license-key"
-     ADMIN_BASIC_AUTH_PASSWORD: "your-admin-password"
-     # ...add more secrets as needed
-   ```
+```sh
+./prepare.sh k8s
+```
 
-2. **Prepare the chart:**
+This will create the `./dist/` directory with all necessary charts.
 
-   ```sh
-   ./prepare.sh k8s
-   ```
+### 2. Create Values File
 
-3. **Deploy the chart:**
+Copy the example values file and customize it with your configuration:
 
-   ```sh
-   helm install bootstrap ./dist/bootstrap -f .secure/values.yaml --namespace paragon --create-namespace
-   ```
+```sh
+cp ./charts/example.yaml .secure/values.yaml
+```
 
-   To upgrade:
-   ```sh
-   helm upgrade bootstrap ./dist/bootstrap -f .secure/values.yaml --namespace paragon
-   ```
+**Important:** Edit `.secure/values.yaml` and replace all placeholder values (marked with "your-*") with your actual configuration and secrets.
 
-## Security
+### 3. Configure Default StorageClass
 
-- **Never commit `.secure/values.yaml` to version control.**  
+Ensure your cluster has a default StorageClass for persistent volumes:
+
+```sh
+# List available storage classes
+kubectl get storageclass
+
+# Set a storage class as default (replace <name> with actual storage class name)
+kubectl patch storageclass <name> -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+```
+
+## Deployment Order
+
+Deploy the charts in the following order to ensure proper dependencies:
+
+### 1. Bootstrap Chart
+
+The bootstrap chart sets up essential secrets and configuration:
+
+```sh
+helm install bootstrap ./dist/bootstrap -f .secure/values.yaml --namespace paragon --create-namespace
+```
+
+To upgrade:
+```sh
+helm upgrade bootstrap ./dist/bootstrap -f .secure/values.yaml --namespace paragon
+```
+
+### 2. Paragon Logging Chart
+
+Deploy logging infrastructure (OpenObserve and Fluent Bit):
+
+```sh
+helm install paragon-logging ./dist/paragon-logging -f .secure/values.yaml --namespace paragon
+```
+
+To upgrade:
+```sh
+helm upgrade paragon-logging ./dist/paragon-logging -f .secure/values.yaml --namespace paragon
+```
+
+### 3. Paragon Core Chart
+
+Deploy the main Paragon application services:
+
+```sh
+helm install paragon-onprem ./dist/paragon-onprem -f .secure/values.yaml --namespace paragon
+```
+
+To upgrade:
+```sh
+helm upgrade paragon-onprem ./dist/paragon-onprem -f .secure/values.yaml --namespace paragon
+```
+
+### 4. Paragon Monitoring Chart
+
+Deploy monitoring infrastructure (Prometheus, Grafana, etc.):
+
+```sh
+helm install paragon-monitoring ./dist/paragon-monitoring -f .secure/values.yaml --namespace paragon
+```
+
+To upgrade:
+```sh
+helm upgrade paragon-monitoring ./dist/paragon-monitoring -f .secure/values.yaml --namespace paragon
+```
+
+## Configuration Reference
+
+### Required Values
+
+The following sections in `.secure/values.yaml` must be configured:
+
+- **dockerCfg**: Docker Hub credentials for pulling Paragon images
+- **global.env**: Environment variables and service configuration
+- **secrets**: Database credentials, API keys, and other sensitive data
+- **fluent-bit.secrets**: OpenObserve credentials for log forwarding
+- **openobserve**: Bucket configuration for log storage
+
+### Platform-Specific Notes
+
+- **AWS**: Configure S3 buckets and IAM credentials
+- **Azure**: Configure blob storage and service principal credentials  
+- **GCP**: Configure GCS buckets and service account credentials
+- **On-premises**: Configure external storage and database connections
+
+## Verification
+
+After deployment, verify all services are running:
+
+```sh
+# Check pod status
+kubectl get pods -n paragon
+
+# Check ingress resources
+kubectl get ingress -n paragon
+
+# Check persistent volume claims
+kubectl get pvc -n paragon
+```
+
+## Security Best Practices
+
+- **Never commit `.secure/values.yaml` to version control**
+- Store sensitive values in a secure secrets management system
+- Use Kubernetes RBAC to restrict access to the paragon namespace
+- Enable encryption at rest for persistent volumes
+- Configure network policies to restrict pod-to-pod communication
 
 ## Troubleshooting
 
-- Ensure your YAML is valid.
-- Use the correct key paths for `dockerCfg`, `env`, and `secrets` values.
-- If you see namespace errors, use `--create-namespace` or create the namespace manually.
+### Common Issues
+
+1. **PVC stuck in Pending state**: Ensure default StorageClass is configured
+2. **Image pull errors**: Verify Docker registry credentials in dockerCfg
+3. **Pod startup failures**: Check logs and ensure all required secrets are set
+4. **Service connectivity**: Verify DNS resolution and network policies
+
+### Getting Help
+
+- Check pod logs: `kubectl logs <pod-name> -n paragon`
+- Describe resources: `kubectl describe <resource-type> <resource-name> -n paragon`
+- Review Helm release status: `helm status <release-name> -n paragon`
+
+## Uninstallation
+
+To remove all Paragon components:
+
+```sh
+# Remove in reverse order
+helm uninstall paragon-monitoring -n paragon
+helm uninstall paragon-onprem -n paragon  
+helm uninstall paragon-logging -n paragon
+helm uninstall bootstrap -n paragon
+
+# Optionally remove the namespace
+kubectl delete namespace paragon
+```
+
+**Warning**: This will delete all data stored in persistent volumes.
