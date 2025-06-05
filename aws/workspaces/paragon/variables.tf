@@ -305,8 +305,8 @@ locals {
     }
     "worker-eventlogs" = {
       "healthcheck_path" = "/healthz"
-      "port"             = try(local.helm_vars.global.env["WORKER_EVENTLOGS_PORT"], 1723)
-      "public_url"       = try(local.helm_vars.global.env["WORKER_EVENTLOGS_PUBLIC_URL"], "https://worker-eventlogs.${var.domain}")
+      "port"             = try(local.helm_vars.global.env["WORKER_EVENT_LOGS_PORT"], 1723)
+      "public_url"       = try(local.helm_vars.global.env["WORKER_EVENT_LOGS_PUBLIC_URL"], "https://worker-eventlogs.${var.domain}")
     }
     "worker-proxy" = {
       "healthcheck_path" = "/healthz"
@@ -460,7 +460,7 @@ locals {
           WORKER_CREDENTIALS_PORT = try(local.microservices["worker-credentials"].port, null)
           WORKER_CRONS_PORT       = try(local.microservices["worker-crons"].port, null)
           WORKER_DEPLOYMENTS_PORT = try(local.microservices["worker-deployments"].port, null)
-          WORKER_EVENTLOGS_PORT   = try(local.microservices["worker-eventlogs"].port, null)
+          WORKER_EVENT_LOGS_PORT  = try(local.microservices["worker-eventlogs"].port, null)
           WORKER_PROXY_PORT       = try(local.microservices["worker-proxy"].port, null)
           WORKER_TRIGGERS_PORT    = try(local.microservices["worker-triggers"].port, null)
           WORKER_WORKFLOWS_PORT   = try(local.microservices["worker-workflows"].port, null)
@@ -484,7 +484,7 @@ locals {
           WORKER_CREDENTIALS_PRIVATE_URL = try("http://worker-credentials:${local.microservices["worker-credentials"].port}", null)
           WORKER_CRONS_PRIVATE_URL       = try("http://worker-crons:${local.microservices["worker-crons"].port}", null)
           WORKER_DEPLOYMENTS_PRIVATE_URL = try("http://worker-deployments:${local.microservices["worker-deployments"].port}", null)
-          WORKER_EVENTLOGS_PRIVATE_URL   = try("http://worker-eventlogs:${local.microservices["worker-eventlogs"].port}", null)
+          WORKER_EVENT_LOGS_PRIVATE_URL  = try("http://worker-eventlogs:${local.microservices["worker-eventlogs"].port}", null)
           WORKER_PROXY_PRIVATE_URL       = try("http://worker-proxy:${local.microservices["worker-proxy"].port}", null)
           WORKER_TRIGGERS_PRIVATE_URL    = try("http://worker-triggers:${local.microservices["worker-triggers"].port}", null)
           WORKER_WORKFLOWS_PRIVATE_URL   = try("http://worker-workflows:${local.microservices["worker-workflows"].port}", null)
@@ -507,7 +507,7 @@ locals {
           WORKER_CREDENTIALS_PUBLIC_URL = try(local.microservices["worker-credentials"].public_url, null)
           WORKER_CRONS_PUBLIC_URL       = try(local.microservices["worker-crons"].public_url, null)
           WORKER_DEPLOYMENTS_PUBLIC_URL = try(local.microservices["worker-deployments"].public_url, null)
-          WORKER_EVENTLOGS_PUBLIC_URL   = try(local.microservices["worker-eventlogs"].public_url, null)
+          WORKER_EVENT_LOGS_PUBLIC_URL  = try(local.microservices["worker-eventlogs"].public_url, null)
           WORKER_PROXY_PUBLIC_URL       = try(local.microservices["worker-proxy"].public_url, null)
           WORKER_TRIGGERS_PUBLIC_URL    = try(local.microservices["worker-triggers"].public_url, null)
           WORKER_WORKFLOWS_PUBLIC_URL   = try(local.microservices["worker-workflows"].public_url, null)
