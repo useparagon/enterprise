@@ -11,9 +11,8 @@ resource "aws_kms_alias" "kafka_alias" {
 }
 
 resource "random_string" "msk_username" {
-  length           = 16
-  special          = false
-  override_special = "!#$%&*()-_=+[]{}<>:?"
+  length  = 16
+  special = false
 }
 
 resource "random_password" "msk_password" {
@@ -99,7 +98,7 @@ resource "aws_msk_configuration" "kafka" {
 
   kafka_versions = [var.msk_kafka_version]
 
-  server_properties = <<PROPERTIES
+  server_properties = <<-PROPERTIES
 auto.create.topics.enable = true
 delete.topic.enable = true
 log.retention.hours = 168
