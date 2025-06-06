@@ -25,6 +25,10 @@ dockerCfg:
   docker_password: "your-docker-password"
   docker_email: "your-docker-email@example.com"
 
+# Let's Encrypt configuration for SSL certificates
+letsencrypt:
+  email: "your-letsencrypt-email@example.com"
+
 # Logging Forwarder
 fluent-bit:
   secrets:

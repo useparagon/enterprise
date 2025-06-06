@@ -64,7 +64,7 @@ spec:
   tls:
     - hosts:
         - {{ include "cerberus.ingressHost" . }}
-      secretName: {{ .Values.tls_secret }}
+      secretName: {{ .Values.tls_secret | default (printf "%s-tls" (include "cerberus.fullname" .)) }}
   {{- else if eq .Values.global.env.HOST_ENV "GCP_K8" }}
   loadBalancerIP: {{ .Values.ingress.loadBalancerIP }}
   {{- end }}

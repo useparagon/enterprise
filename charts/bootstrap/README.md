@@ -11,6 +11,117 @@ This guide covers deploying Paragon using Helm charts directly on Kubernetes. Th
 - A default StorageClass configured in your cluster
 - Docker registry credentials for pulling Paragon images
 
+### Infrastructure Prerequisites
+
+Before deploying Paragon, install these core infrastructure components:
+
+#### 1. NGINX Ingress Controller
+
+Required for routing external traffic to your Paragon services:
+
+```sh
+# Add the ingress-nginx repository
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+# Install nginx ingress controller (default for most cloud providers)
+helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --set controller.service.type=LoadBalancer
+
+# Certain providers may require or benefit from custom annotations. e.g.
+# for AWS EKS, you may want to use Network Load Balancer:
+# helm install ingress-nginx ingress-nginx/ingress-nginx \
+#   --namespace ingress-nginx \
+#   --create-namespace \
+#   --set controller.service.type=LoadBalancer \
+#   --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb"
+```
+
+#### 2. cert-manager (for SSL Certificates)
+
+Required for automatic SSL certificate management with Let's Encrypt:
+
+```sh
+# Add the cert-manager repository
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+
+# Install cert-manager
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.13.0 \
+  --set installCRDs=true
+```
+
+### DNS Configuration
+
+After installing the infrastructure components and deploying Paragon, configure your DNS:
+
+1. **Get the Load Balancer endpoint**:
+   ```sh
+   kubectl get service --namespace ingress-nginx ingress-nginx-controller --output wide
+   ```
+
+2. **Set up DNS records** pointing to the load balancer hostname:
+
+   **Option A: Wildcard CNAME (Recommended)**
+   ```
+   *.<your-domain>                 CNAME   <load-balancer-hostname>
+   ```
+   
+   **Note**: If using Cloudflare, ensure DNS-only mode (gray cloud) for proper Let's Encrypt certificate validation.
+   
+   **Option B: Individual CNAMEs**
+   ```
+   account.<your-domain>           CNAME   <load-balancer-hostname>
+   dashboard.<your-domain>         CNAME   <load-balancer-hostname>
+   cerberus.<your-domain>          CNAME   <load-balancer-hostname>
+   # ... etc for all services
+   ```
+
+   **For the naked/apex domain** (optional):
+   ```
+   # AWS Route 53 (recommended for AWS)
+   <your-domain>                   ALIAS   <load-balancer-hostname>
+   
+   # Cloudflare - DNS-only mode (not proxied!)
+   <your-domain>                   CNAME   <load-balancer-hostname>  (DNS-only, gray cloud)
+   
+   # Traditional DNS providers - use A record with IP
+   <your-domain>                   A       <load-balancer-ip>
+   ```
+
+   **⚠️ Important for Cloudflare users**: If using Cloudflare, make sure to use **DNS-only mode** (gray cloud icon) rather than proxied mode (orange cloud). Proxied mode will break Let's Encrypt certificate validation since Cloudflare terminates TLS at their edge instead of your ingress controller.
+
+3. **Configure PARAGON_DOMAIN environment variable** in your values.yaml:
+   ```yaml
+   global:
+     env:
+       PARAGON_DOMAIN: "your-domain.com"
+   ```
+
+The ingresses will automatically use `<service-name>.<PARAGON_DOMAIN>` as hostnames when PARAGON_DOMAIN is set.
+
+### Verify Infrastructure Setup
+
+Before deploying Paragon, verify your infrastructure is ready:
+
+```sh
+# Check nginx ingress controller
+kubectl get pods -n ingress-nginx
+kubectl get service -n ingress-nginx ingress-nginx-controller
+
+# Check cert-manager
+kubectl get pods -n cert-manager
+kubectl get clusterissuer  # Should show letsencrypt-prod after bootstrap deployment
+
+# Check storage class
+kubectl get storageclass
+```
+
 ## Setup
 
 ### 1. Prepare Charts
@@ -51,7 +162,7 @@ Deploy the charts in the following order to ensure proper dependencies:
 
 ### 1. Bootstrap Chart
 
-The bootstrap chart sets up essential secrets and configuration:
+The bootstrap chart sets up essential secrets, configuration, and the Let's Encrypt ClusterIssuer for SSL certificates:
 
 ```sh
 helm install bootstrap ./dist/bootstrap -f .secure/values.yaml --namespace paragon --create-namespace
@@ -61,6 +172,8 @@ To upgrade:
 ```sh
 helm upgrade bootstrap ./dist/bootstrap -f .secure/values.yaml --namespace paragon
 ```
+
+**Note**: The bootstrap chart includes a Let's Encrypt ClusterIssuer (`letsencrypt-prod`) that works with cert-manager to automatically provision SSL certificates for all Paragon ingresses. Make sure to configure the Let's Encrypt email address in your `.secure/values.yaml` (this is already included in the example.yaml template).
 
 ### 2. Paragon Logging Chart
 
