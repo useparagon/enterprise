@@ -5,7 +5,7 @@ output "rds" {
       host     = aws_db_instance.postgres[key].address
       port     = aws_db_instance.postgres[key].port
       user     = aws_db_instance.postgres[key].username
-      password = random_password.postgres_root_password[key].result
+      password = var.rds_restore_from_snapshot ? null : random_password.postgres_root_password[key].result
       database = aws_db_instance.postgres[key].db_name
     }
   }
