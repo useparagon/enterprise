@@ -63,13 +63,13 @@ spec:
   {{- if or (eq .Values.global.env.HOST_ENV "AZURE_K8") (not (or (eq .Values.global.env.HOST_ENV "AWS_K8") (eq .Values.global.env.HOST_ENV "GCP_K8"))) }}
   tls:
     - hosts:
-        - {{ .Values.ingress.host }}
+        - {{ include "pheme.ingressHost" . }}
       secretName: {{ .Values.tls_secret }}
   {{- else if eq .Values.global.env.HOST_ENV "GCP_K8" }}
   loadBalancerIP: {{ .Values.ingress.loadBalancerIP }}
   {{- end }}
   rules:
-    - host: {{ .Values.ingress.host }}
+    - host: {{ include "pheme.ingressHost" . }}
       http:
         paths:
           - path: /

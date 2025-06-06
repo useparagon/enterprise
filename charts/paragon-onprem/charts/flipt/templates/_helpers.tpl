@@ -136,3 +136,22 @@ Deployment annotations
 {{- print "autoscaling/v2" -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Generate the ingress host
+*/}}
+{{- define "flipt.ingressHost" -}}
+{{- if .Values.ingress.host }}
+{{- if .Values.global.env.PARAGON_DOMAIN }}
+{{- printf "%s.%s" .Values.ingress.host .Values.global.env.PARAGON_DOMAIN }}
+{{- else }}
+{{- .Values.ingress.host }}
+{{- end }}
+{{- else }}
+{{- if .Values.global.env.PARAGON_DOMAIN }}
+{{- printf "%s.%s" .Chart.Name .Values.global.env.PARAGON_DOMAIN }}
+{{- else }}
+{{- .Chart.Name }}
+{{- end }}
+{{- end }}
+{{- end }}
