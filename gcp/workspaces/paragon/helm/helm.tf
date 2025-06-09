@@ -235,17 +235,27 @@ resource "helm_release" "paragon_logging" {
   }
 
   set {
-    name  = "global.secrets.ZO_S3_BUCKET_NAME"
+    name  = "global.env.ZO_S3_BUCKET_NAME"
     value = var.logs_bucket
   }
 
-  set {
-    name  = "global.secrets.ZO_ROOT_USER_EMAIL"
+  set_sensitive {
+    name  = "fluent-bit.secrets.ZO_ROOT_USER_EMAIL"
     value = local.openobserve_email
   }
 
   set_sensitive {
-    name  = "global.secrets.ZO_ROOT_USER_PASSWORD"
+    name  = "fluent-bit.secrets.ZO_ROOT_USER_PASSWORD"
+    value = local.openobserve_password
+  }
+
+  set_sensitive {
+    name  = "openobserve.secrets.ZO_ROOT_USER_EMAIL"
+    value = local.openobserve_email
+  }
+
+  set_sensitive {
+    name  = "openobserve.secrets.ZO_ROOT_USER_PASSWORD"
     value = local.openobserve_password
   }
 

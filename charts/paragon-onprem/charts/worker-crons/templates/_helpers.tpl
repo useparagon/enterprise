@@ -66,11 +66,7 @@ Generate the ingress host
 */}}
 {{- define "worker-crons.ingressHost" -}}
 {{- if .Values.ingress.host }}
-{{- if .Values.global.env.PARAGON_DOMAIN }}
-{{- printf "%s.%s" .Values.ingress.host .Values.global.env.PARAGON_DOMAIN }}
-{{- else }}
 {{- .Values.ingress.host }}
-{{- end }}
 {{- else }}
 {{- if .Values.global.env.PARAGON_DOMAIN }}
 {{- printf "%s.%s" .Chart.Name .Values.global.env.PARAGON_DOMAIN }}
