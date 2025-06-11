@@ -69,6 +69,7 @@ module "kafka" {
 
   workspace                  = local.workspace
   force_destroy              = var.disable_deletion_protection
+  msk_autoscaling_enabled    = var.msk_autoscaling_enabled
   msk_kafka_version          = var.msk_kafka_version
   msk_instance_type          = var.msk_instance_type
   msk_kafka_num_broker_nodes = var.msk_kafka_num_broker_nodes

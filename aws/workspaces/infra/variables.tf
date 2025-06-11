@@ -249,6 +249,12 @@ variable "msk_kafka_num_broker_nodes" {
   default     = 2
 }
 
+variable "msk_autoscaling_enabled" {
+  description = "Whether to enable autoscaling for the MSK cluster."
+  type        = bool
+  default     = true
+}
+
 variable "msk_instance_type" {
   description = "The instance type for the MSK cluster."
   type        = string
