@@ -109,6 +109,8 @@ PROPERTIES
 }
 
 resource "aws_appautoscaling_target" "kafka" {
+  count = var.msk_autoscaling_enabled ? 1 : 0
+
   max_capacity       = 3000
   min_capacity       = 1
   resource_id        = aws_msk_cluster.kafka.arn
@@ -117,11 +119,13 @@ resource "aws_appautoscaling_target" "kafka" {
 }
 
 resource "aws_appautoscaling_policy" "kafka" {
+  count = var.msk_autoscaling_enabled ? 1 : 0
+
   name               = "${aws_msk_cluster.kafka.cluster_name}-msk-scaling"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_msk_cluster.kafka.arn
-  scalable_dimension = aws_appautoscaling_target.kafka.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.kafka.service_namespace
+  scalable_dimension = aws_appautoscaling_target.kafka[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.kafka[0].service_namespace
 
   target_tracking_scaling_policy_configuration {
     disable_scale_in = false
