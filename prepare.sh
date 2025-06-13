@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # version of charts, must be semver and doesn't have to match Paragon appVersion
-version="2025.6.9"
+version="2025.6.13"
 provider=${1:-aws}
 
 # allow calling from other directories
@@ -33,7 +33,8 @@ fi
 charts=($destination/*/)
 for chart in "${charts[@]}"
 do
-    hash=$(find $chart -type f -exec shasum -a 256 {} + | sort | shasum -a 256 | awk '{print $1}' | cut -c1-8)
+    # sha256 hash of all files in the chart folder with paths sorted then stripped for consistency across providers
+    hash=$(find $chart -type f | sort | xargs shasum -a 256 -b | awk '{print $1}' | shasum -a 256 | awk '{print $1}' | cut -c1-8)
     find $chart -type f -exec sed -i '' -e "s/__PARAGON_VERSION__/$version-$hash/g" {} +
     echo "$(basename "$chart"): $hash"
 done
