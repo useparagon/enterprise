@@ -130,10 +130,12 @@ resource "aws_iam_user_policy" "app" {
             "s3:ListBucketMultipartUploads"
           ],
           "Effect" : "Allow",
-          "Resource" : [
+          "Resource" : concat([
             "${aws_s3_bucket.app.arn}",
             "${aws_s3_bucket.cdn.arn}"
-          ]
+            ], var.managed_sync_enabled ? [
+            "${aws_s3_bucket.managed_sync[0].arn}"
+          ] : [])
         },
         {
           "Sid" : "AllowReadObjectOperations",
@@ -144,10 +146,12 @@ resource "aws_iam_user_policy" "app" {
             "s3:ListMultipartUploadParts"
           ],
           "Effect" : "Allow",
-          "Resource" : [
+          "Resource" : concat([
             "${aws_s3_bucket.app.arn}/*",
             "${aws_s3_bucket.cdn.arn}/*"
-          ]
+            ], var.managed_sync_enabled ? [
+            "${aws_s3_bucket.managed_sync[0].arn}/*"
+          ] : [])
         },
         {
           "Sid" : "AllowPutAndDeleteObjectOperations",
@@ -159,10 +163,12 @@ resource "aws_iam_user_policy" "app" {
             "s3:PutObjectLegalHold"
           ],
           "Effect" : "Allow",
-          "Resource" : [
+          "Resource" : concat([
             "${aws_s3_bucket.app.arn}/*",
             "${aws_s3_bucket.cdn.arn}/*"
-          ]
+            ], var.managed_sync_enabled ? [
+            "${aws_s3_bucket.managed_sync[0].arn}/*"
+          ] : [])
         }
       ]
     }

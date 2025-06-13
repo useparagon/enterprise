@@ -169,6 +169,18 @@ variable "helm_yaml" {
   default     = null
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+  default     = false
+}
+
+variable "managed_sync_version" {
+  description = "The version of the Managed Sync helm chart to install."
+  type        = string
+  default     = "latest"
+}
+
 locals {
   # hash of account ID to help ensure uniqueness of resources like S3 bucket names
   hash        = substr(sha256(data.aws_caller_identity.current.account_id), 0, 8)
@@ -195,7 +207,7 @@ locals {
 
   cloud_storage_type = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "S3")
 
-  all_microservices = {
+  monorepo_microservices = {
     "account" = {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["ACCOUNT_PORT"], 1708)
@@ -313,6 +325,21 @@ locals {
     }
   }
 
+  managed_sync_microservices = {
+    "api-sync" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["API_SYNC_HTTP_PORT"], 1800)
+      "public_url"       = try(local.helm_vars.global.env["API_SYNC_PUBLIC_URL"], "https://ms-sync.${var.domain}")
+    }
+    "worker-sync" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["SYNC_WORKER_HTTP_PORT"], 1802)
+      "public_url"       = try(local.helm_vars.global.env["SYNC_WORKER_PUBLIC_URL"], "https://ms-worker-sync.${var.domain}")
+    }
+  }
+
+  all_microservices = merge(local.monorepo_microservices, var.managed_sync_enabled ? local.managed_sync_microservices : {})
+
   microservices = {
     for microservice, config in local.all_microservices :
     microservice => config
@@ -402,208 +429,244 @@ locals {
 
   helm_values = merge(local.helm_vars, {
     global = merge(local.helm_vars.global, {
-      env = merge({
-        AWS_REGION             = var.aws_region
-        BRANCH                 = "main"
-        EMAIL_DELIVERY_SERVICE = "none"
-        HOST_ENV               = "AWS_K8"
-        LOG_LEVEL              = "info"
-        NODE_ENV               = "production"
-        ORGANIZATION           = var.organization
-        PARAGON_DOMAIN         = var.domain
-        PLATFORM_ENV           = "enterprise"
-        REGION                 = var.aws_region
+      env = merge(
+        {
+          AWS_REGION             = var.aws_region
+          BRANCH                 = "main"
+          EMAIL_DELIVERY_SERVICE = "none"
+          HOST_ENV               = "AWS_K8"
+          LOG_LEVEL              = "info"
+          NODE_ENV               = "production"
+          ORGANIZATION           = var.organization
+          PARAGON_DOMAIN         = var.domain
+          PLATFORM_ENV           = "enterprise"
+          REGION                 = var.aws_region
 
-        # Service ports
-        ACCOUNT_PORT            = try(local.microservices.account.port, null)
-        CACHE_REPLAY_PORT       = try(local.microservices["cache-replay"].port, null)
-        CERBERUS_PORT           = try(local.microservices.cerberus.port, null)
-        CONNECT_PORT            = try(local.microservices.connect.port, null)
-        DASHBOARD_PORT          = try(local.microservices.dashboard.port, null)
-        HADES_PORT              = try(local.microservices.hades.port, null)
-        HEALTH_CHECKER_PORT     = try(local.microservices["health-checker"].port, null)
-        HERMES_PORT             = try(local.microservices.hermes.port, null)
-        MINIO_PORT              = try(local.microservices.minio.port, null)
-        PASSPORT_PORT           = try(local.microservices.passport.port, null)
-        PHEME_PORT              = try(local.microservices.pheme.port, null)
-        RELEASE_PORT            = try(local.microservices.release.port, null)
-        WORKER_ACTIONKIT_PORT   = try(local.microservices["worker-actionkit"].port, null)
-        WORKER_ACTIONS_PORT     = try(local.microservices["worker-actions"].port, null)
-        WORKER_CREDENTIALS_PORT = try(local.microservices["worker-credentials"].port, null)
-        WORKER_CRONS_PORT       = try(local.microservices["worker-crons"].port, null)
-        WORKER_DEPLOYMENTS_PORT = try(local.microservices["worker-deployments"].port, null)
-        WORKER_EVENT_LOGS_PORT  = try(local.microservices["worker-eventlogs"].port, null)
-        WORKER_PROXY_PORT       = try(local.microservices["worker-proxy"].port, null)
-        WORKER_TRIGGERS_PORT    = try(local.microservices["worker-triggers"].port, null)
-        WORKER_WORKFLOWS_PORT   = try(local.microservices["worker-workflows"].port, null)
-        ZEUS_PORT               = try(local.microservices.zeus.port, null)
+          # Service ports
+          ACCOUNT_PORT            = try(local.microservices.account.port, null)
+          CACHE_REPLAY_PORT       = try(local.microservices["cache-replay"].port, null)
+          CERBERUS_PORT           = try(local.microservices.cerberus.port, null)
+          CONNECT_PORT            = try(local.microservices.connect.port, null)
+          DASHBOARD_PORT          = try(local.microservices.dashboard.port, null)
+          HADES_PORT              = try(local.microservices.hades.port, null)
+          HEALTH_CHECKER_PORT     = try(local.microservices["health-checker"].port, null)
+          HERMES_PORT             = try(local.microservices.hermes.port, null)
+          MINIO_PORT              = try(local.microservices.minio.port, null)
+          PASSPORT_PORT           = try(local.microservices.passport.port, null)
+          PHEME_PORT              = try(local.microservices.pheme.port, null)
+          RELEASE_PORT            = try(local.microservices.release.port, null)
+          WORKER_ACTIONKIT_PORT   = try(local.microservices["worker-actionkit"].port, null)
+          WORKER_ACTIONS_PORT     = try(local.microservices["worker-actions"].port, null)
+          WORKER_CREDENTIALS_PORT = try(local.microservices["worker-credentials"].port, null)
+          WORKER_CRONS_PORT       = try(local.microservices["worker-crons"].port, null)
+          WORKER_DEPLOYMENTS_PORT = try(local.microservices["worker-deployments"].port, null)
+          WORKER_EVENT_LOGS_PORT  = try(local.microservices["worker-eventlogs"].port, null)
+          WORKER_PROXY_PORT       = try(local.microservices["worker-proxy"].port, null)
+          WORKER_TRIGGERS_PORT    = try(local.microservices["worker-triggers"].port, null)
+          WORKER_WORKFLOWS_PORT   = try(local.microservices["worker-workflows"].port, null)
+          ZEUS_PORT               = try(local.microservices.zeus.port, null)
 
-        # Service Private URLs
-        ACCOUNT_PRIVATE_URL            = try("http://account:${local.microservices.account.port}", null)
-        CACHE_REPLAY_PRIVATE_URL       = try("http://cache-replay:${local.microservices["cache-replay"].port}", null)
-        CERBERUS_PRIVATE_URL           = try("http://cerberus:${local.microservices.cerberus.port}", null)
-        CONNECT_PRIVATE_URL            = try("http://connect:${local.microservices.connect.port}", null)
-        DASHBOARD_PRIVATE_URL          = try("http://dashboard:${local.microservices.dashboard.port}", null)
-        HADES_PRIVATE_URL              = try("http://hades:${local.microservices.hades.port}", null)
-        HEALTH_CHECKER_PRIVATE_URL     = try("http://health-checker:${local.microservices["health-checker"].port}", null)
-        HERMES_PRIVATE_URL             = try("http://hermes:${local.microservices.hermes.port}", null)
-        MINIO_PRIVATE_URL              = try("http://minio:${local.microservices.minio.port}", null)
-        PASSPORT_PRIVATE_URL           = try("http://passport:${local.microservices.passport.port}", null)
-        PHEME_PRIVATE_URL              = try("http://pheme:${local.microservices.pheme.port}", null)
-        RELEASE_PRIVATE_URL            = try("http://release:${local.microservices.release.port}", null)
-        WORKER_ACTIONKIT_PRIVATE_URL   = try("http://worker-actionkit:${local.microservices["worker-actionkit"].port}", null)
-        WORKER_ACTIONS_PRIVATE_URL     = try("http://worker-actions:${local.microservices["worker-actions"].port}", null)
-        WORKER_CREDENTIALS_PRIVATE_URL = try("http://worker-credentials:${local.microservices["worker-credentials"].port}", null)
-        WORKER_CRONS_PRIVATE_URL       = try("http://worker-crons:${local.microservices["worker-crons"].port}", null)
-        WORKER_DEPLOYMENTS_PRIVATE_URL = try("http://worker-deployments:${local.microservices["worker-deployments"].port}", null)
-        WORKER_EVENT_LOGS_PRIVATE_URL  = try("http://worker-eventlogs:${local.microservices["worker-eventlogs"].port}", null)
-        WORKER_PROXY_PRIVATE_URL       = try("http://worker-proxy:${local.microservices["worker-proxy"].port}", null)
-        WORKER_TRIGGERS_PRIVATE_URL    = try("http://worker-triggers:${local.microservices["worker-triggers"].port}", null)
-        WORKER_WORKFLOWS_PRIVATE_URL   = try("http://worker-workflows:${local.microservices["worker-workflows"].port}", null)
-        ZEUS_PRIVATE_URL               = try("http://zeus:${local.microservices.zeus.port}", null)
+          # Service Private URLs
+          ACCOUNT_PRIVATE_URL            = try("http://account:${local.microservices.account.port}", null)
+          CACHE_REPLAY_PRIVATE_URL       = try("http://cache-replay:${local.microservices["cache-replay"].port}", null)
+          CERBERUS_PRIVATE_URL           = try("http://cerberus:${local.microservices.cerberus.port}", null)
+          CONNECT_PRIVATE_URL            = try("http://connect:${local.microservices.connect.port}", null)
+          DASHBOARD_PRIVATE_URL          = try("http://dashboard:${local.microservices.dashboard.port}", null)
+          HADES_PRIVATE_URL              = try("http://hades:${local.microservices.hades.port}", null)
+          HEALTH_CHECKER_PRIVATE_URL     = try("http://health-checker:${local.microservices["health-checker"].port}", null)
+          HERMES_PRIVATE_URL             = try("http://hermes:${local.microservices.hermes.port}", null)
+          MINIO_PRIVATE_URL              = try("http://minio:${local.microservices.minio.port}", null)
+          PASSPORT_PRIVATE_URL           = try("http://passport:${local.microservices.passport.port}", null)
+          PHEME_PRIVATE_URL              = try("http://pheme:${local.microservices.pheme.port}", null)
+          RELEASE_PRIVATE_URL            = try("http://release:${local.microservices.release.port}", null)
+          WORKER_ACTIONKIT_PRIVATE_URL   = try("http://worker-actionkit:${local.microservices["worker-actionkit"].port}", null)
+          WORKER_ACTIONS_PRIVATE_URL     = try("http://worker-actions:${local.microservices["worker-actions"].port}", null)
+          WORKER_CREDENTIALS_PRIVATE_URL = try("http://worker-credentials:${local.microservices["worker-credentials"].port}", null)
+          WORKER_CRONS_PRIVATE_URL       = try("http://worker-crons:${local.microservices["worker-crons"].port}", null)
+          WORKER_DEPLOYMENTS_PRIVATE_URL = try("http://worker-deployments:${local.microservices["worker-deployments"].port}", null)
+          WORKER_EVENT_LOGS_PRIVATE_URL  = try("http://worker-eventlogs:${local.microservices["worker-eventlogs"].port}", null)
+          WORKER_PROXY_PRIVATE_URL       = try("http://worker-proxy:${local.microservices["worker-proxy"].port}", null)
+          WORKER_TRIGGERS_PRIVATE_URL    = try("http://worker-triggers:${local.microservices["worker-triggers"].port}", null)
+          WORKER_WORKFLOWS_PRIVATE_URL   = try("http://worker-workflows:${local.microservices["worker-workflows"].port}", null)
+          ZEUS_PRIVATE_URL               = try("http://zeus:${local.microservices.zeus.port}", null)
 
-        # Service Public URLs
-        ACCOUNT_PUBLIC_URL            = try(local.microservices.account.public_url, null)
-        CERBERUS_PUBLIC_URL           = try(local.microservices.cerberus.public_url, null)
-        CONNECT_PUBLIC_URL            = try(local.microservices.connect.public_url, null)
-        DASHBOARD_PUBLIC_URL          = try(local.microservices.dashboard.public_url, null)
-        HADES_PUBLIC_URL              = try(local.microservices.hades.public_url, null)
-        HEALTH_CHECKER_PUBLIC_URL     = try(local.microservices["health-checker"].public_url, null)
-        HERMES_PUBLIC_URL             = try(local.microservices.hermes.public_url, null)
-        MINIO_PUBLIC_URL              = try(local.microservices.minio.public_url, null)
-        PASSPORT_PUBLIC_URL           = try(local.microservices.passport.public_url, null)
-        PHEME_PUBLIC_URL              = try(local.microservices.pheme.public_url, null)
-        RELEASE_PUBLIC_URL            = try(local.microservices.release.public_url, null)
-        WORKER_ACTIONKIT_PUBLIC_URL   = try(local.microservices["worker-actionkit"].public_url, null)
-        WORKER_ACTIONS_PUBLIC_URL     = try(local.microservices["worker-actions"].public_url, null)
-        WORKER_CREDENTIALS_PUBLIC_URL = try(local.microservices["worker-credentials"].public_url, null)
-        WORKER_CRONS_PUBLIC_URL       = try(local.microservices["worker-crons"].public_url, null)
-        WORKER_DEPLOYMENTS_PUBLIC_URL = try(local.microservices["worker-deployments"].public_url, null)
-        WORKER_EVENT_LOGS_PUBLIC_URL  = try(local.microservices["worker-eventlogs"].public_url, null)
-        WORKER_PROXY_PUBLIC_URL       = try(local.microservices["worker-proxy"].public_url, null)
-        WORKER_TRIGGERS_PUBLIC_URL    = try(local.microservices["worker-triggers"].public_url, null)
-        WORKER_WORKFLOWS_PUBLIC_URL   = try(local.microservices["worker-workflows"].public_url, null)
-        ZEUS_PUBLIC_URL               = try(local.microservices.zeus.public_url, null)
+          # Service Public URLs
+          ACCOUNT_PUBLIC_URL            = try(local.microservices.account.public_url, null)
+          CERBERUS_PUBLIC_URL           = try(local.microservices.cerberus.public_url, null)
+          CONNECT_PUBLIC_URL            = try(local.microservices.connect.public_url, null)
+          DASHBOARD_PUBLIC_URL          = try(local.microservices.dashboard.public_url, null)
+          HADES_PUBLIC_URL              = try(local.microservices.hades.public_url, null)
+          HEALTH_CHECKER_PUBLIC_URL     = try(local.microservices["health-checker"].public_url, null)
+          HERMES_PUBLIC_URL             = try(local.microservices.hermes.public_url, null)
+          MINIO_PUBLIC_URL              = try(local.microservices.minio.public_url, null)
+          PASSPORT_PUBLIC_URL           = try(local.microservices.passport.public_url, null)
+          PHEME_PUBLIC_URL              = try(local.microservices.pheme.public_url, null)
+          RELEASE_PUBLIC_URL            = try(local.microservices.release.public_url, null)
+          WORKER_ACTIONKIT_PUBLIC_URL   = try(local.microservices["worker-actionkit"].public_url, null)
+          WORKER_ACTIONS_PUBLIC_URL     = try(local.microservices["worker-actions"].public_url, null)
+          WORKER_CREDENTIALS_PUBLIC_URL = try(local.microservices["worker-credentials"].public_url, null)
+          WORKER_CRONS_PUBLIC_URL       = try(local.microservices["worker-crons"].public_url, null)
+          WORKER_DEPLOYMENTS_PUBLIC_URL = try(local.microservices["worker-deployments"].public_url, null)
+          WORKER_EVENT_LOGS_PUBLIC_URL  = try(local.microservices["worker-eventlogs"].public_url, null)
+          WORKER_PROXY_PUBLIC_URL       = try(local.microservices["worker-proxy"].public_url, null)
+          WORKER_TRIGGERS_PUBLIC_URL    = try(local.microservices["worker-triggers"].public_url, null)
+          WORKER_WORKFLOWS_PUBLIC_URL   = try(local.microservices["worker-workflows"].public_url, null)
+          ZEUS_PUBLIC_URL               = try(local.microservices.zeus.public_url, null)
 
-        # Worker variables
-        WORKER_WORKFLOWS_MINIMUM_HERMES_PROCESSOR_QUEUE_COUNT = 0
-        WORKER_WORKFLOWS_MINIMUM_TEST_WORKFLOW_QUEUE_COUNT    = 1
+          # Worker variables
+          WORKER_WORKFLOWS_MINIMUM_HERMES_PROCESSOR_QUEUE_COUNT = 0
+          WORKER_WORKFLOWS_MINIMUM_TEST_WORKFLOW_QUEUE_COUNT    = 1
 
-        # Authentication
-        ADMIN_BASIC_AUTH_USERNAME = local.helm_vars.global.env["LICENSE"]
-        ADMIN_BASIC_AUTH_PASSWORD = local.helm_vars.global.env["LICENSE"]
+          # Authentication
+          ADMIN_BASIC_AUTH_USERNAME = local.helm_vars.global.env["LICENSE"]
+          ADMIN_BASIC_AUTH_PASSWORD = local.helm_vars.global.env["LICENSE"]
 
-        # Feature flags
-        FEATURE_FLAG_PLATFORM_ENABLED  = "true"
-        FEATURE_FLAG_PLATFORM_ENDPOINT = "http://flipt:${local.microservices.flipt.port}"
+          # Feature flags
+          FEATURE_FLAG_PLATFORM_ENABLED  = "true"
+          FEATURE_FLAG_PLATFORM_ENDPOINT = "http://flipt:${local.microservices.flipt.port}"
 
-        # Database configurations
-        CERBERUS_POSTGRES_HOST       = try(local.infra_vars.postgres.value.cerberus.host, local.infra_vars.postgres.value.paragon.host)
-        CERBERUS_POSTGRES_PORT       = try(local.infra_vars.postgres.value.cerberus.port, local.infra_vars.postgres.value.paragon.port)
-        CERBERUS_POSTGRES_USERNAME   = try(local.infra_vars.postgres.value.cerberus.user, local.infra_vars.postgres.value.paragon.user)
-        CERBERUS_POSTGRES_PASSWORD   = try(local.infra_vars.postgres.value.cerberus.password, local.infra_vars.postgres.value.paragon.password)
-        CERBERUS_POSTGRES_DATABASE   = try(local.infra_vars.postgres.value.cerberus.database, local.infra_vars.postgres.value.paragon.database)
-        EVENT_LOGS_POSTGRES_HOST     = try(local.infra_vars.postgres.value.eventlogs.host, local.infra_vars.postgres.value.paragon.host)
-        EVENT_LOGS_POSTGRES_PORT     = try(local.infra_vars.postgres.value.eventlogs.port, local.infra_vars.postgres.value.paragon.port)
-        EVENT_LOGS_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.eventlogs.user, local.infra_vars.postgres.value.paragon.user)
-        EVENT_LOGS_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.eventlogs.password, local.infra_vars.postgres.value.paragon.password)
-        EVENT_LOGS_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.eventlogs.database, local.infra_vars.postgres.value.paragon.database)
-        HERMES_POSTGRES_HOST         = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
-        HERMES_POSTGRES_PORT         = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
-        HERMES_POSTGRES_USERNAME     = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
-        HERMES_POSTGRES_PASSWORD     = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
-        HERMES_POSTGRES_DATABASE     = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
-        PHEME_POSTGRES_HOST          = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
-        PHEME_POSTGRES_PORT          = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
-        PHEME_POSTGRES_USERNAME      = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
-        PHEME_POSTGRES_PASSWORD      = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
-        PHEME_POSTGRES_DATABASE      = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
-        ZEUS_POSTGRES_HOST           = try(local.infra_vars.postgres.value.zeus.host, local.infra_vars.postgres.value.paragon.host)
-        ZEUS_POSTGRES_PORT           = try(local.infra_vars.postgres.value.zeus.port, local.infra_vars.postgres.value.paragon.port)
-        ZEUS_POSTGRES_USERNAME       = try(local.infra_vars.postgres.value.zeus.user, local.infra_vars.postgres.value.paragon.user)
-        ZEUS_POSTGRES_PASSWORD       = try(local.infra_vars.postgres.value.zeus.password, local.infra_vars.postgres.value.paragon.password)
-        ZEUS_POSTGRES_DATABASE       = try(local.infra_vars.postgres.value.zeus.database, local.infra_vars.postgres.value.paragon.database)
+          # Database configurations
+          CERBERUS_POSTGRES_HOST       = try(local.infra_vars.postgres.value.cerberus.host, local.infra_vars.postgres.value.paragon.host)
+          CERBERUS_POSTGRES_PORT       = try(local.infra_vars.postgres.value.cerberus.port, local.infra_vars.postgres.value.paragon.port)
+          CERBERUS_POSTGRES_USERNAME   = try(local.infra_vars.postgres.value.cerberus.user, local.infra_vars.postgres.value.paragon.user)
+          CERBERUS_POSTGRES_PASSWORD   = try(local.infra_vars.postgres.value.cerberus.password, local.infra_vars.postgres.value.paragon.password)
+          CERBERUS_POSTGRES_DATABASE   = try(local.infra_vars.postgres.value.cerberus.database, local.infra_vars.postgres.value.paragon.database)
+          EVENT_LOGS_POSTGRES_HOST     = try(local.infra_vars.postgres.value.eventlogs.host, local.infra_vars.postgres.value.paragon.host)
+          EVENT_LOGS_POSTGRES_PORT     = try(local.infra_vars.postgres.value.eventlogs.port, local.infra_vars.postgres.value.paragon.port)
+          EVENT_LOGS_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.eventlogs.user, local.infra_vars.postgres.value.paragon.user)
+          EVENT_LOGS_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.eventlogs.password, local.infra_vars.postgres.value.paragon.password)
+          EVENT_LOGS_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.eventlogs.database, local.infra_vars.postgres.value.paragon.database)
+          HERMES_POSTGRES_HOST         = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
+          HERMES_POSTGRES_PORT         = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
+          HERMES_POSTGRES_USERNAME     = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
+          HERMES_POSTGRES_PASSWORD     = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
+          HERMES_POSTGRES_DATABASE     = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
+          PHEME_POSTGRES_HOST          = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
+          PHEME_POSTGRES_PORT          = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
+          PHEME_POSTGRES_USERNAME      = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
+          PHEME_POSTGRES_PASSWORD      = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
+          PHEME_POSTGRES_DATABASE      = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
+          ZEUS_POSTGRES_HOST           = try(local.infra_vars.postgres.value.zeus.host, local.infra_vars.postgres.value.paragon.host)
+          ZEUS_POSTGRES_PORT           = try(local.infra_vars.postgres.value.zeus.port, local.infra_vars.postgres.value.paragon.port)
+          ZEUS_POSTGRES_USERNAME       = try(local.infra_vars.postgres.value.zeus.user, local.infra_vars.postgres.value.paragon.user)
+          ZEUS_POSTGRES_PASSWORD       = try(local.infra_vars.postgres.value.zeus.password, local.infra_vars.postgres.value.paragon.password)
+          ZEUS_POSTGRES_DATABASE       = try(local.infra_vars.postgres.value.zeus.database, local.infra_vars.postgres.value.paragon.database)
 
-        # Redis configurations
-        REDIS_URL = local.default_redis_url
+          # Redis configurations
+          REDIS_URL = local.default_redis_url
 
-        CACHE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.cache.cluster, local.default_redis_cluster)
-        CACHE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.cache.ssl, local.default_redis_ssl)
-        CACHE_REDIS_URL                = try("${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}", local.default_redis_url)
-        QUEUE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.queue.cluster, local.default_redis_cluster)
-        QUEUE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.queue.ssl, local.default_redis_ssl)
-        QUEUE_REDIS_URL                = try("${local.infra_vars.redis.value.queue.host}:${local.infra_vars.redis.value.queue.port}", local.default_redis_url)
-        SYSTEM_REDIS_CLUSTER_ENABLED   = try(local.infra_vars.redis.value.system.cluster, local.default_redis_cluster)
-        SYSTEM_REDIS_TLS_ENABLED       = try(local.infra_vars.redis.value.system.ssl, local.default_redis_ssl)
-        SYSTEM_REDIS_URL               = try("${local.infra_vars.redis.value.system.host}:${local.infra_vars.redis.value.system.port}", local.default_redis_url)
-        WORKFLOW_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.workflow.cluster, local.default_redis_cluster)
-        WORKFLOW_REDIS_TLS_ENABLED     = try(local.infra_vars.redis.value.workflow.ssl, local.default_redis_ssl)
-        WORKFLOW_REDIS_URL             = try("${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
+          CACHE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.cache.cluster, local.default_redis_cluster)
+          CACHE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.cache.ssl, local.default_redis_ssl)
+          CACHE_REDIS_URL                = try("${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}", local.default_redis_url)
+          QUEUE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.queue.cluster, local.default_redis_cluster)
+          QUEUE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.queue.ssl, local.default_redis_ssl)
+          QUEUE_REDIS_URL                = try("${local.infra_vars.redis.value.queue.host}:${local.infra_vars.redis.value.queue.port}", local.default_redis_url)
+          SYSTEM_REDIS_CLUSTER_ENABLED   = try(local.infra_vars.redis.value.system.cluster, local.default_redis_cluster)
+          SYSTEM_REDIS_TLS_ENABLED       = try(local.infra_vars.redis.value.system.ssl, local.default_redis_ssl)
+          SYSTEM_REDIS_URL               = try("${local.infra_vars.redis.value.system.host}:${local.infra_vars.redis.value.system.port}", local.default_redis_url)
+          WORKFLOW_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.workflow.cluster, local.default_redis_cluster)
+          WORKFLOW_REDIS_TLS_ENABLED     = try(local.infra_vars.redis.value.workflow.ssl, local.default_redis_ssl)
+          WORKFLOW_REDIS_URL             = try("${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
 
-        # Cloud Storage configurations
-        CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
-        CLOUD_STORAGE_MICROSERVICE_USER = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
-        CLOUD_STORAGE_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
-        CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
-        CLOUD_STORAGE_TYPE              = local.cloud_storage_type
-        CLOUD_STORAGE_REGION            = var.aws_region
+          # Cloud Storage configurations
+          CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
+          CLOUD_STORAGE_MICROSERVICE_USER = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
+          CLOUD_STORAGE_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
+          CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
+          CLOUD_STORAGE_TYPE              = local.cloud_storage_type
+          CLOUD_STORAGE_REGION            = var.aws_region
 
-        CLOUD_STORAGE_PUBLIC_URL = coalesce(
-          try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
-          local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
-          try(local.microservices.minio.public_url, null), null
-        )
-        CLOUD_STORAGE_PRIVATE_URL = coalesce(
-          try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
-          local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
-          try(local.microservices.minio.public_url, null), null
-        )
+          CLOUD_STORAGE_PUBLIC_URL = coalesce(
+            try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+            local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+            try(local.microservices.minio.public_url, null), null
+          )
+          CLOUD_STORAGE_PRIVATE_URL = coalesce(
+            try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+            local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+            try(local.microservices.minio.public_url, null), null
+          )
 
-        # MinIO configurations
-        MINIO_BROWSER           = "off"
-        MINIO_INSTANCE_COUNT    = "1"
-        MINIO_MICROSERVICE_PASS = local.infra_vars.minio.value.microservice_pass
-        MINIO_MICROSERVICE_USER = local.infra_vars.minio.value.microservice_user
-        MINIO_MODE              = "gateway-s3"
-        MINIO_NGINX_PROXY       = "on"
-        MINIO_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
-        MINIO_REGION            = var.aws_region
-        MINIO_ROOT_PASSWORD     = local.infra_vars.minio.value.root_password
-        MINIO_ROOT_USER         = local.infra_vars.minio.value.root_user
-        MINIO_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
+          # MinIO configurations
+          MINIO_BROWSER           = "off"
+          MINIO_INSTANCE_COUNT    = "1"
+          MINIO_MICROSERVICE_PASS = local.infra_vars.minio.value.microservice_pass
+          MINIO_MICROSERVICE_USER = local.infra_vars.minio.value.microservice_user
+          MINIO_MODE              = "gateway-s3"
+          MINIO_NGINX_PROXY       = "on"
+          MINIO_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
+          MINIO_REGION            = var.aws_region
+          MINIO_ROOT_PASSWORD     = local.infra_vars.minio.value.root_password
+          MINIO_ROOT_USER         = local.infra_vars.minio.value.root_user
+          MINIO_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
 
-        # Monitor configurations
-        MONITOR_BULL_EXPORTER_HOST              = "http://bull-exporter"
-        MONITOR_BULL_EXPORTER_PORT              = try(local.monitors["bull-exporter"].port, null)
-        MONITOR_GRAFANA_AWS_ACCESS_ID           = var.monitors_enabled ? module.monitors[0].grafana_aws_access_key_id : null
-        MONITOR_GRAFANA_AWS_SECRET_KEY          = var.monitors_enabled ? module.monitors[0].grafana_aws_secret_access_key : null
-        MONITOR_GRAFANA_HOST                    = "http://grafana"
-        MONITOR_GRAFANA_PORT                    = try(local.monitors["grafana"].port, null)
-        MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD = var.monitors_enabled ? module.monitors[0].grafana_admin_password : null
-        MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
-        MONITOR_GRAFANA_SERVER_DOMAIN           = try(local.monitors["grafana"].public_url, null)
-        MONITOR_GRAFANA_UPTIME_WEBHOOK_URL      = module.uptime.webhook
-        MONITOR_KUBE_STATE_METRICS_HOST         = "http://kube-state-metrics"
-        MONITOR_KUBE_STATE_METRICS_PORT         = try(local.monitors["kube-state-metrics"].port, null)
-        MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null
-        MONITOR_PGADMIN_HOST                    = "http://pgadmin"
-        MONITOR_PGADMIN_PASSWORD                = var.monitors_enabled ? module.monitors[0].pgadmin_admin_password : null
-        MONITOR_PGADMIN_PORT                    = try(local.monitors["pgadmin"].port, null)
-        MONITOR_PGADMIN_SSL_MODE                = "disable"
-        MONITOR_POSTGRES_EXPORTER_HOST          = "http://postgres-exporter"
-        MONITOR_POSTGRES_EXPORTER_PORT          = try(local.monitors["postgres-exporter"].port, null)
-        MONITOR_POSTGRES_EXPORTER_SSL_MODE      = "disable"
-        MONITOR_PROMETHEUS_HOST                 = "http://prometheus"
-        MONITOR_PROMETHEUS_PORT                 = try(local.monitors["prometheus"].port, null)
-        MONITOR_QUEUE_REDIS_TARGET              = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
-        MONITOR_REDIS_EXPORTER_HOST             = "http://redis-exporter"
-        MONITOR_REDIS_EXPORTER_PORT             = try(local.monitors["redis-exporter"].port, null)
-        MONITOR_REDIS_INSIGHT_HOST              = "http://redis-insight"
-        MONITOR_REDIS_INSIGHT_PORT              = try(local.monitors["redis-insight"].port, null)
-        }, {
-        for key, value in local.helm_vars.global.env :
-        key => value if value != null && !contains(local.helm_keys_to_remove, key) && !startswith(key, "FLIPT_")
-      })
+          # Monitor configurations
+          MONITOR_BULL_EXPORTER_HOST              = "http://bull-exporter"
+          MONITOR_BULL_EXPORTER_PORT              = try(local.monitors["bull-exporter"].port, null)
+          MONITOR_GRAFANA_AWS_ACCESS_ID           = var.monitors_enabled ? module.monitors[0].grafana_aws_access_key_id : null
+          MONITOR_GRAFANA_AWS_SECRET_KEY          = var.monitors_enabled ? module.monitors[0].grafana_aws_secret_access_key : null
+          MONITOR_GRAFANA_HOST                    = "http://grafana"
+          MONITOR_GRAFANA_PORT                    = try(local.monitors["grafana"].port, null)
+          MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD = var.monitors_enabled ? module.monitors[0].grafana_admin_password : null
+          MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
+          MONITOR_GRAFANA_SERVER_DOMAIN           = try(local.monitors["grafana"].public_url, null)
+          MONITOR_GRAFANA_UPTIME_WEBHOOK_URL      = module.uptime.webhook
+          MONITOR_KUBE_STATE_METRICS_HOST         = "http://kube-state-metrics"
+          MONITOR_KUBE_STATE_METRICS_PORT         = try(local.monitors["kube-state-metrics"].port, null)
+          MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null
+          MONITOR_PGADMIN_HOST                    = "http://pgadmin"
+          MONITOR_PGADMIN_PASSWORD                = var.monitors_enabled ? module.monitors[0].pgadmin_admin_password : null
+          MONITOR_PGADMIN_PORT                    = try(local.monitors["pgadmin"].port, null)
+          MONITOR_PGADMIN_SSL_MODE                = "disable"
+          MONITOR_POSTGRES_EXPORTER_HOST          = "http://postgres-exporter"
+          MONITOR_POSTGRES_EXPORTER_PORT          = try(local.monitors["postgres-exporter"].port, null)
+          MONITOR_POSTGRES_EXPORTER_SSL_MODE      = "disable"
+          MONITOR_PROMETHEUS_HOST                 = "http://prometheus"
+          MONITOR_PROMETHEUS_PORT                 = try(local.monitors["prometheus"].port, null)
+          MONITOR_QUEUE_REDIS_TARGET              = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
+          MONITOR_REDIS_EXPORTER_HOST             = "http://redis-exporter"
+          MONITOR_REDIS_EXPORTER_PORT             = try(local.monitors["redis-exporter"].port, null)
+          MONITOR_REDIS_INSIGHT_HOST              = "http://redis-insight"
+          MONITOR_REDIS_INSIGHT_PORT              = try(local.monitors["redis-insight"].port, null)
+          }, {
+          for key, value in local.helm_vars.global.env :
+          key => value if value != null && !contains(local.helm_keys_to_remove, key) && !startswith(key, "FLIPT_")
+        },
+        var.managed_sync_enabled ? {
+          API_SYNC_HTTP_PORT    = try(local.managed_sync_microservices["api-sync"].port, null)
+          WORKER_SYNC_HTTP_PORT = try(local.managed_sync_microservices["worker-sync"].port, null)
+
+          CLOUD_STORAGE_MANAGED_SYNC_BUCKET = try(local.infra_vars.minio.value.managed_sync_bucket, "${local.workspace}-managed-sync")
+          CLOUD_STORAGE_PASS                = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
+          CLOUD_STORAGE_USER                = local.cloud_storage_type == "S3" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
+
+          MANAGED_SYNC_KAFKA_BROKER_URLS                       = try(local.infra_vars.kafka.value.cluster_bootstrap_brokers, null)
+          MANAGED_SYNC_KAFKA_SASL_USERNAME                     = try(local.infra_vars.kafka.value.cluster_username, null)
+          MANAGED_SYNC_KAFKA_SASL_PASSWORD                     = try(local.infra_vars.kafka.value.cluster_password, null)
+          MANAGED_SYNC_KAFKA_SASL_MECHANISM                    = try(local.infra_vars.kafka.value.cluster_mechanism, null)
+          MANAGED_SYNC_KAFKA_SSL_ENABLED                       = try(local.infra_vars.kafka.value.cluster_tls_enabled, null)
+          MANAGED_SYNC_KAFKA_TOPICS_DEFAULT_REPLICATION_FACTOR = 1
+
+          MANAGED_SYNC_REDIS_URL             = try("${local.infra_vars.redis.value.managed_sync.host}:${local.infra_vars.redis.value.managed_sync.port}", local.default_redis_url)
+          MANAGED_SYNC_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.managed_sync.cluster, local.default_redis_cluster)
+          MANAGED_SYNC_REDIS_TLS_ENABLED     = try(local.infra_vars.redis.value.managed_sync.ssl, local.default_redis_ssl)
+
+          OPENFGA_POSTGRES_HOST        = try(local.infra_vars.postgres.value.managed_sync.host, local.infra_vars.postgres.value.paragon.host)
+          OPENFGA_POSTGRES_PORT        = try(local.infra_vars.postgres.value.managed_sync.port, local.infra_vars.postgres.value.paragon.port)
+          OPENFGA_POSTGRES_USERNAME    = try(local.infra_vars.postgres.value.managed_sync.user, local.infra_vars.postgres.value.paragon.user)
+          OPENFGA_POSTGRES_PASSWORD    = try(local.infra_vars.postgres.value.managed_sync.password, local.infra_vars.postgres.value.paragon.password)
+          OPENFGA_POSTGRES_DATABASE    = try(local.infra_vars.postgres.value.managed_sync.database, local.infra_vars.postgres.value.paragon.database)
+          OPENFGA_POSTGRES_SSL_ENABLED = true
+
+          OPENFGA_HTTP_PORT           = 6200
+          OPENFGA_GRPC_PORT           = 6201
+          OPENFGA_AUTH_METHOD         = "preshared",
+          OPENFGA_AUTH_PRESHARED_KEYS = sha256(try(local.infra_vars.postgres.value.managed_sync.password, local.infra_vars.postgres.value.paragon.password))
+          OPENFGA_HTTP_URL            = "http://openfga:${6200}"
+
+          PARAGON_PROXY_BASE_URL = try("http://worker-proxy:${local.microservices["worker-proxy"].port}", null)
+        } : {}
+      )
     })
   })
 
