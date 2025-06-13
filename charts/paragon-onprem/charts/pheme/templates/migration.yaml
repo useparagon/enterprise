@@ -27,7 +27,7 @@ spec:
         - name: "postgres-pheme"
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "useparagon/postgres-pheme:{{ .Values.global.paragon_version }}"
+          image: "useparagon/postgres-pheme:{{ .Values.global.paragon_version | default .Values.global.env.VERSION }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
