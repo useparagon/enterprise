@@ -1,5 +1,18 @@
 namespace: paragon
 
+# Enable/disable components
+ingress-nginx:
+  enabled: true
+  controller:
+    service:
+      type: LoadBalancer
+    metrics:
+      enabled: false  # Disable metrics since we're not using ServiceMonitor
+
+letsencrypt:
+  enabled: true
+  email: "your-email@example.com"  # Replace with your email
+
 envKeys:
  - ACCOUNT_BILLING_SYNC_FREQUENCY
  - ACCOUNT_BILLING_SYNC_PARALLEL_PROCESSING
