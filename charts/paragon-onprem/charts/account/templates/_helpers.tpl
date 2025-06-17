@@ -60,3 +60,18 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Generate the ingress host
+*/}}
+{{- define "account.ingressHost" -}}
+{{- if .Values.ingress.host }}
+{{- .Values.ingress.host }}
+{{- else }}
+{{- if .Values.global.env.PARAGON_DOMAIN }}
+{{- printf "%s.%s" .Chart.Name .Values.global.env.PARAGON_DOMAIN }}
+{{- else }}
+{{- .Chart.Name }}
+{{- end }}
+{{- end }}
+{{- end }}

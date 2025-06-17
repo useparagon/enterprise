@@ -38,6 +38,11 @@ variable "domain" {
   type        = string
 }
 
+variable "gcp_creds" {
+  description = "GCP credentials for logging bucket access."
+  type        = string
+}
+
 variable "openobserve_email" {
   description = "OpenObserve admin login email."
   type        = string
