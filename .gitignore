@@ -45,4 +45,6 @@ main.tf
 dist
 
 # ignore IDE files
+.cursor
 .idea
+.vscode
