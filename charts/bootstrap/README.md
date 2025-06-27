@@ -174,7 +174,7 @@ The following sections in `.secure/values.yaml` must be configured:
 
 ## DNS Configuration
 
-After installing the infrastructure components and deploying Paragon, configure your DNS:
+After installing the infrastructure components and deploying Paragon, configure your DNS with the `EXTERNAL-IP` from this command:
 
 1. **Get the Load Balancer endpoint**:
    ```sh
@@ -185,29 +185,29 @@ After installing the infrastructure components and deploying Paragon, configure 
 
    **Option A: Wildcard CNAME (Recommended)**
    ```
-   *.<your-domain>                 CNAME   <load-balancer-hostname>
+   *.<your-domain>                 CNAME   <external-ip-hostname>
    ```
    
    **Note**: If using Cloudflare, ensure DNS-only mode (gray cloud) for proper Let's Encrypt certificate validation.
    
    **Option B: Individual CNAMEs**
    ```
-   account.<your-domain>           CNAME   <load-balancer-hostname>
-   dashboard.<your-domain>         CNAME   <load-balancer-hostname>
-   cerberus.<your-domain>          CNAME   <load-balancer-hostname>
+   account.<your-domain>           CNAME   <external-ip-hostname>
+   dashboard.<your-domain>         CNAME   <external-ip-hostname>
+   cerberus.<your-domain>          CNAME   <external-ip-hostname>
    # ... etc for all services
    ```
 
    **For the naked/apex domain** (optional):
    ```
    # AWS Route 53 (recommended for AWS)
-   <your-domain>                   ALIAS   <load-balancer-hostname>
+   <your-domain>                   ALIAS   <external-ip-hostname>
    
    # Cloudflare - DNS-only mode (not proxied!)
-   <your-domain>                   CNAME   <load-balancer-hostname>  (DNS-only, gray cloud)
+   <your-domain>                   CNAME   <external-ip-hostname>  (DNS-only, gray cloud)
    
    # Traditional DNS providers - use A record with IP
-   <your-domain>                   A       <load-balancer-ip>
+   <your-domain>                   A       <external-ip>
    ```
 
    **⚠️ Important for Cloudflare users**: If using Cloudflare, make sure to use **DNS-only mode** (gray cloud icon) rather than proxied mode (orange cloud). Proxied mode will break Let's Encrypt certificate validation since Cloudflare terminates TLS at their edge instead of your ingress controller.
@@ -225,6 +225,15 @@ kubectl get ingress -n paragon
 
 # Check persistent volume claims
 kubectl get pvc -n paragon
+```
+
+If you see `cm-acme-http-solver` entries in the `ingress` list then the certificates are still being generated. Attempts to connect to those services may result in an unsecure certificate error. This process may take several minutes for a new domain. Here are some additional commands to get more details about the process:
+
+```sh
+kubectl get certificate -n paragon
+kubectl get order -n paragon
+kubectl get challenge -n paragon
+kubectl logs -l app.kubernetes.io/name=cert-manager -n cert-manager
 ```
 
 ## Security Best Practices
