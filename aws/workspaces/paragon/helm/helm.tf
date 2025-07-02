@@ -40,7 +40,6 @@ locals {
           env = merge(
             nonsensitive(var.helm_values.global.env),
             {
-              HOST_ENV    = "AWS_K8"
               k8s_version = var.k8s_version
               secretName  = "paragon-secrets"
             }
