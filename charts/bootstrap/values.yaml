@@ -6,6 +6,9 @@ ingress-nginx:
   controller:
     service:
       type: LoadBalancer
+      annotations:
+        # This is required for Azure Load Balancer to work
+        service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/healthz"
     metrics:
       enabled: false  # Disable metrics since we're not using ServiceMonitor
 
