@@ -61,7 +61,7 @@ variable "redis_multiple_instances" {
 locals {
   redis_instances = var.redis_multiple_instances ? {
     cache = {
-      cluster  = true
+      cluster  = var.redis_sku_name == "Premium"
       capacity = var.redis_capacity
       sku      = var.redis_sku_name
     }

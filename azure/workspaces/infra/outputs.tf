@@ -43,6 +43,12 @@ output "redis" {
   sensitive   = true
 }
 
+output "redis_debugging" {
+  description = "Redis cache instances"
+  value       = module.redis.redis_debugging
+  sensitive   = true
+}
+
 output "cluster_name" {
   description = "The name of the AKS cluster."
   value       = module.cluster.kubernetes.name
