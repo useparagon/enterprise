@@ -106,6 +106,12 @@ variable "postgres_sku_name" {
   default     = "GP_Standard_D2ds_v5"
 }
 
+variable "postgres_base_sku_name" {
+  description = "Default PostgreSQL SKU name for instances that don't use the main postgres_sku_name (e.g. `B_Standard_B2s` or `GP_Standard_D2ds_v5`)"
+  type        = string
+  default     = "B_Standard_B2s"
+}
+
 variable "postgres_version" {
   description = "PostgreSQL version (14, 15 or 16)"
   type        = string
@@ -129,12 +135,32 @@ variable "redis_capacity" {
   }
 }
 
+variable "redis_base_capacity" {
+  description = "Default capacity of the Redis cache for instances that don't use the main redis_capacity."
+  type        = number
+  default     = 1
+  validation {
+    condition     = contains([0, 1, 2, 3, 4, 5, 6], var.redis_base_capacity)
+    error_message = "The capacity for the redis instance. It must be between 0 - 6 (inclusive)."
+  }
+}
+
 variable "redis_sku_name" {
   description = "The SKU Name of the Redis cache (`Basic`, `Standard` or `Premium`)."
   type        = string
   default     = "Premium"
   validation {
     condition     = contains(["Basic", "Standard", "Premium"], var.redis_sku_name)
+    error_message = "The sku_name for the redis instance. It must be `Basic`, `Standard`, or `Premium`."
+  }
+}
+
+variable "redis_base_sku_name" {
+  description = "Default SKU Name of the Redis cache (`Basic`, `Standard` or `Premium`) for instances that don't use the main redis_sku_name."
+  type        = string
+  default     = "Standard"
+  validation {
+    condition     = contains(["Basic", "Standard", "Premium"], var.redis_base_sku_name)
     error_message = "The sku_name for the redis instance. It must be `Basic`, `Standard`, or `Premium`."
   }
 }
