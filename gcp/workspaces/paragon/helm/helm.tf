@@ -104,7 +104,6 @@ locals {
           env = merge(
             nonsensitive(var.helm_values.global.env),
             {
-              HOST_ENV    = "GCP_K8"
               k8s_version = var.k8s_version
               secretName  = "paragon-secrets"
             }
@@ -230,24 +229,54 @@ resource "helm_release" "paragon_logging" {
     local.global_values
   ]
 
-  set {
-    name  = "global.env.ZO_S3_PROVIDER"
-    value = "azure"
-  }
-
-  set {
-    name  = "global.secrets.ZO_S3_BUCKET_NAME"
-    value = var.logs_bucket
-  }
-
-  set {
-    name  = "global.secrets.ZO_ROOT_USER_EMAIL"
+  set_sensitive {
+    name  = "fluent-bit.secrets.ZO_ROOT_USER_EMAIL"
     value = local.openobserve_email
   }
 
   set_sensitive {
-    name  = "global.secrets.ZO_ROOT_USER_PASSWORD"
+    name  = "fluent-bit.secrets.ZO_ROOT_USER_PASSWORD"
     value = local.openobserve_password
+  }
+
+  set_sensitive {
+    name  = "openobserve.secrets.ZO_ROOT_USER_EMAIL"
+    value = local.openobserve_email
+  }
+
+  set_sensitive {
+    name  = "openobserve.secrets.ZO_ROOT_USER_PASSWORD"
+    value = local.openobserve_password
+  }
+
+  set_sensitive {
+    name  = "openobserve.credsJson"
+    value = base64encode(var.gcp_creds)
+  }
+
+  set {
+    name  = "openobserve.env.ZO_S3_BUCKET_NAME"
+    value = var.logs_bucket
+  }
+
+  set {
+    name  = "openobserve.env.ZO_S3_REGION_NAME"
+    value = var.region
+  }
+
+  set {
+    name  = "openobserve.secrets.ZO_S3_ACCESS_KEY"
+    value = "/creds/creds.json"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_S3_PROVIDER"
+    value = "gcs"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_S3_SERVER_URL"
+    value = "https://storage.googleapis.com"
   }
 
   depends_on = [

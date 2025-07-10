@@ -27,7 +27,7 @@ spec:
         - name: "postgres-event-logs"
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "useparagon/postgres-event-logs:{{ .Values.global.paragon_version }}"
+          image: "useparagon/postgres-event-logs:{{ .Values.global.paragon_version | default .Values.global.env.VERSION }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
