@@ -25,12 +25,12 @@ variable "k8s_version" {
 }
 
 variable "eks_ondemand_node_instance_type" {
-  description = "The compute instance type to use for Kubernetes nodes."
-  type        = list(string)
+  description = "The compute instance type to use for Kubernetes on-demand nodes."
+  type        = string
 }
 
-variable "eks_spot_node_instance_type" {
-  description = "The compute instance type to use for Kubernetes spot nodes."
+variable "eks_spot_node_instance_types" {
+  description = "The compute instance types to use for Kubernetes spot nodes."
   type        = list(string)
 }
 
@@ -75,13 +75,13 @@ locals {
       ondemand = var.eks_spot_instance_percent == 100 ? null : {
         min_count      = ceil(var.eks_min_node_count * (1 - (var.eks_spot_instance_percent / 100)))
         max_count      = ceil(var.eks_max_node_count * (1 - (var.eks_spot_instance_percent / 100)))
-        instance_types = var.eks_ondemand_node_instance_type
+        instance_types = [var.eks_ondemand_node_instance_type]
         capacity       = "ON_DEMAND"
       }
       spot = var.eks_spot_instance_percent == 0 ? null : {
         min_count      = floor(var.eks_min_node_count * (var.eks_spot_instance_percent / 100))
         max_count      = ceil(var.eks_max_node_count * (var.eks_spot_instance_percent / 100))
-        instance_types = var.eks_spot_node_instance_type
+        instance_types = var.eks_spot_node_instance_types
         capacity       = "SPOT"
       }
     } : key => value
@@ -90,16 +90,16 @@ locals {
 
   cluster_addons = {
     aws-ebs-csi-driver = {
-      version = "v1.37.0-eksbuild.1"
+      version = "v1.45.0-eksbuild.2"
     }
     coredns = {
-      version = "v1.11.3-eksbuild.1"
+      version = "v1.11.4-eksbuild.14"
     }
     kube-proxy = {
-      version = "v1.31.0-eksbuild.2"
+      version = "v1.31.10-eksbuild.2"
     }
     vpc-cni = {
-      version = "v1.18.3-eksbuild.2"
+      version = "v1.19.6-eksbuild.7"
     }
   }
 

@@ -1,7 +1,7 @@
 # Creating the EKS cluster
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.26.0"
+  version = "20.37.2"
 
   cluster_name    = var.workspace
   cluster_version = var.k8s_version
@@ -102,7 +102,7 @@ resource "random_string" "node_group" {
 
 module "eks_managed_node_group" {
   source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
-  version = "20.26.0"
+  version = "20.37.2"
 
   for_each = local.nodes
 

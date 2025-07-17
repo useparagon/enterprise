@@ -110,9 +110,9 @@ module "cluster" {
   eks_admin_arns                  = var.eks_admin_arns
   eks_max_node_count              = var.eks_max_node_count
   eks_min_node_count              = var.eks_min_node_count
-  eks_ondemand_node_instance_type = local.eks_ondemand_node_instance_type
+  eks_ondemand_node_instance_type = var.eks_ondemand_node_instance_type
   eks_spot_instance_percent       = var.eks_spot_instance_percent
-  eks_spot_node_instance_type     = local.eks_spot_node_instance_type
+  eks_spot_node_instance_types    = var.eks_spot_node_instance_types
   k8s_version                     = var.k8s_version
 
   vpc_id             = module.network.vpc.id
