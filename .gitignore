@@ -43,3 +43,8 @@ main.tf
 # only keep the top level charts
 **/paragon/charts
 dist
+
+# ignore IDE files
+.cursor
+.idea
+.vscode
