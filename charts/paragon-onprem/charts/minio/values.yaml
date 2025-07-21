@@ -78,7 +78,7 @@ ingress:
   certificate: ''
   enabled: true
   className: ''
-  host: chart-example.local
+  host: '' # When empty, will use chart name + domain
   healthcheck_path: /minio/health/live
 
 nodeSelector: {}

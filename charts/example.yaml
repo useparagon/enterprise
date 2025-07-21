@@ -1,0 +1,260 @@
+# Example values.yaml for Helm-based Paragon deployment
+#
+# This file serves as a template for creating your .secure/values.yaml when deploying
+# Paragon using Helm charts directly (without Terraform). Replace all placeholder
+# values (marked with "your-*") with your actual configuration and secrets.
+#
+# Usage:
+#   1. Copy this file to .secure/values.yaml
+#   2. Replace all "your-*" placeholders with actual values
+#   3. Use with helm install/upgrade commands for each chart
+#
+# Security Warning:
+#   - Never commit .secure/values.yaml to version control
+#   - This file contains sensitive configuration and credentials
+#
+# For Terraform deployments (AWS/Azure/GCP), use the respective terraform workspaces
+# instead of this file.
+
+namespace: paragon
+
+# Docker Hub Credentials to pull images from Paragon Repositories
+dockerCfg:
+  docker_registry_server: "docker.io"
+  docker_username: "your-docker-username"
+  docker_password: "your-docker-password"
+  docker_email: "your-docker-email@example.com"
+
+# Let's Encrypt configuration for SSL certificates
+letsencrypt:
+  email: "your-letsencrypt-email@example.com"
+
+# Logging Forwarder
+fluent-bit:
+  secrets:
+    ZO_ROOT_USER_EMAIL: "your-openobserve-email@example.com"
+    ZO_ROOT_USER_PASSWORD: "your-openobserve-password"
+
+# Logging Aggregation
+# see https://openobserve.ai/docs/environment-variables/
+openobserve:
+  env:
+    ZO_S3_BUCKET_NAME: "your-logs-bucket-name"
+    ZO_S3_PROVIDER: s3
+    ZO_S3_REGION_NAME: "your-aws-region"
+    ZO_S3_SERVER_URL: "https://s3.your-aws-region.amazonaws.com"
+  secrets:
+    ZO_ROOT_USER_EMAIL: "your-openobserve-email@example.com"
+    ZO_ROOT_USER_PASSWORD: "your-openobserve-password"
+    ZO_S3_ACCESS_KEY: "your-s3-access-key"
+    ZO_S3_SECRET_KEY: "your-s3-secret-key"
+
+global:
+  env:
+    # Platform Configuration
+    ORGANIZATION: "your-organization"
+    PARAGON_DOMAIN: "your-domain.com"
+    PLATFORM_ENV: enterprise
+    HOST_ENV: LOCAL
+    NODE_ENV: production
+    LOG_LEVEL: info
+    BRANCH: main
+    VERSION: "2025.0603.1639-795cc81d"
+
+    # Cloud Storage Configuration
+    CLOUD_STORAGE_TYPE: S3
+    CLOUD_STORAGE_REGION: "your-aws-region"
+    CLOUD_STORAGE_PRIVATE_URL: "https://s3.your-aws-region.amazonaws.com"
+    CLOUD_STORAGE_PUBLIC_URL: "https://s3.your-aws-region.amazonaws.com"
+    CLOUD_STORAGE_PUBLIC_BUCKET: "your-cdn-bucket-name"
+    CLOUD_STORAGE_SYSTEM_BUCKET: "your-app-bucket-name"
+
+    # Redis Configuration
+    CACHE_REDIS_CLUSTER_ENABLED: true
+    CACHE_REDIS_TLS_ENABLED: false
+    QUEUE_REDIS_CLUSTER_ENABLED: false
+    QUEUE_REDIS_TLS_ENABLED: false
+    SYSTEM_REDIS_CLUSTER_ENABLED: false
+    SYSTEM_REDIS_TLS_ENABLED: false
+    WORKFLOW_REDIS_CLUSTER_ENABLED: true
+    WORKFLOW_REDIS_TLS_ENABLED: false
+
+    # Feature Flags
+    FEATURE_FLAG_PLATFORM_ENABLED: true
+    FEATURE_FLAG_PLATFORM_ENDPOINT: http://flipt:1722
+    EMAIL_DELIVERY_SERVICE: none
+
+    # Core Service Ports and URLs
+    ACCOUNT_PORT: 1708
+    ACCOUNT_PRIVATE_URL: http://account:1708
+    ACCOUNT_PUBLIC_URL: "https://account.your-domain.com"
+
+    CERBERUS_PORT: 1700
+    CERBERUS_PRIVATE_URL: http://cerberus:1700
+    CERBERUS_PUBLIC_URL: "https://cerberus.your-domain.com"
+
+    CONNECT_PORT: 1707
+    CONNECT_PRIVATE_URL: http://connect:1707
+    CONNECT_PUBLIC_URL: "https://connect.your-domain.com"
+
+    DASHBOARD_PORT: 1704
+    DASHBOARD_PRIVATE_URL: http://dashboard:1704
+    DASHBOARD_PUBLIC_URL: "https://dashboard.your-domain.com"
+
+    HADES_PORT: 1710
+    HADES_PRIVATE_URL: http://hades:1710
+    HADES_PUBLIC_URL: "https://hades.your-domain.com"
+
+    HEALTH_CHECKER_PORT: 1733
+    HEALTH_CHECKER_PRIVATE_URL: http://health-checker:1733
+    HEALTH_CHECKER_PUBLIC_URL: "https://health-checker.your-domain.com"
+
+    HERMES_PORT: 1702
+    HERMES_PRIVATE_URL: http://hermes:1702
+    HERMES_PUBLIC_URL: "https://hermes.your-domain.com"
+
+    PASSPORT_PORT: 1706
+    PASSPORT_PRIVATE_URL: http://passport:1706
+    PASSPORT_PUBLIC_URL: "https://passport.your-domain.com"
+
+    PHEME_PORT: 1709
+    PHEME_PRIVATE_URL: http://pheme:1709
+    PHEME_PUBLIC_URL: "https://pheme.your-domain.com"
+
+    RELEASE_PORT: 1719
+    RELEASE_PRIVATE_URL: http://release:1719
+    RELEASE_PUBLIC_URL: "https://release.your-domain.com"
+
+    ZEUS_PORT: 1703
+    ZEUS_PRIVATE_URL: http://zeus:1703
+    ZEUS_PUBLIC_URL: "https://zeus.your-domain.com"
+
+    # Cache/Replay Service
+    CACHE_REPLAY_PORT: 1724
+    CACHE_REPLAY_PRIVATE_URL: http://cache-replay:1724
+
+    # Worker Services
+    WORKER_ACTIONKIT_PORT: 1721
+    WORKER_ACTIONKIT_PRIVATE_URL: http://worker-actionkit:1721
+    WORKER_ACTIONKIT_PUBLIC_URL: "https://worker-actionkit.your-domain.com"
+
+    WORKER_ACTIONS_PORT: 1712
+    WORKER_ACTIONS_PRIVATE_URL: http://worker-actions:1712
+    WORKER_ACTIONS_PUBLIC_URL: "https://worker-actions.your-domain.com"
+
+    WORKER_CREDENTIALS_PORT: 1713
+    WORKER_CREDENTIALS_PRIVATE_URL: http://worker-credentials:1713
+    WORKER_CREDENTIALS_PUBLIC_URL: "https://worker-credentials.your-domain.com"
+
+    WORKER_CRONS_PORT: 1714
+    WORKER_CRONS_PRIVATE_URL: http://worker-crons:1714
+    WORKER_CRONS_PUBLIC_URL: "https://worker-crons.your-domain.com"
+
+    WORKER_DEPLOYMENTS_PORT: 1718
+    WORKER_DEPLOYMENTS_PRIVATE_URL: http://worker-deployments:1718
+    WORKER_DEPLOYMENTS_PUBLIC_URL: "https://worker-deployments.your-domain.com"
+
+    WORKER_EVENT_LOGS_PORT: 1723
+    WORKER_EVENT_LOGS_PRIVATE_URL: http://worker-eventlogs:1723
+    WORKER_EVENT_LOGS_PUBLIC_URL: "https://worker-eventlogs.your-domain.com"
+
+    WORKER_PROXY_PORT: 1715
+    WORKER_PROXY_PRIVATE_URL: http://worker-proxy:1715
+    WORKER_PROXY_PUBLIC_URL: "https://worker-proxy.your-domain.com"
+
+    WORKER_TRIGGERS_PORT: 1716
+    WORKER_TRIGGERS_PRIVATE_URL: http://worker-triggers:1716
+    WORKER_TRIGGERS_PUBLIC_URL: "https://worker-triggers.your-domain.com"
+
+    WORKER_WORKFLOWS_PORT: 1717
+    WORKER_WORKFLOWS_PRIVATE_URL: http://worker-workflows:1717
+    WORKER_WORKFLOWS_PUBLIC_URL: "https://worker-workflows.your-domain.com"
+
+    # Worker Configuration
+    WORKER_WORKFLOWS_MINIMUM_HERMES_PROCESSOR_QUEUE_COUNT: 0
+    WORKER_WORKFLOWS_MINIMUM_TEST_WORKFLOW_QUEUE_COUNT: 1
+
+    # Monitoring Configuration
+    MONITOR_BULL_EXPORTER_HOST: http://bull-exporter
+    MONITOR_BULL_EXPORTER_PORT: 9538
+    MONITOR_GRAFANA_HOST: http://grafana
+    MONITOR_GRAFANA_PORT: 4500
+    MONITOR_GRAFANA_SERVER_DOMAIN: "https://grafana.your-domain.com"
+    MONITOR_GRAFANA_UPTIME_WEBHOOK_URL: "https://your-uptime-service.com/webhook/your-webhook-id"
+    MONITOR_KUBE_STATE_METRICS_HOST: http://kube-state-metrics
+    MONITOR_KUBE_STATE_METRICS_PORT: 2550
+    MONITOR_PGADMIN_HOST: http://pgadmin
+    MONITOR_PGADMIN_PORT: 5050
+    MONITOR_PGADMIN_SSL_MODE: disable
+    MONITOR_POSTGRES_EXPORTER_HOST: http://postgres-exporter
+    MONITOR_POSTGRES_EXPORTER_PORT: 9187
+    MONITOR_POSTGRES_EXPORTER_SSL_MODE: disable
+    MONITOR_PROMETHEUS_HOST: http://prometheus
+    MONITOR_PROMETHEUS_PORT: 9090
+    MONITOR_REDIS_EXPORTER_HOST: http://redis-exporter
+    MONITOR_REDIS_EXPORTER_PORT: 9121
+    MONITOR_REDIS_INSIGHT_HOST: http://redis-insight
+    MONITOR_REDIS_INSIGHT_PORT: 8500
+
+# Secrets - Replace all values with your actual secrets
+secrets: 
+  # License
+  LICENSE: "your-license-key"
+
+  # Admin Authentication
+  ADMIN_BASIC_AUTH_PASSWORD: "your-admin-password"
+  ADMIN_BASIC_AUTH_USERNAME: "your-admin-username"
+  
+  # Redis URLs
+  CACHE_REDIS_URL: "your-cache-redis-endpoint:6379"
+  QUEUE_REDIS_URL: "your-queue-redis-endpoint:6379"
+  REDIS_URL: "your-cache-redis-endpoint:6379"
+  SYSTEM_REDIS_URL: "your-system-redis-endpoint:6379"
+  WORKFLOW_REDIS_URL: "your-cache-redis-endpoint:6379"
+  
+  # Database Connections - Cerberus
+  CERBERUS_POSTGRES_DATABASE: cerberus
+  CERBERUS_POSTGRES_HOST: "your-cerberus-db-host"
+  CERBERUS_POSTGRES_PASSWORD: "your-cerberus-db-password"
+  CERBERUS_POSTGRES_PORT: 5432
+  CERBERUS_POSTGRES_USERNAME: "your-cerberus-db-username"
+  
+  # Database Connections - Event Logs
+  EVENT_LOGS_POSTGRES_DATABASE: eventlogs
+  EVENT_LOGS_POSTGRES_HOST: "your-eventlogs-db-host"
+  EVENT_LOGS_POSTGRES_PASSWORD: "your-eventlogs-db-password"
+  EVENT_LOGS_POSTGRES_PORT: 5432
+  EVENT_LOGS_POSTGRES_USERNAME: "your-eventlogs-db-username"
+  
+  # Database Connections - Hermes/Pheme
+  HERMES_POSTGRES_DATABASE: hermes
+  HERMES_POSTGRES_HOST: "your-hermes-db-host"
+  HERMES_POSTGRES_PASSWORD: "your-hermes-db-password"
+  HERMES_POSTGRES_PORT: 5432
+  HERMES_POSTGRES_USERNAME: "your-hermes-db-username"
+  
+  PHEME_POSTGRES_DATABASE: hermes
+  PHEME_POSTGRES_HOST: "your-hermes-db-host"
+  PHEME_POSTGRES_PASSWORD: "your-hermes-db-password"
+  PHEME_POSTGRES_PORT: 5432
+  PHEME_POSTGRES_USERNAME: "your-hermes-db-username"
+  
+  # Database Connections - Zeus
+  ZEUS_POSTGRES_DATABASE: zeus
+  ZEUS_POSTGRES_HOST: "your-zeus-db-host"
+  ZEUS_POSTGRES_PASSWORD: "your-zeus-db-password"
+  ZEUS_POSTGRES_PORT: 5432
+  ZEUS_POSTGRES_USERNAME: "your-zeus-db-username"
+  
+  # Cloud Storage
+  CLOUD_STORAGE_MICROSERVICE_PASS: "your-s3-secret-key"
+  CLOUD_STORAGE_MICROSERVICE_USER: "your-s3-access-key"
+  
+  # Monitoring
+  MONITOR_GRAFANA_AWS_ACCESS_ID: "your-grafana-aws-access-key"
+  MONITOR_GRAFANA_AWS_SECRET_KEY: "your-grafana-aws-secret-key"
+  MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD: "your-grafana-admin-password"
+  MONITOR_GRAFANA_SECURITY_ADMIN_USER: "your-grafana-admin-email@example.com"
+  MONITOR_PGADMIN_EMAIL: "your-pgadmin-email@example.com"
+  MONITOR_PGADMIN_PASSWORD: "your-pgadmin-password"
+  MONITOR_QUEUE_REDIS_TARGET: "your-queue-redis-endpoint"

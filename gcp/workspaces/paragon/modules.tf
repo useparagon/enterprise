@@ -9,6 +9,7 @@ module "helm" {
   domain                 = var.domain
   feature_flags_content  = local.feature_flags_content
   flipt_options          = local.flipt_options
+  gcp_creds              = local.gcp_creds
   helm_values            = local.helm_values
   ingress_scheme         = var.ingress_scheme
   k8s_version            = var.k8s_version
