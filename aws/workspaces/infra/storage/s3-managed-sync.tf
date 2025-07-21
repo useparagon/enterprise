@@ -66,8 +66,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "managed_sync" {
   bucket = aws_s3_bucket.managed_sync[0].id
 
   rule {
-    id = "expiration"
+    id     = "expiration"
+    status = "Enabled"
 
+    filter {}
     expiration {
       days = var.app_bucket_expiration
     }
@@ -75,8 +77,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "managed_sync" {
     noncurrent_version_expiration {
       noncurrent_days = var.app_bucket_expiration
     }
-
-    status = "Enabled"
   }
 }
 

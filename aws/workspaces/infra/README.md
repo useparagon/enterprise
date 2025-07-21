@@ -14,7 +14,7 @@ See [setup-policy.json](../../setup-policy.json) for permissions that are requir
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.72.1 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.100.0 |
 
 ## Modules
 
