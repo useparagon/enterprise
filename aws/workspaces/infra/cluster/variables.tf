@@ -141,9 +141,22 @@ locals {
   # when using an assumed role the role itself must be used instead of the current identity arn
   # so convert identity arn (e.g. arn:aws:sts::123456789:assumed-role/ParagonAssumedRole/SessionName)
   # to role arn (e.g. arn:aws:iam::123456789:role/ParagonAssumedRole)
-  is_assumed_role    = can(regex("assumed-role", data.aws_caller_identity.current.arn))
-  assumed_role_parts = split("/", replace(replace(data.aws_caller_identity.current.arn, ":sts:", ":iam:"), ":assumed-role/", ":role/"))
-  caller_arn         = local.is_assumed_role ? format("%s/%s", local.assumed_role_parts[0], local.assumed_role_parts[1]) : data.aws_caller_identity.current.arn
+  is_assumed_role = can(regex("assumed-role", data.aws_caller_identity.current.arn))
+  assumed_role_parts = split(
+    "/",
+    replace(
+      replace(
+        data.aws_caller_identity.current.arn,
+        ":sts:",
+        ":iam:"
+      ),
+      ":assumed-role/",
+      # in the case of AWS SSO, the arn is in the format of arn:aws:sts::123456789:assumed-role/ParagonAssumedRole/SessionName
+      # but we need to convert it to arn:aws:iam::123456789:role/aws-reserved/sso.amazonaws.com/ParagonAssumedRole
+      local.is_assumed_role && strcontains(data.aws_caller_identity.current.arn, ":assumed-role/AWSReservedSSO") ? ":role__TEMPORARY_DIVIDER__aws-reserved__TEMPORARY_DIVIDER__sso.amazonaws.com/" : ":role/"
+    )
+  )
+  caller_arn = local.is_assumed_role ? replace(format("%s/%s", local.assumed_role_parts[0], local.assumed_role_parts[1]), "__TEMPORARY_DIVIDER__", "/") : data.aws_caller_identity.current.arn
 
   # include current user as EKS admin
   eks_admin_arns = distinct(compact(concat(

@@ -20,22 +20,6 @@ resource "azurerm_key_vault_access_policy" "aks_access_to_kv" {
   ]
 }
 
-resource "kubernetes_secret" "microservices" {
-  for_each = var.microservices
-
-  metadata {
-    name      = "${each.key}-secret"
-    namespace = kubernetes_namespace.paragon.id
-  }
-
-  lifecycle {
-    ignore_changes = [
-      metadata[0].annotations,
-      metadata[0].labels
-    ]
-  }
-}
-
 resource "helm_release" "cert_manager" {
   name       = "cert-manager"
   namespace  = kubernetes_namespace.paragon.id

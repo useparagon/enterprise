@@ -40,12 +40,13 @@ module "uptime" {
 
   uptime_api_token = var.uptime_api_token
   uptime_company   = coalesce(var.uptime_company, var.organization)
-  microservices    = var.ingress_scheme == "internal" ? {} : local.public_microservices
+  microservices    = local.uptime_services
 }
 
 module "dns" {
   source = "./dns"
 
+  enabled              = local.dns_enabled
   cloudflare_api_token = var.cloudflare_api_token
   cloudflare_zone_id   = var.cloudflare_zone_id
   domain               = var.domain

@@ -1,8 +1,8 @@
 output "elasticache" {
   value = var.elasticache_multiple_instances ? {
     for key, value in local.redis_instances :
-    key => key == "cache" ? {
-      host    = aws_elasticache_replication_group.redis[0].configuration_endpoint_address
+    key => value.cluster == true ? {
+      host    = aws_elasticache_replication_group.redis[key == "cache" ? 0 : 1].configuration_endpoint_address
       port    = 6379
       cluster = value.cluster
       } : {

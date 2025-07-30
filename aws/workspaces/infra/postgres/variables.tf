@@ -54,12 +54,32 @@ variable "migrated_passwords" {
   default     = {}
 }
 
+variable "rds_restore_from_snapshot" {
+  description = "Specifies that RDS instances should be restored from a snapshot."
+  type        = bool
+}
+
+variable "rds_final_snapshot_enabled" {
+  description = "Specifies that RDS instances should perform a final snapshot before being deleted."
+  type        = bool
+}
+
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+}
+
 locals {
-  postgres_instances = var.rds_multiple_instances ? {
+  postgres_instances = var.rds_multiple_instances ? merge({
     cerberus = {
       name = "${var.workspace}-cerberus"
       size = "db.t4g.micro"
       db   = "cerberus"
+    }
+    eventlogs = {
+      name = "${var.workspace}-eventlogs"
+      size = "db.t4g.small"
+      db   = "eventlogs"
     }
     hermes = {
       name = "${var.workspace}-hermes"
@@ -71,7 +91,18 @@ locals {
       size = "db.t4g.small"
       db   = "zeus"
     }
-    } : {
+    }, var.managed_sync_enabled ? {
+    managed_sync = {
+      name = "${var.workspace}-managed-sync"
+      size = "db.t4g.small"
+      db   = "managed_sync"
+    }
+    managed_sync_openfga = {
+      name = "${var.workspace}-managed-sync-openfga"
+      size = "db.t4g.small"
+      db   = "managed_sync_openfga"
+    }
+    } : {}) : {
     paragon = {
       name = "${var.workspace}"
       size = var.rds_instance_class

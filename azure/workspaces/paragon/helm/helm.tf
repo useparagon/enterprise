@@ -94,7 +94,6 @@ locals {
           env = merge(
             nonsensitive(var.helm_values.global.env),
             {
-              HOST_ENV    = "AZURE_K8"
               k8s_version = var.k8s_version
               secretName  = "paragon-secrets"
             }
@@ -200,7 +199,6 @@ resource "helm_release" "paragon_on_prem" {
     helm_release.ingress,
     kubernetes_secret.docker_login,
     kubernetes_secret.paragon_secrets,
-    kubernetes_secret.microservices,
     kubernetes_config_map.feature_flag_content
   ]
 }
@@ -254,8 +252,7 @@ resource "helm_release" "paragon_logging" {
 
   depends_on = [
     helm_release.ingress,
-    kubernetes_secret.docker_login,
-    kubernetes_secret.microservices
+    kubernetes_secret.docker_login
   ]
 }
 
@@ -284,7 +281,6 @@ resource "helm_release" "paragon_monitoring" {
   depends_on = [
     helm_release.ingress,
     helm_release.paragon_on_prem,
-    kubernetes_secret.docker_login,
-    kubernetes_secret.microservices
+    kubernetes_secret.docker_login
   ]
 }

@@ -9,6 +9,7 @@ module "helm" {
   domain                 = var.domain
   feature_flags_content  = local.feature_flags_content
   flipt_options          = local.flipt_options
+  gcp_creds              = local.gcp_creds
   helm_values            = local.helm_values
   ingress_scheme         = var.ingress_scheme
   k8s_version            = var.k8s_version
@@ -42,7 +43,7 @@ module "uptime" {
 
   uptime_api_token = var.uptime_api_token
   uptime_company   = coalesce(var.uptime_company, var.organization)
-  microservices    = local.public_microservices
+  microservices    = local.uptime_services
 }
 
 module "dns" {

@@ -22,3 +22,8 @@ variable "migrated_passwords" {
   type        = map(string)
   default     = {}
 }
+
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+}

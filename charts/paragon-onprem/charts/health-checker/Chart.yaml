@@ -1,0 +1,6 @@
+apiVersion: v2
+name: health-checker
+description: Helm Chart for Paragon health-checker service
+type: application
+version: __PARAGON_VERSION__
+appVersion: "1.16.0"

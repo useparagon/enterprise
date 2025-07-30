@@ -30,6 +30,10 @@ dependencies:
     repository: file://charts/hades
     version: __PARAGON_VERSION__
     condition: subchart.hades.enabled
+  - name: health-checker
+    repository: file://charts/health-checker
+    version: __PARAGON_VERSION__
+    condition: subchart.health-checker.enabled
   - name: hermes
     repository: file://charts/hermes
     version: __PARAGON_VERSION__
@@ -74,6 +78,10 @@ dependencies:
     repository: file://charts/worker-deployments
     version: __PARAGON_VERSION__
     condition: subchart.worker-deployments.enabled
+  - name: worker-eventlogs
+    repository: file://charts/worker-eventlogs
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-eventlogs.enabled
   - name: worker-proxy
     repository: file://charts/worker-proxy
     version: __PARAGON_VERSION__

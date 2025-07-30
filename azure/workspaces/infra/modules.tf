@@ -35,6 +35,7 @@ module "postgres" {
   source = "./postgres"
 
   postgres_multiple_instances = var.postgres_multiple_instances
+  postgres_base_sku_name      = var.postgres_base_sku_name
   postgres_redundant          = var.postgres_redundant
   postgres_sku_name           = var.postgres_sku_name
   postgres_version            = var.postgres_version
@@ -50,6 +51,8 @@ module "redis" {
 
   private_subnet           = module.network.private_subnet
   public_subnet            = module.network.public_subnet
+  redis_base_capacity      = var.redis_base_capacity
+  redis_base_sku_name      = var.redis_base_sku_name
   redis_capacity           = var.redis_capacity
   redis_multiple_instances = var.redis_multiple_instances
   redis_sku_name           = var.redis_sku_name

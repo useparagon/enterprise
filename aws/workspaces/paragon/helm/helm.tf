@@ -9,26 +9,26 @@ locals {
           }
         ]
       }
-    }
-    persistence = var.feature_flags_content != null ? {
-      enabled = true
-    } : {}
-    extraVolumes = var.feature_flags_content != null ? [
-      {
-        name = "feature-flags-content"
-        configMap = {
-          name = kubernetes_config_map.feature_flag_content[0].metadata[0].name
+      persistence = var.feature_flags_content != null ? {
+        enabled = true
+      } : {}
+      extraVolumes = var.feature_flags_content != null ? [
+        {
+          name = "feature-flags-content"
+          configMap = {
+            name = kubernetes_config_map.feature_flag_content[0].metadata[0].name
+          }
         }
-      }
-    ] : []
-    extraVolumeMounts = var.feature_flags_content != null ? [
-      {
-        name      = "feature-flags-content"
-        mountPath = "/var/opt/flipt/production/features.yml"
-        subPath   = "features.yml"
-        readOnly  = true
-      }
-    ] : []
+      ] : []
+      extraVolumeMounts = var.feature_flags_content != null ? [
+        {
+          name      = "feature-flags-content"
+          mountPath = "/var/opt/flipt/production/features.yml"
+          subPath   = "features.yml"
+          readOnly  = true
+        }
+      ] : []
+    }
   })
 
   global_values = yamlencode(merge(
@@ -40,7 +40,6 @@ locals {
           env = merge(
             nonsensitive(var.helm_values.global.env),
             {
-              HOST_ENV    = "AWS_K8"
               k8s_version = var.k8s_version
               secretName  = "paragon-secrets"
             }
@@ -89,6 +88,8 @@ subchart:
     enabled: ${contains(keys(var.microservices), "worker-crons")}
   worker-deployments:
     enabled: ${contains(keys(var.microservices), "worker-deployments")}
+  worker-eventlogs:
+    enabled: ${contains(keys(var.microservices), "worker-eventlogs")}
   worker-proxy:
     enabled: ${contains(keys(var.microservices), "worker-proxy")}
   worker-triggers:
