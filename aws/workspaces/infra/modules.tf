@@ -34,6 +34,8 @@ module "postgres" {
   public_subnet      = module.network.public_subnet
   private_subnet     = module.network.private_subnet
   availability_zones = module.network.availability_zones
+
+  migrated_passwords = var.migrated_passwords
 }
 
 module "redis" {
@@ -56,6 +58,8 @@ module "storage" {
   workspace             = local.workspace
   force_destroy         = var.disable_deletion_protection
   app_bucket_expiration = var.app_bucket_expiration
+  migrated_passwords    = var.migrated_passwords
+  migrated_workspace    = var.migrated_workspace
 }
 
 module "bastion" {

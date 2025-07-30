@@ -13,11 +13,19 @@ resource "aws_iam_role" "eks_cluster_admin" {
       }
     ]
   })
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 resource "aws_iam_policy" "eks_cluster_admin" {
   name   = "${var.workspace}-eks-admin"
   policy = file("./templates/eks/eks-admin-policy.json")
+
+  lifecycle {
+    create_before_destroy = false
+  }
 
   tags = {
     Name = "${var.workspace}-eks-admin"

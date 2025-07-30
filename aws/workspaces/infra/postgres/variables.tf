@@ -48,6 +48,12 @@ variable "rds_multiple_instances" {
   type        = bool
 }
 
+variable "migrated_passwords" {
+  description = "Override credentials to preserve complexity conventions when migrating from legacy workspaces"
+  type        = map(string)
+  default     = {}
+}
+
 locals {
   postgres_instances = var.rds_multiple_instances ? {
     cerberus = {

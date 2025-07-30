@@ -13,7 +13,11 @@ resource "random_string" "postgres_root_username" {
 }
 
 resource "random_password" "postgres_root_password" {
-  for_each = local.postgres_instances
+  for_each = {
+    for key, value in local.postgres_instances :
+    key => value
+    if try(var.migrated_passwords[key], null) == null
+  }
 
   length  = 32
   lower   = true
@@ -90,7 +94,7 @@ resource "aws_db_instance" "postgres" {
   db_name    = each.value.db
   port       = "5432"
   username   = random_string.postgres_root_username[each.key].result
-  password   = random_password.postgres_root_password[each.key].result
+  password   = try(var.migrated_passwords[each.key], random_password.postgres_root_password[each.key].result)
 
   engine               = "postgres"
   engine_version       = var.rds_postgres_version

@@ -34,6 +34,10 @@ resource "aws_key_pair" "bastion" {
   key_name   = "${var.workspace}-key"
   public_key = tls_private_key.bastion.public_key_openssh
 
+  lifecycle {
+    create_before_destroy = false
+  }
+
   tags = {
     Name = "${var.workspace}-key-pair"
   }

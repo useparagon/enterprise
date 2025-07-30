@@ -217,11 +217,23 @@ variable "cloudflare_tunnel_email_domain" {
   default     = "useparagon.com"
 }
 
+variable "migrated_workspace" {
+  description = "Override the workspace name to preserve naming conventions when migrating from legacy workspaces"
+  type        = string
+  default     = null
+}
+
+variable "migrated_passwords" {
+  description = "Override credentials to preserve complexity conventions when migrating from legacy workspaces"
+  type        = map(string)
+  default     = {}
+}
+
 locals {
   # hash of account ID to help ensure uniqueness of resources like S3 bucket names
   hash        = substr(sha256(data.aws_caller_identity.current.account_id), 0, 8)
   environment = "enterprise"
-  workspace   = "paragon-${var.organization}-${local.hash}"
+  workspace   = var.migrated_workspace != null ? var.migrated_workspace : "paragon-${var.organization}-${local.hash}"
 
   # NOTE hash and workspace can't be included in tags since it creates a circular reference
   default_tags = {

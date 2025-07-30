@@ -40,6 +40,10 @@ resource "aws_iam_policy" "bastion_infra_read_only" {
   name   = "${local.bastion_name}-infra-read-only"
   policy = data.aws_iam_policy_document.bastion_infra_read_only.json
 
+  lifecycle {
+    create_before_destroy = false
+  }
+
   tags = {
     Name = "${local.bastion_name}-infra-read-only"
   }
