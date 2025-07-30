@@ -239,6 +239,8 @@ variable "migrated_passwords" {
   description = "Override credentials to preserve complexity conventions when migrating from legacy workspaces"
   type        = map(string)
   default     = {}
+}
+
 variable "managed_sync_enabled" {
   description = "Whether to enable managed sync."
   type        = bool
