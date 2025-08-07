@@ -6,6 +6,7 @@ module "gke" {
 
   create_service_account     = true
   default_max_pods_per_node  = 20
+  deletion_protection        = !var.disable_deletion_protection
   filestore_csi_driver       = false
   horizontal_pod_autoscaling = true
   http_load_balancing        = true
