@@ -109,6 +109,14 @@ locals {
     ADMIN_POSTGRES_DATABASE    = local.postgres_config.admin.database
     ADMIN_POSTGRES_SSL_ENABLED = true
 
+    # same values as admin postgres instance, mapped to these additional keys for monorepo
+    MANAGED_SYNC_POSTGRES_HOST        = local.postgres_config.admin.host
+    MANAGED_SYNC_POSTGRES_PORT        = local.postgres_config.admin.port
+    MANAGED_SYNC_POSTGRES_DATABASE    = local.postgres_config.admin.database
+    MANAGED_SYNC_POSTGRES_USERNAME    = local.postgres_config.admin.username
+    MANAGED_SYNC_POSTGRES_PASSWORD    = local.postgres_config.admin.password
+    MANAGED_SYNC_POSTGRES_SSL_ENABLED = true
+
     OPENFGA_HTTP_PORT           = 6200
     OPENFGA_GRPC_PORT           = 6201
     OPENFGA_AUTH_METHOD         = "preshared"
