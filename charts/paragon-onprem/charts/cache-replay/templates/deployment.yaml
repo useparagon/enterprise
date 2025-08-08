@@ -31,7 +31,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.global.paragon_version }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.global.paragon_version | default .Values.global.env.VERSION }}"
           command: ["./cache-replay"]
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:

@@ -303,7 +303,13 @@ minReadySeconds:
 ##
 terminationGracePeriodSeconds:
 
-priorityClassName: "system-node-critical"
+priorityClassName: "logging-critical"
+
+priorityClass:
+  create: true
+  name: "logging-critical"
+  value: 1000000
+  description: "Priority class for critical logging components like fluent-bit"
 
 secrets: {}
 

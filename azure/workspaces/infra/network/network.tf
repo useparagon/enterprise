@@ -56,7 +56,7 @@ resource "azurerm_subnet" "postgres" {
   }
 }
 
-# subnet specifically for postgres resources
+# subnet specifically for redis resources
 resource "azurerm_subnet" "redis" {
   name = "${var.workspace}-redis-subnet"
 

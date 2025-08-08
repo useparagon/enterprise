@@ -125,6 +125,7 @@ secretKeys:
   - SHOPIFY_CLIENT_SECRET
   - SLACK_APP_CLIENT_ID
   - SLACK_APP_SECRET_ID
+  - SYSTEM_REDIS_URL
   - TRELLO_APP_NAME
   - WORKER_DEPLOYMENTS_ACCESS_TOKEN
   - WORKER_SHARED_AUTOSCALER_ECS_ACCESS_KEY_ID
@@ -200,7 +201,6 @@ envKeys:
   - SERVICE_MONITORING_ENABLED
   - SYSTEM_REDIS_CLUSTER_ENABLED
   - SYSTEM_REDIS_TLS_ENABLED
-  - SYSTEM_REDIS_URL
   - TASK_HISTORY_DISABLED
   - TASK_HISTORY_LOGS_DISABLED
   - VERSION
@@ -279,7 +279,7 @@ ingress:
   certificate: ''
   enabled: true
   className: ''
-  host: chart-example.local
+  host: '' # When empty, will use chart name + domain
   healthcheck_path: /healthz
 
 nodeSelector: {}
