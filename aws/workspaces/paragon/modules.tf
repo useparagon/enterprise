@@ -48,6 +48,7 @@ module "managed_sync_config" {
 
   aws_region       = var.aws_region
   base_helm_values = local.helm_vars
+  infra_values     = local.infra_vars
   domain           = var.domain
   microservices    = local.microservices
 }

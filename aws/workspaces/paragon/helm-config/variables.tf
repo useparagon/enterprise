@@ -7,6 +7,10 @@ variable "base_helm_values" {
   description = "The base configuration for the values for the helm chart."
 }
 
+variable "infra_values" {
+  description = "The values from the infrastructure workspace."
+}
+
 variable "domain" {
   description = "The domain of the application."
   type        = string

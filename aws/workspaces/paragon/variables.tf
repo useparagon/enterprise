@@ -328,22 +328,22 @@ locals {
   managed_sync_microservices = {
     "api-sync" = {
       "healthcheck_path" = "/healthz"
-      "port"             = try(local.base_helm_values.global.env["API_SYNC_HTTP_PORT"], 1800)
-      "public_url"       = try(local.base_helm_values.global.env["API_SYNC_PUBLIC_URL"], "https://sync.${var.domain}")
+      "port"             = try(local.helm_vars.global.env["API_SYNC_HTTP_PORT"], 1800)
+      "public_url"       = try(local.helm_vars.global.env["API_SYNC_PUBLIC_URL"], "https://sync.${var.domain}")
     }
     "api-project" = {
       "healthcheck_path" = "/healthz"
-      "port"             = try(local.base_helm_values.global.env["API_PROJECT_HTTP_PORT"], 1804)
+      "port"             = try(local.helm_vars.global.env["API_PROJECT_HTTP_PORT"], 1804)
       "public_url"       = null
     }
     "worker-sync" = {
       "healthcheck_path" = "/healthz"
-      "port"             = try(local.base_helm_values.global.env["WORKER_SYNC_HTTP_PORT"], 1802)
+      "port"             = try(local.helm_vars.global.env["WORKER_SYNC_HTTP_PORT"], 1802)
       "public_url"       = null
     }
     "queue-exporter" = {
       "healthcheck_path" = "/healthz"
-      "port"             = try(local.base_helm_values.global.env["MONITOR_QUEUE_EXPORTER_HTTP_PORT"], 1806)
+      "port"             = try(local.helm_vars.global.env["MONITOR_QUEUE_EXPORTER_HTTP_PORT"], 1806)
       "public_url"       = null
     }
   }

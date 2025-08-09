@@ -1,31 +1,39 @@
 locals {
+  _default_postgres_config = {
+    host     = try(var.base_helm_values.global.env["ADMIN_POSTGRES_HOST"], var.infra_values.postgres.value.managed_sync.host, var.infra_values.postgres.value.paragon.host)
+    port     = try(var.base_helm_values.global.env["ADMIN_POSTGRES_PORT"], var.infra_values.postgres.value.managed_sync.port, var.infra_values.postgres.value.paragon.port)
+    user     = try(var.base_helm_values.global.env["ADMIN_POSTGRES_USERNAME"], var.infra_values.postgres.value.managed_sync.user, var.infra_values.postgres.value.paragon.user)
+    password = try(var.base_helm_values.global.env["ADMIN_POSTGRES_PASSWORD"], var.infra_values.postgres.value.managed_sync.password, var.infra_values.postgres.value.paragon.password)
+    database = try(var.base_helm_values.global.env["ADMIN_POSTGRES_DATABASE"], var.infra_values.postgres.value.managed_sync.database, var.infra_values.postgres.value.paragon.database)
+  }
+
   postgres_config = {
     admin = {
       # these are the default credentials for the admin postgres instance
       # if using multiple postgres instances, it should be set to the `managed-sync` instance
-      host     = try(var.base_helm_values.global.env["ADMIN_POSTGRES_HOST"], var.base_helm_values.global.env["POSTGRES_HOST"])
-      port     = try(var.base_helm_values.global.env["ADMIN_POSTGRES_PORT"], var.base_helm_values.global.env["POSTGRES_PORT"])
-      username = try(var.base_helm_values.global.env["ADMIN_POSTGRES_USERNAME"], var.base_helm_values.global.env["POSTGRES_USER"])
-      password = try(var.base_helm_values.global.env["ADMIN_POSTGRES_PASSWORD"], var.base_helm_values.global.env["POSTGRES_PASSWORD"])
-      database = try(var.base_helm_values.global.env["ADMIN_POSTGRES_DATABASE"], var.base_helm_values.global.env["POSTGRES_DATABASE"])
+      host     = local._default_postgres_config.host
+      port     = local._default_postgres_config.port
+      username = local._default_postgres_config.user
+      password = local._default_postgres_config.password
+      database = local._default_postgres_config.database
     }
     openfga = {
-      host     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_HOST"], var.base_helm_values.global.env["POSTGRES_HOST"])
-      port     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_PORT"], var.base_helm_values.global.env["POSTGRES_PORT"])
+      host     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_HOST"], local._default_postgres_config.host)
+      port     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_PORT"], local._default_postgres_config.port)
       username = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_USERNAME"], random_string.postgres_username["openfga"].result)
       password = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_PASSWORD"], random_password.postgres_password["openfga"].result)
       database = "openfga"
     }
     sync_instance = {
-      host     = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_HOST"], var.base_helm_values.global.env["POSTGRES_HOST"])
-      port     = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_PORT"], var.base_helm_values.global.env["POSTGRES_PORT"])
+      host     = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_HOST"], local._default_postgres_config.host)
+      port     = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_PORT"], local._default_postgres_config.port)
       username = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_USERNAME"], random_string.postgres_username["sync_instance"].result)
       password = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_PASSWORD"], random_password.postgres_password["sync_instance"].result)
       database = "sync_instance"
     }
     sync_project = {
-      host     = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_HOST"], var.base_helm_values.global.env["POSTGRES_HOST"])
-      port     = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_PORT"], var.base_helm_values.global.env["POSTGRES_PORT"])
+      host     = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_HOST"], local._default_postgres_config.host)
+      port     = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_PORT"], local._default_postgres_config.port)
       username = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_USERNAME"], random_string.postgres_username["sync_project"].result)
       password = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_PASSWORD"], random_password.postgres_password["sync_project"].result)
       database = "sync_project"
@@ -33,11 +41,38 @@ locals {
   }
 
   kafka_config = {
-    broker_urls    = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_BROKER_URLS"], null)
-    sasl_username  = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_SASL_USERNAME"], null)
-    sasl_password  = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_SASL_PASSWORD"], null)
-    sasl_mechanism = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_SASL_MECHANISM"], null)
-    ssl_enabled    = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_SSL_ENABLED"], null)
+    broker_urls    = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_BROKER_URLS"], var.infra_values.kafka.value.cluster_bootstrap_brokers)
+    sasl_username  = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_SASL_USERNAME"], var.infra_values.kafka.value.cluster_username)
+    sasl_password  = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_SASL_PASSWORD"], var.infra_values.kafka.value.cluster_password)
+    sasl_mechanism = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_SASL_MECHANISM"], var.infra_values.kafka.value.cluster_mechanism)
+    ssl_enabled    = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_SSL_ENABLED"], var.infra_values.kafka.value.cluster_tls_enabled)
+  }
+
+  redis_config = {
+    host            = try(var.base_helm_values.global.env["REDIS_HOST"], var.infra_values.redis.value.managed_sync.host, var.infra_values.redis.value.cache.host)
+    port            = try(var.base_helm_values.global.env["REDIS_PORT"], var.infra_values.redis.value.managed_sync.port, var.infra_values.redis.value.cache.port)
+    cluster_enabled = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CLUSTER_ENABLED"], var.infra_values.redis.value.managed_sync.cluster, var.infra_values.redis.value.cache.cluster, false)
+  }
+
+  storage_type = try(var.base_helm_values.global.env["CLOUD_STORAGE_TYPE"], "S3")
+
+  storage_config = {
+    buckets = {
+      public       = coalesce(try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_BUCKET"], null), try(var.base_helm_values.global.env["MINIO_PUBLIC_BUCKET"], null), var.infra_values.minio.value.public_bucket)
+      managed_sync = coalesce(try(var.base_helm_values.global.env["CLOUD_STORAGE_MANAGED_SYNC_BUCKET"], null), var.infra_values.minio.value.managed_sync_bucket)
+    }
+    type = try(var.base_helm_values.global.env["CLOUD_STORAGE_TYPE"], "S3")
+    user = try(
+      local.storage_type == "MINIO" ? try(var.base_helm_values.global.env["MINIO_MICROSERVICE_USER"], var.infra_values.minio.value.microservice_user) : try(var.base_helm_values.global.env["CLOUD_STORAGE_MICROSERVICE_USER"], var.infra_values.minio.value.root_user)
+    )
+    pass = try(
+      local.storage_type == "MINIO" ? try(var.base_helm_values.global.env["MINIO_MICROSERVICE_PASS"], var.infra_values.minio.value.microservice_pass) : try(var.base_helm_values.global.env["CLOUD_STORAGE_MICROSERVICE_PASS"], var.infra_values.minio.value.root_password)
+    )
+    public_url = coalesce(
+      try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+      local.storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+      try(var.microservices.minio.public_url, null), null
+    )
   }
 
   queue_exporter_config = {
@@ -51,12 +86,13 @@ locals {
     HOST_ENV  = "AWS_K8"
     LOG_LEVEL = try(var.base_helm_values.global.env["LOG_LEVEL"], "debug")
 
-    CLOUD_STORAGE_TYPE                = try(var.base_helm_values.global.env["CLOUD_STORAGE_TYPE"], "MINIO")
-    CLOUD_STORAGE_PUBLIC_BUCKET       = coalesce(try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_BUCKET"], null), try(var.base_helm_values.global.env["MINIO_PUBLIC_BUCKET"], null), null)
-    CLOUD_STORAGE_USER                = try(var.base_helm_values.global.env["MINIO_MICROSERVICE_USER"], null)
-    CLOUD_STORAGE_PASS                = try(var.base_helm_values.global.env["MINIO_MICROSERVICE_PASS"], null)
-    CLOUD_STORAGE_MANAGED_SYNC_BUCKET = coalesce(try(var.base_helm_values.global.env["MINIO_MANAGED_SYNC_BUCKET"], null), "managed-sync")
-    CLOUD_STORAGE_PUBLIC_URL          = coalesce(try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"], null), try(var.base_helm_values.global.env["MINIO_PUBLIC_URL"], null), "https://s3.${var.aws_region}.amazonaws.com")
+    CLOUD_STORAGE_TYPE                = local.storage_type
+    CLOUD_STORAGE_PUBLIC_BUCKET       = local.storage_config.buckets.public
+    CLOUD_STORAGE_USER                = local.storage_config.user
+    CLOUD_STORAGE_PASS                = local.storage_config.pass
+    CLOUD_STORAGE_MANAGED_SYNC_BUCKET = local.storage_config.buckets.managed_sync
+    CLOUD_STORAGE_PUBLIC_URL          = local.storage_config.public_url
+    CLOUD_STORAGE_PRIVATE_URL         = local.storage_config.public_url
 
     // TODO: make `MANAGED_SYNC_URL` communicate via private DNS instead of open internet
     MANAGED_SYNC_URL       = try(var.base_helm_values.global.env["MANAGED_SYNC_URL"], "https://sync.${var.domain}")
@@ -74,9 +110,9 @@ locals {
     MANAGED_SYNC_KAFKA_SASL_MECHANISM = local.kafka_config.sasl_mechanism
     MANAGED_SYNC_KAFKA_SSL_ENABLED    = local.kafka_config.ssl_enabled
 
-    MANAGED_SYNC_REDIS_URL             = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_URL"], "${var.base_helm_values.global.env["REDIS_HOST"]}:${var.base_helm_values.global.env["REDIS_PORT"]}/0")
-    MANAGED_SYNC_REDIS_CLUSTER_ENABLED = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CLUSTER_ENABLED"], "false")
-    MANAGED_SYNC_REDIS_TLS_ENABLED     = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_TLS_ENABLED"], "false")
+    MANAGED_SYNC_REDIS_URL             = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_URL"], "${local.redis_config.host}:${local.redis_config.port}")
+    MANAGED_SYNC_REDIS_CLUSTER_ENABLED = local.redis_config.cluster_enabled
+    MANAGED_SYNC_REDIS_TLS_ENABLED     = false
 
     SYNC_INSTANCE_POSTGRES_HOST        = local.postgres_config.sync_instance.host
     SYNC_INSTANCE_POSTGRES_PORT        = local.postgres_config.sync_instance.port

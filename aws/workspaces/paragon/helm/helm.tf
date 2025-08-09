@@ -175,6 +175,15 @@ resource "kubernetes_secret" "paragon_secrets" {
     namespace = kubernetes_namespace.paragon.id
   }
 
+  type = "Opaque"
+
+  data = {
+    # Map global.env from helm_values into secret data
+    for key, value in nonsensitive(var.helm_values.global.env) :
+    key => value
+  }
+}
+
 # ingress controller; provisions load balancer
 resource "helm_release" "ingress" {
   name        = "ingress"
