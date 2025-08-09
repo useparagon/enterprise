@@ -38,6 +38,16 @@ resource "helm_release" "managed_sync" {
     value = var.logs_bucket
   }
 
+  set {
+    name  = "ingress.listenPorts[0].HTTP"
+    value = "80"
+  }
+
+  set {
+    name  = "ingress.listenPorts[1].HTTPS"
+    value = "443"
+  }
+
   # configures whether the load balancer is 'internet-facing' (public) or 'internal' (private)
   set {
     name  = "ingress.scheme"
