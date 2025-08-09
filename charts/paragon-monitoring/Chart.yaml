@@ -14,6 +14,10 @@ dependencies:
     version: __PARAGON_VERSION__
     repository: file://charts/grafana
     condition: subchart.grafana.enabled
+  - name: kafka-exporter
+    version: __PARAGON_VERSION__
+    condition: subchart.kafka-exporter.enabled
+    repository: file://charts/kafka-exporter
   - name: kube-state-metrics
     version: __PARAGON_VERSION__
     condition: subchart.kube-state-metrics.enabled
