@@ -124,14 +124,40 @@ locals {
     OPENFGA_HTTP_URL            = "http://openfga:${6200}"
 
     # monitoring config
-    MONITOR_MANAGED_SYNC_ENABLED = true
+    MANAGED_SYNC_ENABLED         = true
+    MONITOR_MANAGED_SYNC_ENABLED = true // TODO (PARA-14774): remove `MONITOR_MANAGED_SYNC_ENABLED` when key renamed
 
+    # TODO (PARA-14774): remove `MONITOR_MANAGED_SYNC_KAFKA_*` keys when keys are renamed
     MONITOR_MANAGED_SYNC_KAFKA_BROKER_URLS    = local.kafka_config.broker_urls
     MONITOR_MANAGED_SYNC_KAFKA_SASL_USERNAME  = local.kafka_config.sasl_username
     MONITOR_MANAGED_SYNC_KAFKA_SASL_PASSWORD  = local.kafka_config.sasl_password
     MONITOR_MANAGED_SYNC_KAFKA_SASL_MECHANISM = local.kafka_config.sasl_mechanism
     MONITOR_MANAGED_SYNC_KAFKA_SSL_ENABLED    = local.kafka_config.ssl_enabled
 
+    MONITOR_QUEUE_EXPORTER_PRIVATE_URL = try(
+      var.base_helm_values.global.env["MONITOR_QUEUE_EXPORTER_PRIVATE_URL"],
+      "http://queue-exporter:${var.microservices["queue-exporter"].port}"
+    )
+    MONITOR_QUEUE_EXPORTER_PORT = try(
+      var.base_helm_values.global.env["MONITOR_QUEUE_EXPORTER_PORT"],
+      var.base_helm_values.global.env["MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_PORT"], # TODO (PARA-14774): remove after keys renamed
+      var.microservices["queue-exporter"].port,
+      1806
+    )
+    MONITOR_QUEUE_EXPORTER_USERNAME = try(
+      var.base_helm_values.global.env["MONITOR_QUEUE_EXPORTER_USERNAME"],
+      var.base_helm_values.global.env["MONITOR_QUEUE_EXPORTER_HTTP_USERNAME"],              # TODO (PARA-14774): remove after keys renamed
+      var.base_helm_values.global.env["MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_HTTP_USERNAME"], # TODO (PARA-14774): remove after keys renamed
+      random_string.queue_exporter_username.result
+    )
+    MONITOR_QUEUE_EXPORTER_PASSWORD = try(
+      var.base_helm_values.global.env["MONITOR_QUEUE_EXPORTER_PASSWORD"],
+      var.base_helm_values.global.env["MONITOR_QUEUE_EXPORTER_HTTP_PASSWORD"],              # TODO (PARA-14774): remove after keys renamed
+      var.base_helm_values.global.env["MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_HTTP_PASSWORD"], # TODO (PARA-14774): remove after keys renamed
+      random_password.queue_exporter_password.result
+    )
+
+    # TODO (PARA-14774): remove after keys renamed
     MONITOR_QUEUE_EXPORTER_HTTP_USERNAME              = local.queue_exporter_config.username
     MONITOR_QUEUE_EXPORTER_HTTP_PASSWORD              = local.queue_exporter_config.password
     MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_HOST          = local.queue_exporter_config.host
@@ -139,6 +165,7 @@ locals {
     MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_HTTP_USERNAME = local.queue_exporter_config.username
     MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_HTTP_PASSWORD = local.queue_exporter_config.password
 
+    # TODO (PARA-14774): remove `MONITOR_MANAGED_SYNC_POSTGRES_*` keys when keys are renamed
     MONITOR_MANAGED_SYNC_POSTGRES_HOST        = local.postgres_config.admin.host
     MONITOR_MANAGED_SYNC_POSTGRES_PORT        = local.postgres_config.admin.port
     MONITOR_MANAGED_SYNC_POSTGRES_USERNAME    = local.postgres_config.admin.username
