@@ -48,7 +48,7 @@ subchart:
 
 restart:
   enabled: true
-  schedule: 0 21 * * * # everyday at 1pm PST
+  schedule: 0 14 * * * # everyday at 9am EST
 
 global:
   pullPolicy: IfNotPresent
