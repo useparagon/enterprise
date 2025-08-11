@@ -1,0 +1,108 @@
+# Default values for kafka-exporter.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: useparagon/kafka-exporter
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 'latest'
+
+imagePullSecrets:
+  - name: docker-cfg
+nameOverride: ''
+fullnameOverride: 'kafka-exporter'
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 9308
+
+ingress:
+  enabled: false
+  className: ''
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  limits:
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 1
+      preference:
+        matchExpressions:
+        - key: useparagon.com/capacityType
+          operator: In
+          values:
+          - spot
+
+secretName: "paragon-secrets"
+
+secretKeys:
+  - MANAGED_SYNC_KAFKA_BROKER_URLS
+  - MANAGED_SYNC_KAFKA_SASL_MECHANISM
+  - MANAGED_SYNC_KAFKA_SASL_PASSWORD
+  - MANAGED_SYNC_KAFKA_SASL_USERNAME
+  - MANAGED_SYNC_KAFKA_SSL_ENABLED
+  - MONITOR_MANAGED_SYNC_KAFKA_BROKER_URLS # TODO (PARA-14774): remove after keys renamed
+  - MONITOR_MANAGED_SYNC_KAFKA_SASL_MECHANISM # TODO (PARA-14774): remove after keys renamed
+  - MONITOR_MANAGED_SYNC_KAFKA_SASL_PASSWORD # TODO (PARA-14774): remove after keys renamed
+  - MONITOR_MANAGED_SYNC_KAFKA_SASL_USERNAME # TODO (PARA-14774): remove after keys renamed
+  - MONITOR_MANAGED_SYNC_KAFKA_SSL_ENABLED # TODO (PARA-14774): remove after keys renamed
+  
+envKeys:
+  - MONITOR_KAFKA_EXPORTER_HOST
+  - MONITOR_KAFKA_EXPORTER_PORT

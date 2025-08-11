@@ -3,6 +3,10 @@ subchart:
     enabled: true
   grafana:
     enabled: true
+  kafka-exporter:
+    enabled: true
+  kube-state-metrics:
+    enabled: true
   pgadmin:
     enabled: true
   node-exporter:

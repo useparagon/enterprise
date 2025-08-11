@@ -42,6 +42,17 @@ module "helm" {
   workspace              = local.workspace
 }
 
+module "managed_sync_config" {
+  source = "./helm-config"
+  count  = var.managed_sync_enabled ? 1 : 0
+
+  aws_region       = var.aws_region
+  base_helm_values = local.helm_vars
+  infra_values     = local.infra_vars
+  domain           = var.domain
+  microservices    = local.microservices
+}
+
 module "monitors" {
   source = "./monitors"
   count  = var.monitors_enabled ? 1 : 0

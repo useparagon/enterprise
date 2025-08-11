@@ -50,6 +50,15 @@ locals {
     }
   ))
 
+  global_values_minus_env = yamlencode(merge(
+    nonsensitive(var.helm_values),
+    {
+      global = merge(nonsensitive(var.helm_values).global, { env = {
+        HOST_ENV = "AWS_K8"
+      } })
+    }
+  ))
+
   supported_microservices_values = <<EOF
 subchart:
   account:
@@ -153,8 +162,16 @@ resource "kubernetes_secret" "docker_login" {
 
 # shared secrets
 resource "kubernetes_secret" "paragon_secrets" {
+  for_each = toset(
+    var.managed_sync_enabled ? [
+      "paragon-secrets",
+      "paragon-managed-sync-secrets"
+      ] : [
+      "paragon-secrets"
+    ]
+  )
   metadata {
-    name      = "paragon-secrets"
+    name      = each.value
     namespace = kubernetes_namespace.paragon.id
   }
 

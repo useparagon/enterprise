@@ -91,11 +91,6 @@ locals {
       size = "db.t4g.small"
       db   = "managed_sync"
     }
-    managed_sync_openfga = {
-      name = "${var.workspace}-managed-sync-openfga"
-      size = "db.t4g.small"
-      db   = "managed_sync_openfga"
-    }
     } : {}) : {
     paragon = {
       name = "${var.workspace}"
