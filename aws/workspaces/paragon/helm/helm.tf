@@ -315,6 +315,16 @@ resource "helm_release" "paragon_on_prem" {
     }
   }
 
+  # configures load balancer className
+  dynamic "set" {
+    for_each = var.public_microservices
+
+    content {
+      name  = "${set.key}.ingress.className"
+      value = "alb"
+    }
+  }
+
   depends_on = [
     helm_release.ingress,
     kubernetes_secret.docker_login,
@@ -460,6 +470,16 @@ resource "helm_release" "paragon_monitoring" {
     content {
       name  = "${set.key}.ingress.logs_bucket"
       value = var.logs_bucket
+    }
+  }
+
+  # configures load balancer className
+  dynamic "set" {
+    for_each = var.public_monitors
+
+    content {
+      name  = "${set.key}.ingress.className"
+      value = "alb"
     }
   }
 

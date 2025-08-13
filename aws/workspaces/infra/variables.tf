@@ -108,19 +108,19 @@ variable "elasticache_multi_az" {
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
-  default     = "1.31"
+  default     = "1.32"
 }
 
 variable "eks_ondemand_node_instance_type" {
   description = "The compute instance type to use for Kubernetes nodes."
   type        = string
-  default     = "t3a.large,t3.large"
+  default     = "m6a.xlarge"
 }
 
 variable "eks_spot_node_instance_type" {
   description = "The compute instance type to use for Kubernetes spot nodes."
   type        = string
-  default     = "t3a.large,t3.large"
+  default     = "t3a.xlarge,t3.xlarge,m5a.xlarge,m5.xlarge,m6a.xlarge,m6i.xlarge,m7a.xlarge,m7i.xlarge,r5a.xlarge,m4.xlarge"
 }
 
 variable "eks_spot_instance_percent" {

@@ -60,3 +60,8 @@ variable "k8s_spot_node_instance_type" {
   description = "The compute instance type to use for Kubernetes spot nodes."
   type        = string
 }
+
+variable "disable_deletion_protection" {
+  description = "Used to disable deletion protection on GKE resources."
+  type        = bool
+}

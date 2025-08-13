@@ -90,16 +90,16 @@ locals {
 
   cluster_addons = {
     aws-ebs-csi-driver = {
-      version = "v1.37.0-eksbuild.1"
+      version = "v1.45.0-eksbuild.2"
     }
     coredns = {
-      version = "v1.11.3-eksbuild.1"
+      version = "v1.11.4-eksbuild.14"
     }
     kube-proxy = {
-      version = "v1.31.0-eksbuild.2"
+      version = "v1.31.10-eksbuild.2"
     }
     vpc-cni = {
-      version = "v1.18.3-eksbuild.2"
+      version = "v1.19.6-eksbuild.7"
     }
   }
 
