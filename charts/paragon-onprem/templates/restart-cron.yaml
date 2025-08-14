@@ -12,7 +12,7 @@ spec:
           serviceAccountName: paragon-restart-manager
           containers:
           - name: restart-pods
-            image: bitnami/kubectl:1.27.14 # An image with kubectl installed
+            image: bitnami/kubectl:1.32.4 # An image with kubectl installed
             command:
             - /bin/sh
             - -c
