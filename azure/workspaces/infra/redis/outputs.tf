@@ -8,8 +8,12 @@ output "redis" {
       password = azurerm_redis_cache.redis[key].primary_access_key
       ssl      = !azurerm_redis_cache.redis[key].non_ssl_port_enabled
       cluster  = value.sku == "Premium" && value.cluster
-      connection_string = (value.sku == "Premium" && azurerm_redis_cache.redis[key].non_ssl_port_enabled ?
-        "${azurerm_redis_cache.redis[key].hostname}:${azurerm_redis_cache.redis[key].port}" :
+      connection_string = (value.sku == "Premium" && azurerm_redis_cache.redis[key].non_ssl_port_enabled
+        ?
+        # Premium SKU supports non-SSL port when in private subnet
+        "${azurerm_redis_cache.redis[key].hostname}:${azurerm_redis_cache.redis[key].port}"
+        :
+        # SSL port enabled and optional private DNS endpoint (required for Standard SKU)
       ":${azurerm_redis_cache.redis[key].primary_access_key}@${try(trim(azurerm_private_dns_a_record.redis[key].fqdn, "."), azurerm_redis_cache.redis[key].hostname)}:${azurerm_redis_cache.redis[key].ssl_port}")
     }
   }
