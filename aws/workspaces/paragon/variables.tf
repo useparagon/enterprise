@@ -244,6 +244,7 @@ locals {
       "public_url"       = try(local.helm_vars.global.env["HADES_PUBLIC_URL"], "https://hades.${var.domain}")
     }
     "health-checker" = {
+      "monitor_path"     = "/status"
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["HEALTH_CHECKER_PORT"], 1733)
       "public_url"       = try(local.helm_vars.global.env["HEALTH_CHECKER_PUBLIC_URL"], "https://health-checker.${var.domain}")

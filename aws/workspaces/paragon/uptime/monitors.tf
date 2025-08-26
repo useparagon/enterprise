@@ -34,7 +34,7 @@ resource "betteruptime_monitor" "monitor" {
   request_timeout       = 15  # seconds
   ssl_expiration        = 14  # days
   team_wait             = 180 # seconds
-  url                   = "${each.value.public_url}${each.value.healthcheck_path}"
+  url                   = "${each.value.public_url}${try(each.value.monitor_path, each.value.healthcheck_path)}"
 
   call  = true
   email = true
