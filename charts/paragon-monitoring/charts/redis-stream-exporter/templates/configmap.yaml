@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "redis-stream-exporter.configMapName" . }}
+  labels:
+    {{- include "redis-stream-exporter.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    monitor_port: {{ .Values.service.targetPort }}
+    log_level: {{ .Values.env | first | where (eq "name" "LOG_LEVEL") | first | default "info" | quote }}
+    redis_connection_timeout: {{ .Values.env | first | where (eq "name" "REDIS_CONNECTION_TIMEOUT") | first | default "30s" | quote }}
+    redis_read_timeout: {{ .Values.env | first | where (eq "name" "REDIS_READ_TIMEOUT") | first | default "10s" | quote }}
+    metrics_path: {{ .Values.env | first | where (eq "name" "METRICS_PATH") | first | default "/metrics" | quote }}
+    health_check_path: {{ .Values.env | first | where (eq "name" "HEALTH_CHECK_PATH") | first | default "/health" | quote }}
+    ready_check_path: {{ .Values.env | first | where (eq "name" "READY_CHECK_PATH") | first | default "/ready" | quote }}
