@@ -3,7 +3,7 @@
 
 # Image configuration
 image:
-  repository: paragon/redis-stream-exporter
+  repository: useparagon/redis-streams-exporter
   tag: "latest"
   pullPolicy: IfNotPresent
 
