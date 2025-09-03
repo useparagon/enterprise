@@ -234,7 +234,7 @@ secrets:
   HERMES_POSTGRES_USERNAME: "your-hermes-db-username"
   
   # Database Connections - Pheme (typically shares a server with Hermes)
-  PHEME_POSTGRES_DATABASE: pheme
+  PHEME_POSTGRES_DATABASE: hermes
   PHEME_POSTGRES_HOST: "your-hermes-db-host"
   PHEME_POSTGRES_PASSWORD: "your-hermes-db-password"
   PHEME_POSTGRES_PORT: 5432
