@@ -59,7 +59,7 @@ global:
     NODE_ENV: production
     LOG_LEVEL: info
     BRANCH: main
-    VERSION: "2025.0603.1639-795cc81d"
+    VERSION: "your-paragon-version" # e.g. 2025.0903.0729-7d7d9767. See https://dashboard.useparagon.com/infoz for latest.
 
     # Cloud Storage Configuration
     CLOUD_STORAGE_TYPE: S3
@@ -226,14 +226,15 @@ secrets:
   EVENT_LOGS_POSTGRES_PORT: 5432
   EVENT_LOGS_POSTGRES_USERNAME: "your-eventlogs-db-username"
   
-  # Database Connections - Hermes/Pheme
+  # Database Connections - Hermes
   HERMES_POSTGRES_DATABASE: hermes
   HERMES_POSTGRES_HOST: "your-hermes-db-host"
   HERMES_POSTGRES_PASSWORD: "your-hermes-db-password"
   HERMES_POSTGRES_PORT: 5432
   HERMES_POSTGRES_USERNAME: "your-hermes-db-username"
   
-  PHEME_POSTGRES_DATABASE: hermes
+  # Database Connections - Pheme (typically shares a server with Hermes)
+  PHEME_POSTGRES_DATABASE: pheme
   PHEME_POSTGRES_HOST: "your-hermes-db-host"
   PHEME_POSTGRES_PASSWORD: "your-hermes-db-password"
   PHEME_POSTGRES_PORT: 5432
