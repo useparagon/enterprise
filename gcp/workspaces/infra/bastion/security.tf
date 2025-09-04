@@ -4,6 +4,7 @@ resource "google_service_account" "bastion" {
   description  = "Bastion service account to access Kubernetes cluster."
 }
 
+# TODO this should not be needed
 resource "google_service_account_key" "bastion" {
   service_account_id = google_service_account.bastion.name
   public_key_type    = "TYPE_X509_PEM_FILE"
