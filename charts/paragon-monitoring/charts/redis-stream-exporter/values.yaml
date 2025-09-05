@@ -8,12 +8,12 @@ image:
   pullPolicy: IfNotPresent
 
 # Image pull secrets
-imagePullSecrets: []
+imagePullSecrets:
+  - name: docker-cfg
 
 # Name override
-nameOverride: ""
-# Full name override
-fullnameOverride: ""
+nameOverride: ''
+fullnameOverride: 'redis-stream-exporter'
 
 # Service account configuration
 serviceAccount:
@@ -37,8 +37,8 @@ securityContext: {}
 # Service configuration
 service:
   type: ClusterIP
-  port: 9121
-  targetPort: 9121
+  port: 9124
+  targetPort: 9124
   annotations: {}
 
 # Ingress configuration
@@ -173,21 +173,13 @@ networkPolicy:
 secrets: {}
 secretName: paragon-secrets
 
-# Environment keys for configuration
 envKeys:
-  - LOG_LEVEL
-  - REDIS_CONNECTION_TIMEOUT
-  - REDIS_READ_TIMEOUT
-  - METRICS_PATH
-  - HEALTH_CHECK_PATH
-  - READY_CHECK_PATH
+ - MONITOR_REDIS_STREAM_EXPORTER_PORT
 
-# Secret keys for Redis connections
 secretKeys:
-  - CACHE_REDIS_URL
-  - QUEUE_REDIS_URL
-  - SYSTEM_REDIS_URL
-  - WORKFLOW_REDIS_URL
+ - QUEUE_REDIS_URL
+ - CACHE_REDIS_URL
+ - WORKFLOW_REDIS_URL
 
 # Replica count (used when autoscaling is disabled)
 replicaCount: 1

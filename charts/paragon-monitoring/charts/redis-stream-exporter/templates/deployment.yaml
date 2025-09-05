@@ -35,7 +35,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.targetPort }}
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -46,7 +46,7 @@ spec:
             {{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
             - name: {{ $key }}
               value: {{ index $.Values.env $key | quote }}
-            {{- else if and $.Values.global.env (kindIs "map" $.Values.global.env) (hasKey $.Values.global.env $key) }}
+            {{- else if and $.Values.global $.Values.global.env (kindIs "map" $.Values.global.env) (hasKey $.Values.global.env $key) }}
             - name: {{ $key }}
               value: {{ index $.Values.global.env $key | quote }}
             {{- end }}
@@ -58,7 +58,8 @@ spec:
             - name: {{ $key }}
               valueFrom:
                 secretKeyRef:
-                  name: {{- if and $.Values.secretName }}-{{ $.Chart.Name }}
+                  name: {{- if and $.Values.secrets (kindIs "map" $.Values.secrets) (hasKey $.Values.secrets $key) }}
+                         {{ $.Values.secretName }}-{{ $.Chart.Name }}
                        {{- else }}
                          {{ $.Values.secretName }}
                        {{- end }}
@@ -66,71 +67,13 @@ spec:
                   optional: true
             {{- end }}
             {{- end }}
-            {{- /* Add Redis connection environment variables */}}
-            {{- if .Values.redis }}
-            {{- if .Values.redis.cache }}
-            - name: CACHE_REDIS_URL
+            {{- /* Map QUEUE_REDIS_URL to REDIS_CONNECTION_STRING */}}
+            - name: REDIS_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.redis.cache.secretName }}
-                  key: {{ .Values.redis.cache.secretKey }}
+                  name: {{ $.Values.secretName }}
+                  key: QUEUE_REDIS_URL
                   optional: true
-            {{- end }}
-            {{- if .Values.redis.queue }}
-            - name: QUEUE_REDIS_URL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.redis.queue.secretName }}
-                  key: {{ .Values.redis.queue.secretKey }}
-                  optional: true
-            {{- end }}
-            {{- if .Values.redis.system }}
-            - name: SYSTEM_REDIS_URL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.redis.system.secretName }}
-                  key: {{ .Values.redis.system.secretKey }}
-                  optional: true
-            {{- end }}
-            {{- if .Values.redis.workflow }}
-            - name: WORKFLOW_REDIS_URL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.redis.workflow.secretName }}
-                  key: {{ .Values.redis.workflow.secretKey }}
-                  optional: true
-            {{- end }}
-            {{- end }}
-          {{- if .Values.livenessProbe.enabled }}
-          livenessProbe:
-            httpGet:
-              path: {{ .Values.livenessProbe.path }}
-              port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
-          {{- end }}
-          {{- if .Values.readinessProbe.enabled }}
-          readinessProbe:
-            httpGet:
-              path: {{ .Values.readinessProbe.path }}
-              port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
-          {{- end }}
-          {{- if .Values.startupProbe.enabled }}
-          startupProbe:
-            httpGet:
-              path: {{ .Values.startupProbe.path }}
-              port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
-          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
