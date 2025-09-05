@@ -17,6 +17,8 @@ subchart:
     enabled: true
   redis-exporter:
     enabled: true
+  redis-stream-exporter:
+    enabled: true
   redis-insight:
     enabled: true
 
