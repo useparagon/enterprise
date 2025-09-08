@@ -60,7 +60,6 @@ module "storage" {
   workspace             = local.workspace
   force_destroy         = var.disable_deletion_protection
   app_bucket_expiration = var.app_bucket_expiration
-  logs_bucket_expiration = var.logs_bucket_expiration
   managed_sync_enabled  = var.managed_sync_enabled
 }
 
