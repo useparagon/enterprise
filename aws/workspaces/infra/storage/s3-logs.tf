@@ -92,7 +92,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "logs" {
     status = "Enabled"
 
     expiration {
-      days = 365
+      days = var.logs_bucket_expiration
     }
   }
 }

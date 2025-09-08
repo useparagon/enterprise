@@ -188,6 +188,12 @@ variable "app_bucket_expiration" {
   default     = 365
 }
 
+variable "logs_bucket_expiration" {
+  description = "The number of days to retain S3 logs before deleting"
+  type        = number
+  default     = 30
+}
+
 # cloudflare
 variable "cloudflare_api_token" {
   description = "Cloudflare API token created at https://dash.cloudflare.com/profile/api-tokens. Requires Edit permissions on Account `Cloudflare Tunnel`, `Access: Organizations, Identity Providers, and Groups`, `Access: Apps and Policies` and Zone `DNS`"
