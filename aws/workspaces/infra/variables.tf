@@ -191,7 +191,7 @@ variable "app_bucket_expiration" {
 variable "logs_bucket_expiration" {
   description = "The number of days to retain S3 logs before deleting"
   type        = number
-  default     = 30
+  default     = 90
 }
 
 # cloudflare
