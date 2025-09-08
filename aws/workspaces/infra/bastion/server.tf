@@ -46,7 +46,7 @@ module "bastion" {
 
   # logging
   bucket_name     = local.bastion_name
-  log_expiry_days = 30
+  log_expiry_days = 365
 
   # networking
   auto_scaling_group_subnets = var.private_subnet.*.id
