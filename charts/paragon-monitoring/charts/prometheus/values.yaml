@@ -158,15 +158,47 @@ envKeys:
 prometheusRule:
   enabled: true
   rules:
-    - alert: PodTooManyRestarts
+    # Critical alert for any restart in critical microservices
+    - alert: CriticalPodRestart
       expr: |
-        sum by (container) (increase(kube_pod_container_status_restarts_total[1h])) > 0
+        sum by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total[1h])) > 0
         and
-        sum by (container) (kube_pod_container_status_restarts_total) > 0
-      for: 5m
+        on(namespace) label_replace(kube_pod_info{namespace=~"paragon"}, "service", "paragon", "", "")
+      for: 2m
+      labels:
+        severity: critical
+        service: "paragon"
+      annotations:
+        summary: "Critical service pod {{ $labels.container }} has restarted"
+        description: "Critical service pod {{ $labels.container }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last hour. This requires immediate attention."
+        runbook_url: "https://github.com/useparagon/enterprise/wiki/Troubleshooting#pod-restarts"
+    
+    # Warning for multiple restarts in short time
+    - alert: PodFrequentRestarts
+      expr: |
+        sum by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total[15m])) > 2
+        and
+        on(namespace) label_replace(kube_pod_info{namespace=~"paragon"}, "service", "paragon", "", "")
+      for: 1m
       labels:
         severity: warning
+        service: "paragon"
       annotations:
-        summary: "Pod {{ $labels.container }} has restarted too many times"
-        description: "Pod {{ $labels.container }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last hour"
+        summary: "Pod {{ $labels.container }} is restarting frequently"
+        description: "Pod {{ $labels.container }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last 15 minutes"
         runbook_url: "https://github.com/useparagon/enterprise/wiki/Troubleshooting#pod-restarts"
+    
+    # Alert for crash loop detection
+    - alert: PodCrashLoop
+      expr: |
+        sum by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total[5m])) > 3
+        and
+        on(namespace) label_replace(kube_pod_info{namespace=~"paragon"}, "service", "paragon", "", "")
+      for: 30s
+      labels:
+        severity: critical
+        service: "paragon"
+      annotations:
+        summary: "Pod {{ $labels.container }} is in crash loop"
+        description: "Pod {{ $labels.container }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last 5 minutes - possible crash loop"
+        runbook_url: "https://github.com/useparagon/enterprise/wiki/Troubleshooting#crash-loops"
