@@ -153,3 +153,20 @@ envKeys:
   - WORKER_WORKFLOWS_PRIVATE_URL
   - WORKFLOW_REDIS_URL
   - ZEUS_PRIVATE_URL
+
+# PrometheusRule configuration for custom alert rules
+prometheusRule:
+  enabled: true
+  rules:
+    - alert: PodTooManyRestarts
+      expr: |
+        sum by (container) (increase(kube_pod_container_status_restarts_total[1h])) > 0
+        and
+        sum by (container) (kube_pod_container_status_restarts_total) > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pod {{ $labels.container }} has restarted too many times"
+        description: "Pod {{ $labels.container }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last hour"
+        runbook_url: "https://github.com/useparagon/enterprise/wiki/Troubleshooting#pod-restarts"
