@@ -185,7 +185,7 @@ variable "disable_deletion_protection" {
 variable "app_bucket_expiration" {
   description = "The number of days to retain S3 app data before deleting"
   type        = number
-  default     = 365
+  default     = 90
 }
 
 # cloudflare
