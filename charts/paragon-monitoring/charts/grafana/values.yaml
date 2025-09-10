@@ -131,3 +131,16 @@ envKeys:
   - MONITOR_SYSTEM_REDIS_TARGET
   - ORGANIZATION
   - PLATFORM_ENV
+
+# Grafana alerting configuration
+alerting:
+  enabled: true
+  # Alert thresholds
+  thresholds:
+    restartCount: 4
+  # Alert durations
+  durations:
+    restartAlert: "10m"
+  # Alert labels
+  labels:
+    severity: "high"
