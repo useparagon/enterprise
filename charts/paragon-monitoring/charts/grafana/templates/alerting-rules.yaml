@@ -1,0 +1,71 @@
+{{- if .Values.alerting.enabled }}
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: Standard
+    folder: Paragon
+    interval: 1m
+    rules:
+      - uid: k8-pod-too-many-restarts
+        title: ':x: K8s Pod List | Too many restarts'
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: paragon-prometheus
+            model:
+              datasource: '<%= it.datasource %>'
+              expr: sum by (container) (increase(kube_pod_container_status_restarts_total[1h]))
+              format: time_series
+              intervalMs: 15000
+              legendFormat: '{{container}}'
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              type: reduce
+              reducer: last
+              refId: B
+              hide: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              type: threshold
+              reducer: last
+              refId: C
+              hide: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - {{ .Values.alerting.thresholds.restartCount | default 4 }}
+                  operator:
+                    type: and
+                  query:
+                    params: [B]
+        dashboardUid: k8-pod-list
+        panelId: 20
+        noDataState: OK
+        execErrState: Error
+        for: {{ .Values.alerting.durations.restartAlert | default "10m" }}
+        annotations:
+          __dashboardUid__: k8-pod-list
+          __panelId__: 20
+          summary: 'Service {{ $labels.container }} has restarted more than {{ .Values.alerting.thresholds.restartCount | default 4 }} times'
+          service: '{{ $labels.container }}'
+        labels:
+          __contacts__: '<%= it.canaryAlert %>'
+          organization: '<%= it.organization %>'
+          platform: '<%= it.platform %>'
+          severity: {{ .Values.alerting.labels.severity | default "high" }}
+        isPaused: false
+{{- end }}
