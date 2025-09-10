@@ -20,7 +20,7 @@ groups:
               expr: sum by (container) (increase(kube_pod_container_status_restarts_total[1h]))
               format: time_series
               intervalMs: 15000
-              legendFormat: '{{container}}'
+              legendFormat: '{{ "{{" }}container{{ "}}" }}'
               maxDataPoints: 43200
               refId: A
           - refId: B
@@ -60,8 +60,8 @@ groups:
         annotations:
           __dashboardUid__: k8-pod-list
           __panelId__: 20
-          summary: 'Service {{ $labels.container }} has restarted more than {{ .Values.alerting.thresholds.restartCount | default 4 }} times'
-          service: '{{ $labels.container }}'
+          summary: 'Service {{ "{{" }}container{{ "}}" }} has restarted more than {{ .Values.alerting.thresholds.restartCount | default 4 }} times'
+          service: '{{ "{{" }}container{{ "}}" }}'
         labels:
           __contacts__: '<%= it.canaryAlert %>'
           organization: '<%= it.organization %>'
