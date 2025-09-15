@@ -53,8 +53,8 @@ eksctl version
 
 # install helm
 writeLog "installing helm"
-curl -fsSL https://baltocdn.com/helm/signing.asc | sudo apt-key add -
-echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | sudo gpg --dearmor -o /etc/apt/keyrings/helm.gpg
+echo "deb [signed-by=/etc/apt/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 sudo apt-get update -y
 sudo apt-get install -y helm
 
