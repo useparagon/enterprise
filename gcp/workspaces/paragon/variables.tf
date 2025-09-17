@@ -417,6 +417,10 @@ locals {
       "port"       = 8500
       "public_url" = null
     }
+    "redis-stream-exporter" = {
+      "port"       = 9124
+      "public_url" = null
+    }
   }
 
   public_monitors = var.monitors_enabled ? {
