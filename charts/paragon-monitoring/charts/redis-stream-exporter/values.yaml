@@ -89,7 +89,7 @@ redis:
 # Prometheus monitoring configuration
 prometheus:
   enabled: true
-  port: 9121
+  port: 9124
   path: /metrics
   interval: 15s
   scrapeTimeout: 10s
