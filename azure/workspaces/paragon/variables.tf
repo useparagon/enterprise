@@ -588,8 +588,10 @@ locals {
         MONITOR_QUEUE_REDIS_TARGET              = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
         MONITOR_REDIS_EXPORTER_HOST             = "http://redis-exporter"
         MONITOR_REDIS_EXPORTER_PORT             = try(local.monitors["redis-exporter"].port, null)
-        MONITOR_REDIS_INSIGHT_HOST              = "http://redis-insight"
-        MONITOR_REDIS_INSIGHT_PORT              = try(local.monitors["redis-insight"].port, null)
+          MONITOR_REDIS_INSIGHT_HOST              = "http://redis-insight"
+          MONITOR_REDIS_INSIGHT_PORT              = try(local.monitors["redis-insight"].port, null)
+          MONITOR_REDIS_STREAM_EXPORTER_HOST      = "http://redis-stream-exporter"
+          MONITOR_REDIS_STREAM_EXPORTER_PORT      = try(local.monitors["redis-stream-exporter"].port, null)
         }, {
         for key, value in local.helm_vars.global.env :
         key => value if value != null && !contains(local.helm_keys_to_remove, key) && !startswith(key, "FLIPT_")

@@ -39,8 +39,45 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.startupProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+          {{- end }}
           env:
-            {{- /* Handle environment variables */}}
+            {{- /* Handle static environment variables from values.yaml */}}
+            {{- if .Values.env }}
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+            {{- end }}
+            {{- /* Handle environment variables from global or local env */}}
             {{- if and .Values.envKeys (kindIs "slice" .Values.envKeys) }}
             {{- range $key := .Values.envKeys }}
             {{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
@@ -67,13 +104,49 @@ spec:
                   optional: true
             {{- end }}
             {{- end }}
-            {{- /* Map QUEUE_REDIS_URL to REDIS_CONNECTION_STRING */}}
+            {{- /* Configure Redis connection based on values.yaml redis configuration */}}
+            {{- if .Values.redis }}
+            {{- if .Values.redis.queue }}
+            - name: REDIS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.queue.secretName }}
+                  key: {{ .Values.redis.queue.secretKey }}
+                  optional: true
+            {{- end }}
+            {{- if .Values.redis.cache }}
+            - name: REDIS_CACHE_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.cache.secretName }}
+                  key: {{ .Values.redis.cache.secretKey }}
+                  optional: true
+            {{- end }}
+            {{- if .Values.redis.system }}
+            - name: REDIS_SYSTEM_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.system.secretName }}
+                  key: {{ .Values.redis.system.secretKey }}
+                  optional: true
+            {{- end }}
+            {{- if .Values.redis.workflow }}
+            - name: REDIS_WORKFLOW_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.workflow.secretName }}
+                  key: {{ .Values.redis.workflow.secretKey }}
+                  optional: true
+            {{- end }}
+            {{- else }}
+            {{- /* Fallback to hardcoded QUEUE_REDIS_URL for backward compatibility */}}
             - name: REDIS_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
                   name: {{ $.Values.secretName }}
                   key: QUEUE_REDIS_URL
                   optional: true
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
