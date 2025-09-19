@@ -7,9 +7,9 @@ subchart:
     enabled: true
   kube-state-metrics:
     enabled: true
-  pgadmin:
-    enabled: true
   node-exporter:
+    enabled: true
+  pgadmin:
     enabled: true
   postgres-exporter:
     enabled: true
@@ -18,6 +18,8 @@ subchart:
   redis-exporter:
     enabled: true
   redis-insight:
+    enabled: true
+  redis-stream-exporter:
     enabled: true
 
 global:
