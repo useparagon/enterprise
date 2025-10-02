@@ -3,4 +3,4 @@ name: openobserve
 description: OpenObserve to aggregate and visualize log data
 type: application
 version: __PARAGON_VERSION__
-appVersion: "v0.14.5"
+appVersion: "v0.15.1"
