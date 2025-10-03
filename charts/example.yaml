@@ -48,6 +48,9 @@ openobserve:
     ZO_ROOT_USER_PASSWORD: "your-openobserve-password"
     ZO_S3_ACCESS_KEY: "your-s3-access-key"
     ZO_S3_SECRET_KEY: "your-s3-secret-key"
+  persistence:
+    enabled: true
+    size: 5Gi
 
 global:
   env:

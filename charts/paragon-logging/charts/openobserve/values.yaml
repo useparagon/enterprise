@@ -14,13 +14,15 @@ service:
   type: ClusterIP
   port: 5080
 
+# Memory resource configuration for OpenObserve pods
+# Baseline memory allocation between 1-3 Gi as per SRE requirements
 resources:
   limits:
     cpu: 2
-    memory: 2048Mi
+    memory: 3Gi  # Maximum memory limit (3 Gi baseline)
   requests:
     cpu: 0.5
-    memory: 512Mi
+    memory: 1Gi  # Minimum memory request (1 Gi baseline)
 
 nameOverride: ''
 fullnameOverride: 'openobserve'
@@ -63,5 +65,14 @@ env:
   ZO_DATA_DIR: /data
   ZO_LOCAL_MODE_STORAGE: s3
   ZO_TELEMETRY: false
+
+# Persistent Volume Claim configuration for /data directory
+# Minimum 8Gi as per SRE requirements, parametrizable storage size
+persistence:
+  enabled: true
+  size: 8Gi  # Minimum PVC size for /data directory (parametrizable)
+  # Storage class behavior:
+  # - AWS: gp3 (if HOST_ENV=AWS_K8)
+  # - Other clouds: default storage class
 
 secrets: {}
