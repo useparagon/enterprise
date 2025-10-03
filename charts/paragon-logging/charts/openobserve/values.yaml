@@ -67,12 +67,8 @@ env:
   ZO_TELEMETRY: false
 
 # Persistent Volume Claim configuration for /data directory
-# Minimum 8Gi as per SRE requirements, parametrizable storage size
 persistence:
   enabled: true
-  size: 8Gi  # Minimum PVC size for /data directory (parametrizable)
-  # Storage class behavior:
-  # - AWS: gp3 (if HOST_ENV=AWS_K8)
-  # - Other clouds: default storage class
+  size: 5Gi  # Minimum PVC size for /data directory (parametrizable)
 
 secrets: {}
