@@ -16,11 +16,11 @@ service:
 
 resources:
   limits:
-    cpu: 2
-    memory: 2048Mi
+    cpu: 1
+    memory: 3Gi
   requests:
     cpu: 0.5
-    memory: 512Mi
+    memory: 3Gi
 
 nameOverride: ''
 fullnameOverride: 'openobserve'
@@ -63,5 +63,9 @@ env:
   ZO_DATA_DIR: /data
   ZO_LOCAL_MODE_STORAGE: s3
   ZO_TELEMETRY: false
+
+# Persistent Volume Claim configuration for /data directory
+persistence:
+  size: 5Gi
 
 secrets: {}

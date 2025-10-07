@@ -81,7 +81,7 @@ spec:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 5Gi
+            storage: {{ .Values.persistence.size | default "5Gi" }}
         {{- if eq .Values.global.env.HOST_ENV "AWS_K8" }}
         storageClassName: gp3
         {{- end }}
