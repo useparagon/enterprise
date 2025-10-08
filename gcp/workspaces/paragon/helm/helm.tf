@@ -279,6 +279,47 @@ resource "helm_release" "paragon_logging" {
     value = "https://storage.googleapis.com"
   }
 
+  # Conservative OpenObserve environment variables to prevent SEVs
+  set {
+    name  = "openobserve.env.ZO_MEMORY_CACHE_ENABLED"
+    value = "true"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_MEMORY_CACHE_MAX_SIZE"
+    value = "512"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_MEMORY_CACHE_DATAFUSION_MAX_SIZE"
+    value = "256"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_MAX_FILE_SIZE_IN_MEMORY"
+    value = "64"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_FILE_MOVE_THREAD_NUM"
+    value = "1"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_COMPACT_FAST_MODE"
+    value = "false"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_COMPACT_MAX_FILE_SIZE"
+    value = "128"
+  }
+
+  set {
+    name  = "openobserve.env.RUST_LOG"
+    value = "error"
+  }
+
   depends_on = [
     kubernetes_secret.docker_login,
     kubernetes_secret.paragon_secrets
