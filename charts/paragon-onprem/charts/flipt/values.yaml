@@ -30,7 +30,7 @@ podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/scheme: "http"
   prometheus.io/path: "/metrics"
-  prometheus.io/port: "9000"
+  prometheus.io/port: "1722"
 podLabels: {}
 
 deploymentAnnotations: {}
