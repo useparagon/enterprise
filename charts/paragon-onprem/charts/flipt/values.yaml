@@ -26,7 +26,11 @@ test:
   # Can pin the version of busybox to a specific version
   # tag: '1.36.1'
 
-podAnnotations: {}
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/scheme: "http"
+  prometheus.io/path: "/metrics"
+  prometheus.io/port: "1722"
 podLabels: {}
 
 deploymentAnnotations: {}
