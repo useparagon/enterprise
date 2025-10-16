@@ -320,6 +320,21 @@ resource "helm_release" "paragon_logging" {
     value = "error"
   }
 
+  set {
+    name  = "openobserve.env.ZO_METRICS_ENABLED"
+    value = "true"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_METRICS_PORT"
+    value = "1701"
+  }
+
+  set {
+    name  = "openobserve.env.ZO_QUERY_TIMEOUT"
+    value = "300"
+  }
+
   depends_on = [
     kubernetes_secret.docker_login,
     kubernetes_secret.paragon_secrets
