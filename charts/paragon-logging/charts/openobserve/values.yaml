@@ -65,7 +65,7 @@ envKeys:
   - ZO_COMPACT_FAST_MODE
   - ZO_COMPACT_MAX_FILE_SIZE
   - RUST_LOG
-  - ZO_METRICS_ENABLED
+  - ZO_PROMETHEUS_ENABLE
   - ZO_METRICS_PORT
   - ZO_QUERY_TIMEOUT
 
@@ -82,15 +82,15 @@ env:
   ZO_COMPACT_FAST_MODE: false
   ZO_COMPACT_MAX_FILE_SIZE: 128
   RUST_LOG: error
-  ZO_METRICS_ENABLED: true
-  ZO_METRICS_PORT: 1701
+  ZO_PROMETHEUS_ENABLE: true
+  ZO_METRICS_PORT: 1800
   ZO_QUERY_TIMEOUT: 300
 
 podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/scheme: "http"
   prometheus.io/path: "/metrics"
-  prometheus.io/port: "1701"
+  prometheus.io/port: "1801"
 
 # Persistent Volume Claim configuration for /data directory
 persistence:

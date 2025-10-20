@@ -428,7 +428,7 @@ resource "helm_release" "paragon_logging" {
   }
 
   set {
-    name  = "openobserve.env.ZO_METRICS_ENABLED"
+    name  = "openobserve.env.ZO_PROMETHEUS_ENABLE"
     value = "true"
   }
 
