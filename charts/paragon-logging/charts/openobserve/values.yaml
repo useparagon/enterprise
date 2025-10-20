@@ -90,7 +90,7 @@ podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/scheme: "http"
   prometheus.io/path: "/metrics"
-  prometheus.io/port: "1801"
+  prometheus.io/port: "1800"
 
 # Persistent Volume Claim configuration for /data directory
 persistence:
