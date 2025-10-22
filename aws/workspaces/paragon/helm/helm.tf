@@ -347,9 +347,13 @@ resource "helm_release" "paragon_logging" {
   verify           = false
   timeout          = 900 # 15 minutes
 
-  values = [
-    local.global_values
-  ]
+  values = concat(
+    local.global_values,
+    # load values from `values.yaml` if available
+    fileexists("${path.root}/../.secure/values.yaml") ? [
+      "${file("${path.root}/../.secure/values.yaml")}"
+    ] : []
+  )
 
   set {
     name  = "global.env.ZO_S3_PROVIDER"
@@ -385,6 +389,7 @@ resource "helm_release" "paragon_logging" {
     name  = "openobserve.secrets.ZO_ROOT_USER_PASSWORD"
     value = local.openobserve_password
   }
+
 
   depends_on = [
     helm_release.ingress,

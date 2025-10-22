@@ -225,9 +225,13 @@ resource "helm_release" "paragon_logging" {
   verify           = false
   timeout          = 900 # 15 minutes
 
-  values = [
-    local.global_values
-  ]
+  values = concat(
+    local.global_values,
+    # load values from `values.yaml` if available
+    fileexists("${path.root}/../.secure/values.yaml") ? [
+      "${file("${path.root}/../.secure/values.yaml")}"
+    ] : []
+  )
 
   set_sensitive {
     name  = "fluent-bit.secrets.ZO_ROOT_USER_EMAIL"
@@ -278,6 +282,7 @@ resource "helm_release" "paragon_logging" {
     name  = "openobserve.env.ZO_S3_SERVER_URL"
     value = "https://storage.googleapis.com"
   }
+
 
   depends_on = [
     kubernetes_secret.docker_login,
