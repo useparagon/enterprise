@@ -347,13 +347,11 @@ resource "helm_release" "paragon_logging" {
   verify           = false
   timeout          = 900 # 15 minutes
 
-  values = concat(
+  values = [
     local.global_values,
     # load values from `values.yaml` if available
-    fileexists("${path.root}/../.secure/values.yaml") ? [
-      "${file("${path.root}/../.secure/values.yaml")}"
-    ] : []
-  )
+    fileexists("${path.root}/../.secure/values.yaml") ? "${file("${path.root}/../.secure/values.yaml")}" : null
+  ]
 
   set {
     name  = "global.env.ZO_S3_PROVIDER"
