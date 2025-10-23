@@ -1,0 +1,161 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "redis-stream-exporter.fullname" . }}
+  labels:
+    {{- include "redis-stream-exporter.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "redis-stream-exporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "redis-stream-exporter.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "redis-stream-exporter.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.startupProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+          {{- end }}
+          env:
+            {{- /* Handle static environment variables from values.yaml */}}
+            {{- if .Values.env }}
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+            {{- end }}
+            {{- /* Handle environment variables from global or local env */}}
+            {{- if and .Values.envKeys (kindIs "slice" .Values.envKeys) }}
+            {{- range $key := .Values.envKeys }}
+            {{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
+            - name: {{ $key }}
+              value: {{ index $.Values.env $key | quote }}
+            {{- else if and $.Values.global $.Values.global.env (kindIs "map" $.Values.global.env) (hasKey $.Values.global.env $key) }}
+            - name: {{ $key }}
+              value: {{ index $.Values.global.env $key | quote }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- /* Handle secrets */}}
+            {{- if and .Values.secretKeys (kindIs "slice" .Values.secretKeys) }}
+            {{- range $key := .Values.secretKeys }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{- if and $.Values.secrets (kindIs "map" $.Values.secrets) (hasKey $.Values.secrets $key) }}
+                         {{ $.Values.secretName }}-{{ $.Chart.Name }}
+                       {{- else }}
+                         {{ $.Values.secretName }}
+                       {{- end }}
+                  key: {{ $key }}
+                  optional: true
+            {{- end }}
+            {{- end }}
+            {{- /* Configure Redis connection based on values.yaml redis configuration */}}
+            {{- if .Values.redis }}
+            {{- if .Values.redis.queue }}
+            - name: REDIS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.queue.secretName }}
+                  key: {{ .Values.redis.queue.secretKey }}
+                  optional: true
+            {{- end }}
+            {{- if .Values.redis.cache }}
+            - name: REDIS_CACHE_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.cache.secretName }}
+                  key: {{ .Values.redis.cache.secretKey }}
+                  optional: true
+            {{- end }}
+            {{- if .Values.redis.system }}
+            - name: REDIS_SYSTEM_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.system.secretName }}
+                  key: {{ .Values.redis.system.secretKey }}
+                  optional: true
+            {{- end }}
+            {{- if .Values.redis.workflow }}
+            - name: REDIS_WORKFLOW_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.workflow.secretName }}
+                  key: {{ .Values.redis.workflow.secretKey }}
+                  optional: true
+            {{- end }}
+            {{- else }}
+            {{- /* Fallback to hardcoded QUEUE_REDIS_URL for backward compatibility */}}
+            - name: REDIS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secretName }}
+                  key: QUEUE_REDIS_URL
+                  optional: true
+            {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
