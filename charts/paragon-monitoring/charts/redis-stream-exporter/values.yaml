@@ -89,7 +89,7 @@ redis:
 # Prometheus monitoring configuration
 prometheus:
   enabled: true
-  port: 9124
+  port: 1801
   path: /metrics
   interval: 15s
   scrapeTimeout: 10s
@@ -101,61 +101,6 @@ autoscaling:
   maxReplicas: 3
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
-
-# Environment variables
-env:
-  - name: LOG_LEVEL
-    value: "info"
-  - name: REDIS_CONNECTION_TIMEOUT
-    value: "30s"
-  - name: REDIS_READ_TIMEOUT
-    value: "10s"
-  - name: METRICS_PATH
-    value: "/metrics"
-  - name: HEALTH_CHECK_PATH
-    value: "/health"
-  - name: READY_CHECK_PATH
-    value: "/ready"
-
-# Liveness probe configuration
-livenessProbe:
-  enabled: true
-  path: /health
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-# Readiness probe configuration
-readinessProbe:
-  enabled: true
-  path: /ready
-  initialDelaySeconds: 5
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 3
-
-# Startup probe configuration
-startupProbe:
-  enabled: true
-  path: /health
-  initialDelaySeconds: 10
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 30
-
-# ServiceMonitor for Prometheus Operator
-serviceMonitor:
-  enabled: true
-  interval: 15s
-  scrapeTimeout: 10s
-  path: /metrics
-  port: http
-  honorLabels: false
-  additionalLabels: {}
-  targetLabels: []
-  metricRelabelings: []
-  relabelings: []
 
 # Pod disruption budget
 podDisruptionBudget:
@@ -175,11 +120,14 @@ secretName: paragon-secrets
 
 envKeys:
  - MONITOR_REDIS_STREAM_EXPORTER_PORT
+ - REDIS_CLUSTER_ENABLED
+ - REDIS_TLS_ENABLED
 
 secretKeys:
  - QUEUE_REDIS_URL
  - CACHE_REDIS_URL
  - WORKFLOW_REDIS_URL
+ - SYSTEM_REDIS_URL
 
 # Replica count (used when autoscaling is disabled)
 replicaCount: 1

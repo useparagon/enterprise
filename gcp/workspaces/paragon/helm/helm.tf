@@ -225,13 +225,12 @@ resource "helm_release" "paragon_logging" {
   verify           = false
   timeout          = 900 # 15 minutes
 
-  values = concat(
+  values = fileexists("${path.root}/../.secure/values.yaml") ? [
     local.global_values,
-    # load values from `values.yaml` if available
-    fileexists("${path.root}/../.secure/values.yaml") ? [
-      "${file("${path.root}/../.secure/values.yaml")}"
-    ] : []
-  )
+    file("${path.root}/../.secure/values.yaml")
+  ] : [
+    local.global_values
+  ]
 
   set_sensitive {
     name  = "fluent-bit.secrets.ZO_ROOT_USER_EMAIL"

@@ -7,8 +7,8 @@ replicaCount: 2
 image:
   repository: public.ecr.aws/zinclabs/openobserve
   pullPolicy: IfNotPresent
-  tag: v0.15.1
-  # tag: v0.15.1-debug
+  tag: v0.15.2
+  # tag: v0.15.2-debug
 
 service:
   type: ClusterIP
@@ -66,8 +66,6 @@ envKeys:
   - ZO_COMPACT_MAX_FILE_SIZE
   - RUST_LOG
   - ZO_PROMETHEUS_ENABLE
-  - ZO_METRICS_PORT
-  - ZO_QUERY_TIMEOUT
 
 env:
   ZO_COMPACT_DATA_RETENTION_DAYS: 365
@@ -83,14 +81,12 @@ env:
   ZO_COMPACT_MAX_FILE_SIZE: 128
   RUST_LOG: warn
   ZO_PROMETHEUS_ENABLE: true
-  ZO_METRICS_PORT: 1800
-  ZO_QUERY_TIMEOUT: 300
 
 podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/scheme: "http"
   prometheus.io/path: "/metrics"
-  prometheus.io/port: "1800"
+  prometheus.io/port: "5080"
 
 # Persistent Volume Claim configuration for /data directory
 persistence:
