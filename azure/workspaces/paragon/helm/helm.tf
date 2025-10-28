@@ -216,7 +216,12 @@ resource "helm_release" "paragon_logging" {
   verify           = false
   timeout          = 900 # 15 minutes
 
-  values = [local.global_values]
+  values = fileexists("${path.root}/../.secure/values.yaml") ? [
+    local.global_values,
+    file("${path.root}/../.secure/values.yaml")
+    ] : [
+    local.global_values
+  ]
 
   set {
     name  = "global.env.ZO_S3_PROVIDER"
