@@ -22,7 +22,7 @@ resource "azurerm_subnet_network_security_group_association" "postgres" {
 }
 
 resource "azurerm_private_dns_zone" "postgres" {
-  name                = "${replace(var.workspace, "paragon-", "")}.postgres.database.azure.com"
+  name                = "${length("${var.workspace}.postgres.database.azure.com") > 63 ? replace(var.workspace, "paragon-", "") : var.workspace}.postgres.database.azure.com"
   resource_group_name = var.resource_group.name
 
   depends_on = [azurerm_subnet_network_security_group_association.postgres]
