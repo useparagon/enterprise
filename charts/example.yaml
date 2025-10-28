@@ -195,10 +195,6 @@ global:
     MONITOR_REDIS_EXPORTER_PORT: 9121
     MONITOR_REDIS_INSIGHT_HOST: http://redis-insight
     MONITOR_REDIS_INSIGHT_PORT: 8500
-    MONITOR_REDIS_STREAM_EXPORTER_HOST: http://redis-stream-exporter
-    MONITOR_REDIS_STREAM_EXPORTER_PORT: 9124
-    REDIS_CLUSTER_ENABLED: false
-    REDIS_TLS_ENABLED: false
 
 # Secrets - Replace all values with your actual secrets
 secrets: 

@@ -406,10 +406,6 @@ locals {
       "port"       = 8500
       "public_url" = null
     }
-    "redis-stream-exporter" = {
-      "port"       = 9124
-      "public_url" = null
-    }
   }
 
   public_monitors = var.monitors_enabled ? {
@@ -651,8 +647,6 @@ locals {
           MONITOR_REDIS_EXPORTER_PORT             = try(local.monitors["redis-exporter"].port, null)
           MONITOR_REDIS_INSIGHT_HOST              = "http://redis-insight"
           MONITOR_REDIS_INSIGHT_PORT              = try(local.monitors["redis-insight"].port, null)
-          MONITOR_REDIS_STREAM_EXPORTER_HOST      = "http://redis-stream-exporter"
-          MONITOR_REDIS_STREAM_EXPORTER_PORT      = try(local.monitors["redis-stream-exporter"].port, null)
           }, {
           for key, value in local.helm_vars.global.env :
           key => value if value != null && !contains(local.helm_keys_to_remove, key) && !startswith(key, "FLIPT_")
