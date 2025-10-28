@@ -593,8 +593,6 @@ locals {
         WORKFLOW_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.workflow.cluster, local.default_redis_cluster)
         WORKFLOW_REDIS_TLS_ENABLED     = try(local.infra_vars.redis.value.workflow.ssl, local.default_redis_ssl)
         WORKFLOW_REDIS_URL             = try("${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
-        REDIS_CLUSTER_ENABLED          = try(local.infra_vars.redis.value.queue.cluster, local.default_redis_cluster)
-        REDIS_TLS_ENABLED              = try(local.infra_vars.redis.value.queue.ssl, local.default_redis_ssl)
 
         # Cloud Storage configurations
         CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "GCP" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
