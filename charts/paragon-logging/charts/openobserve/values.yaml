@@ -22,8 +22,8 @@ resources:
     cpu: 0.5
     memory: 3Gi
 
-nameOverride: ''
-fullnameOverride: 'openobserve'
+nameOverride: ""
+fullnameOverride: "openobserve"
 
 # used to store GCP JSON creds as ConfigMap
 credsJson: ""
@@ -66,6 +66,7 @@ envKeys:
   - ZO_COMPACT_MAX_FILE_SIZE
   - RUST_LOG
   - ZO_PROMETHEUS_ENABLE
+  - ZO_QUICK_MODE_FORCE_ENABLED
 
 env:
   ZO_COMPACT_DATA_RETENTION_DAYS: 365
@@ -81,6 +82,7 @@ env:
   ZO_COMPACT_MAX_FILE_SIZE: 128
   RUST_LOG: warn
   ZO_PROMETHEUS_ENABLE: true
+  ZO_QUICK_MODE_FORCE_ENABLED: false
 
 podAnnotations:
   prometheus.io/scrape: "true"
