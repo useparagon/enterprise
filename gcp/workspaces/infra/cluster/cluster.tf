@@ -1,6 +1,9 @@
+# Get the current service account that Terraform is running under
+data "google_client_openid_userinfo" "me" {}
+
 module "gke" {
   source  = "terraform-google-modules/kubernetes-engine/google"
-  version = "36.0.2"
+  version = "36.2.0"
 
   name = "${var.workspace}-cluster"
 
@@ -104,4 +107,11 @@ module "gke" {
   node_pools_tags = {
     all = []
   }
+}
+
+# Grant necessary permissions to the current service account for namespace creation
+resource "google_project_iam_member" "paragon_installer_container_admin" {
+  project = var.gcp_project_id
+  role    = "roles/container.admin"
+  member  = "serviceAccount:${data.google_client_openid_userinfo.me.email}"
 }
