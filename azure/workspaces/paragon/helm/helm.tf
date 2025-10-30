@@ -219,7 +219,7 @@ resource "helm_release" "paragon_logging" {
   values = fileexists("${path.root}/../.secure/values.yaml") ? [
     local.global_values,
     file("${path.root}/../.secure/values.yaml")
-  ] : [
+    ] : [
     local.global_values
   ]
 

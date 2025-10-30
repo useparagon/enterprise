@@ -310,15 +310,6 @@ nodeSelector: {}
 
 tolerations: []
 
-affinity:
-  nodeAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 1
-      preference:
-        matchExpressions:
-        - key: useparagon.com/capacityType
-          operator: In
-          values:
-          - ondemand
+affinity: {}
 
 tls_secret: ''

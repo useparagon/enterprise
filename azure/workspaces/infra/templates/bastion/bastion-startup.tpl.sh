@@ -90,7 +90,6 @@ curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | sudo g
 echo "deb [signed-by=/etc/apt/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 sudo apt-get update -y
 sudo apt-get install -y helm
-helm version
 
 # install nodejs
 NODE_MAJOR=18

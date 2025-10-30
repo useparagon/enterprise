@@ -181,7 +181,7 @@ variable "redis_multiple_instances" {
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
-  default     = "1.31"
+  default     = "1.32"
 }
 
 variable "k8s_min_node_count" {

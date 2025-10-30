@@ -55,6 +55,11 @@ resource "helm_release" "ingress" {
   version    = "4.12.0"
 
   set {
+    name  = "controller.admissionWebhooks.enabled"
+    value = "false"
+  }
+
+  set {
     name  = "service.type"
     value = "ClusterIP"
   }

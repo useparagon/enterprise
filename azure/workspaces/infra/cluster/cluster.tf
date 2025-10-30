@@ -1,18 +1,33 @@
+resource "random_string" "node_pool" {
+  for_each = local.nodes
+
+  length  = 6
+  special = false
+  numeric = false
+  lower   = true
+  upper   = false
+  keepers = {
+    workspace          = var.workspace
+    vm_size            = each.value.vm_size
+    kubernetes_version = var.k8s_version
+  }
+}
+
 locals {
   cluster_name = "${var.workspace}-cluster"
 
   nodes = merge(
     var.k8s_spot_instance_percent < 100 ? {
       ondemand = {
-        min_count = ceil((var.k8s_min_node_count - 1) * (1 - (var.k8s_spot_instance_percent / 100)))
-        max_count = ceil((var.k8s_max_node_count - 1) * (1 - (var.k8s_spot_instance_percent / 100)))
+        min_count = ceil(var.k8s_min_node_count * (1 - (var.k8s_spot_instance_percent / 100)))
+        max_count = ceil(var.k8s_max_node_count * (1 - (var.k8s_spot_instance_percent / 100)))
         vm_size   = var.k8s_ondemand_node_instance_type
       }
     } : {},
     var.k8s_spot_instance_percent > 0 ? {
       spot = {
-        min_count = floor((var.k8s_min_node_count - 1) * (var.k8s_spot_instance_percent / 100))
-        max_count = ceil((var.k8s_max_node_count - 1) * (var.k8s_spot_instance_percent / 100))
+        min_count = floor(var.k8s_min_node_count * (var.k8s_spot_instance_percent / 100))
+        max_count = ceil(var.k8s_max_node_count * (var.k8s_spot_instance_percent / 100))
         vm_size   = var.k8s_spot_node_instance_type
       }
     } : {}
@@ -65,7 +80,9 @@ resource "azurerm_kubernetes_cluster" "cluster" {
 resource "azurerm_kubernetes_cluster_node_pool" "pool" {
   for_each = local.nodes
 
-  name                  = each.key
+  # must begin with a lowercase letter, contain only lowercase letters and numbers and be between 1 and 12 characters
+  name = each.key == "ondemand" ? "onde${random_string.node_pool[each.key].result}" : "spt${random_string.node_pool[each.key].result}"
+
   auto_scaling_enabled  = true
   kubernetes_cluster_id = azurerm_kubernetes_cluster.cluster.id
   max_count             = each.value.max_count
@@ -73,12 +90,27 @@ resource "azurerm_kubernetes_cluster_node_pool" "pool" {
   orchestrator_version  = var.k8s_version
   os_sku                = "Ubuntu"
   os_type               = "Linux"
-  priority              = "Regular"
   tags                  = merge(var.tags, { Name = each.key })
   vm_size               = each.value.vm_size
   vnet_subnet_id        = var.private_subnet.id
 
+  # TODO add spot support but would require tolerations to be added to the pods
+  # tolerations:
+  # - key: kubernetes.azure.com/scalesetpriority
+  #   operator: Equal
+  #   value: spot
+  #   effect: NoSchedule
+  priority = "Regular" # each.key == "ondemand" ? "Regular" : "Spot"
+
   node_labels = {
     "useparagon.com/capacityType" = each.key
+  }
+
+  # Ensure new nodes are created before old ones are destroyed
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes = [
+      upgrade_settings
+    ]
   }
 }
