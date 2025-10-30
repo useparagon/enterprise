@@ -78,6 +78,7 @@ module "bastion" {
   k8s_version    = var.k8s_version
   private_subnet = module.network.private_subnet
   region         = var.region
+  region_zone    = var.region_zone
   ssh_whitelist  = local.ssh_whitelist
   workspace      = local.workspace
 }

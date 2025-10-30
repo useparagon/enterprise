@@ -3,18 +3,24 @@ resource "tls_private_key" "bastion" {
   rsa_bits  = 4096
 }
 
-resource "google_compute_instance" "bastion" {
-  name                      = local.bastion_name
-  machine_type              = "e2-highmem-4"
-  project                   = var.gcp_project_id
-  allow_stopping_for_update = true
-  tags                      = local.only_cloudflare_tunnel ? [] : ["allow-ssh"]
+# Generate suffix based on startup script content
+locals {
+  startup_script_hash = substr(sha256(file("${path.module}/../templates/bastion/bastion-startup.tpl.sh")), 0, 6)
+}
 
-  boot_disk {
-    initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2204-lts"
-      size  = 40
-    }
+
+# Instance template for the bastion
+resource "google_compute_instance_template" "bastion_v2" {
+  name         = "${local.bastion_name}-${local.startup_script_hash}"
+  description  = "Template for bastion host with auto-recovery"
+  machine_type = "e2-highmem-4"
+  project      = var.gcp_project_id
+
+  disk {
+    source_image = "ubuntu-os-cloud/ubuntu-2204-lts"
+    auto_delete  = true
+    boot         = true
+    disk_size_gb = 40
   }
 
   network_interface {
@@ -52,7 +58,62 @@ resource "google_compute_instance" "bastion" {
     ]
   }
 
+  tags = local.only_cloudflare_tunnel ? [] : ["allow-ssh"]
+
   labels = {
     "name" = local.bastion_name
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Health check for the bastion SSH service
+resource "google_compute_health_check" "bastion" {
+  name                = "${local.bastion_name}-health-check"
+  description         = "Health check for bastion SSH service"
+  check_interval_sec  = 30
+  healthy_threshold   = 3
+  timeout_sec         = 30
+  unhealthy_threshold = 5
+
+  tcp_health_check {
+    port = 22
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Managed instance group for auto-recovery
+resource "google_compute_instance_group_manager" "bastion" {
+  name               = "${local.bastion_name}-mig"
+  description        = "Managed instance group for bastion with auto-recovery"
+  base_instance_name = local.bastion_name
+  project            = var.gcp_project_id
+  zone               = var.region_zone
+
+  version {
+    instance_template = google_compute_instance_template.bastion_v2.id
+  }
+
+  # Auto-healing policy
+  auto_healing_policies {
+    health_check      = google_compute_health_check.bastion.id
+    initial_delay_sec = 600 # 10 minutes before starting health checks
+  }
+
+  # Update policy for rolling updates - allows template changes
+  update_policy {
+    max_surge_fixed       = 1
+    max_unavailable_fixed = 0
+    minimal_action        = "REPLACE"
+    replacement_method    = "SUBSTITUTE"
+    type                  = "PROACTIVE"
+  }
+
+  # Ensure at least 1 instance is always running
+  target_size = 1
 }

@@ -20,6 +20,11 @@ variable "region" {
   description = "The region where to host Google Cloud Organization resources."
 }
 
+variable "region_zone" {
+  description = "The zone in the region where to host Google Cloud Organization resources."
+  type        = string
+}
+
 variable "ssh_whitelist" {
   description = "An optional list of IP addresses to whitelist SSH access."
   type        = list(string)

@@ -30,6 +30,72 @@ sudo apt-get install -y \
     redis-tools \
     unzip
 
+# install cloudflare zero trust and register tunnel
+# see https://blog.cloudflare.com/automating-cloudflare-tunnel-with-terraform/
+if [[ ! -z "${tunnel_id}" ]]; then
+    writeLog "installing cloudflare tunnel"
+    curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+    sudo dpkg -i cloudflared.deb
+
+    sudo mkdir -p /etc/cloudflared
+
+    cat > /etc/cloudflared/cert.json << EOF
+{
+    "AccountTag"   : "${account_id}",
+    "TunnelID"     : "${tunnel_id}",
+    "TunnelName"   : "${tunnel_name}",
+    "TunnelSecret" : "${tunnel_secret}"
+}
+EOF
+
+    sudo cat > /etc/cloudflared/config.yml << EOF
+tunnel: ${tunnel_id}
+credentials-file: /etc/cloudflared/cert.json
+logfile: /var/log/cloudflared.log
+loglevel: debug
+
+ingress:
+  - hostname: ${tunnel_name}
+    service: ssh://localhost:22
+  - service: http_status:404
+EOF
+
+    sudo cloudflared service install
+    sudo systemctl start cloudflared
+    
+    # Ensure SSH is running and configured for tunnel access
+    writeLog "configuring SSH for tunnel access"
+    sudo systemctl enable ssh
+    sudo systemctl start ssh
+    
+    # Ensure SSH directory and authorized_keys file exist with proper permissions
+    sudo mkdir -p /home/ubuntu/.ssh
+    sudo chmod 700 /home/ubuntu/.ssh
+    sudo chown ubuntu:ubuntu /home/ubuntu/.ssh
+    
+    # Wait for GCP metadata service to populate SSH keys
+    writeLog "waiting for SSH keys from metadata service"
+    sleep 10
+    
+    # Ensure authorized_keys file exists and has proper permissions
+    sudo touch /home/ubuntu/.ssh/authorized_keys
+    sudo chmod 600 /home/ubuntu/.ssh/authorized_keys
+    sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/authorized_keys
+    
+    # Configure SSH to allow connections through tunnel
+    sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    sudo sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+    sudo systemctl restart ssh
+    
+    # Verify services are running and SSH keys are present
+    sudo systemctl status ssh --no-pager
+    sudo systemctl status cloudflared --no-pager
+    writeLog "SSH authorized_keys content:"
+    sudo cat /home/ubuntu/.ssh/authorized_keys
+else
+    writeLog "skipped cloudflare tunnel"
+fi
+
 # install gcp cli
 writeLog "installing gcp cli"
 curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
@@ -55,8 +121,8 @@ kubectl version
 
 # install helm
 writeLog "installing helm"
-curl -fsSL https://baltocdn.com/helm/signing.asc | sudo apt-key add -
-echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | sudo gpg --dearmor -o /etc/apt/keyrings/helm.gpg
+echo "deb [signed-by=/etc/apt/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 sudo apt-get update -y
 sudo apt-get install -y helm
 helm version
@@ -93,53 +159,17 @@ sudo apt-get install -y \
 sudo usermod -a -G docker ubuntu
 systemctl disable containerd.service
 
-# install cloudflare zero trust and register tunnel
-# see https://bwriteLog.cloudflare.com/automating-cloudflare-tunnel-with-terraform/
-if [[ ! -z "${tunnel_id}" ]]; then
-    writeLog "installing cloudflare tunnel"
-    curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-    sudo dpkg -i cloudflared.deb
-
-    sudo mkdir -p /etc/cloudflared
-
-    cat > /etc/cloudflared/cert.json << EOF
-{
-    "AccountTag"   : "${account_id}",
-    "TunnelID"     : "${tunnel_id}",
-    "TunnelName"   : "${tunnel_name}",
-    "TunnelSecret" : "${tunnel_secret}"
-}
-EOF
-
-    sudo cat > /etc/cloudflared/config.yml << EOF
-tunnel: ${tunnel_id}
-credentials-file: /etc/cloudflared/cert.json
-writeLogfile: /var/writeLog/cloudflared.writeLog
-writeLoglevel: info
-
-ingress:
-  - hostname: ${tunnel_name}
-    service: ssh://localhost:22
-  - hostname: "*"
-    service: hello-world
-EOF
-
-    sudo cloudflared service install
-    sudo systemctl start cloudflared
-else
-    writeLog "skipped cloudflare tunnel"
-fi
-
 # Create and configure aliases file
 writeLog "configuring aliases for ubuntu"
 cat > /home/ubuntu/.bash_aliases << 'EOF'
 # Kubernetes aliases
 alias k=kubectl
-alias kg="kubectl get"
 alias kd="kubectl describe"
+alias kev="kubectl get events --sort-by='.lastTimestamp'"
+alias kex="kubectl exec -it"
+alias kg="kubectl get"
 alias kl="kubectl logs"
-alias kx="kubectl exec -it"
-alias ksec="kubectl get secret -n paragon paragon-secrets -o jsonpath='{.data}' | jq -r 'to_entries[] | \"\(.key): \(.value | @base64d)\"' | sort"
+alias krr="kubectl get deployments --no-headers -o custom-columns=\":metadata.name\" | xargs -I {} kubectl rollout restart deployment/{}"
 alias kw="watch kubectl get pods"
 alias kwf="watch -- 'kubectl get pods | grep -v fluent'"
 
@@ -151,6 +181,11 @@ kls() {
   fi
   shift
   kubectl logs -n paragon -l app.kubernetes.io/name="$name" --all-containers=true --prefix=true "$@"
+}
+
+ksec() {
+  local name=$${1:-paragon-secrets}
+  kubectl get secret $name -o jsonpath='{.data}' | jq -r 'to_entries[] | "\(.key): \(.value | @base64d)"' | sort
 }
 
 # Common aliases
