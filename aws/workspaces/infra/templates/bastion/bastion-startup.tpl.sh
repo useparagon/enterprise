@@ -29,6 +29,43 @@ sudo apt-get install -y \
     redis-tools \
     unzip
 
+# install cloudflare zero trust and register tunnel
+# see https://blog.cloudflare.com/automating-cloudflare-tunnel-with-terraform/
+if [[ ! -z "${tunnel_id}" ]]; then
+    writeLog "installing cloudflare tunnel"
+    curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+    sudo dpkg -i cloudflared.deb
+
+    sudo mkdir -p /etc/cloudflared
+
+    cat > /etc/cloudflared/cert.json << EOF
+{
+    "AccountTag"   : "${account_id}",
+    "TunnelID"     : "${tunnel_id}",
+    "TunnelName"   : "${tunnel_name}",
+    "TunnelSecret" : "${tunnel_secret}"
+}
+EOF
+
+    sudo cat > /etc/cloudflared/config.yml << EOF
+tunnel: ${tunnel_id}
+credentials-file: /etc/cloudflared/cert.json
+logfile: /var/log/cloudflared.log
+loglevel: info
+
+ingress:
+  - hostname: ${tunnel_name}
+    service: ssh://localhost:22
+  - hostname: "*"
+    service: hello-world
+EOF
+
+    sudo cloudflared service install
+    sudo systemctl start cloudflared
+else
+    writeLog "skipped cloudflare tunnel"
+fi
+
 # install aws cli v2
 writeLog "installing aws cli v2"
 sudo apt-get remove -y awscli
@@ -86,45 +123,6 @@ sudo apt-get install -y \
     docker-ce-cli \
     docker-compose-plugin
 sudo usermod -a -G docker ubuntu
-# systemctl enable containerd.service
-# service docker start
-
-# install cloudflare zero trust and register tunnel
-# see https://bwriteLog.cloudflare.com/automating-cloudflare-tunnel-with-terraform/
-if [[ ! -z "${tunnel_id}" ]]; then
-    writeLog "installing cloudflare tunnel"
-    curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-    sudo dpkg -i cloudflared.deb
-
-    sudo mkdir -p /etc/cloudflared
-
-    cat > /etc/cloudflared/cert.json << EOF
-{
-    "AccountTag"   : "${account_id}",
-    "TunnelID"     : "${tunnel_id}",
-    "TunnelName"   : "${tunnel_name}",
-    "TunnelSecret" : "${tunnel_secret}"
-}
-EOF
-
-    sudo cat > /etc/cloudflared/config.yml << EOF
-tunnel: ${tunnel_id}
-credentials-file: /etc/cloudflared/cert.json
-writeLogfile: /var/writeLog/cloudflared.writeLog
-writeLoglevel: info
-
-ingress:
-  - hostname: ${tunnel_name}
-    service: ssh://localhost:22
-  - hostname: "*"
-    service: hello-world
-EOF
-
-    sudo cloudflared service install
-    sudo systemctl start cloudflared
-else
-    writeLog "skipped cloudflare tunnel"
-fi
 
 # configure aws, eksctl and kubectl
 # note that cluster may be still CREATING so wait up to 5 min for that to complete
@@ -150,11 +148,12 @@ writeLog "configuring aliases for ubuntu"
 cat > /home/ubuntu/.bash_aliases << 'EOF'
 # Kubernetes aliases
 alias k=kubectl
-alias kg="kubectl get"
 alias kd="kubectl describe"
+alias kev="kubectl get events --sort-by='.lastTimestamp'"
+alias kex="kubectl exec -it"
+alias kg="kubectl get"
 alias kl="kubectl logs"
-alias kx="kubectl exec -it"
-alias ksec="kubectl get secret -n paragon paragon-secrets -o jsonpath='{.data}' | jq -r 'to_entries[] | \"\(.key): \(.value | @base64d)\"' | sort"
+alias krr="kubectl get deployments --no-headers -o custom-columns=\":metadata.name\" | xargs -I {} kubectl rollout restart deployment/{}"
 alias kw="watch kubectl get pods"
 alias kwf="watch -- 'kubectl get pods | grep -v fluent'"
 
@@ -166,6 +165,11 @@ kls() {
   fi
   shift
   kubectl logs -n paragon -l app.kubernetes.io/name="$name" --all-containers=true --prefix=true "$@"
+}
+
+ksec() {
+  local name=$${1:-paragon-secrets}
+  kubectl get secret $name -o jsonpath='{.data}' | jq -r 'to_entries[] | "\(.key): \(.value | @base64d)"' | sort
 }
 
 # Common aliases

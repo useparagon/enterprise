@@ -51,3 +51,9 @@ resource "google_storage_bucket" "logs" {
   storage_class = "STANDARD"
   force_destroy = var.disable_deletion_protection
 }
+
+resource "google_storage_bucket_iam_member" "logs" {
+  bucket = google_storage_bucket.logs.name
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${google_service_account.minio.email}"
+}
