@@ -10,13 +10,13 @@ This repository is a set of tools to help you run Paragon on your own cloud infr
 
 Each of the cloud deployments is split into two Terraform workspaces (`infra` and `paragon`). The `infra` workspace provides the infrastructure that is required to run the Paragon service. This includes provisioning the network, Postgresql databases, Kubernetes cluster, Redis clusters, etc. The `paragon` workspace configures and deploys the Helm resources to Kubernetes cluster created by the `infra` workspace.
 
-See the README files in each of the relevent workspace folders for more details.
+See the README files in each of the relevant workspace folders for more details.
 
 ## Disclaimers
 
 ### Modification strongly discouraged.
 
-We're constantly deploying new versions of Paragon's code and infrastructure which often include additional microservices, updates to infrastructure, improved security and more. To ensure new releases of Paragon are compatible with your infrastructure, modifying this repo is strongly discouraged to ensure compatability with future Helm charts and versions of the repo. Modified Terraform or Helm charts may not be supported.
+We're constantly deploying new versions of Paragon's code and infrastructure which often include additional microservices, updates to infrastructure, improved security and more. To ensure new releases of Paragon are compatible with your infrastructure, modifying this repo is strongly discouraged to ensure compatibility with future Helm charts and versions of the repo. Modified Terraform or Helm charts may not be supported.
 
 Instead of making changes, either:
 
