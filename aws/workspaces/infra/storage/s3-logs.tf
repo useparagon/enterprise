@@ -78,16 +78,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "logs" {
   }
 
   rule {
-    id     = "transition-to-glacier"
-    status = "Enabled"
-
-    transition {
-      days          = 30
-      storage_class = "GLACIER"
-    }
-  }
-
-  rule {
     id     = "expire"
     status = "Enabled"
 
