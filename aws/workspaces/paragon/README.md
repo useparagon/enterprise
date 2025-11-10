@@ -22,6 +22,7 @@ See [setup-policy.json](../../setup-policy.json) for permissions that are requir
 |------|--------|---------|
 | <a name="module_alb"></a> [alb](#module\_alb) | ./alb | n/a |
 | <a name="module_helm"></a> [helm](#module\_helm) | ./helm | n/a |
+| <a name="module_managed_sync_config"></a> [managed\_sync\_config](#module\_managed\_sync\_config) | ./helm-config | n/a |
 | <a name="module_monitors"></a> [monitors](#module\_monitors) | ./monitors | n/a |
 | <a name="module_uptime"></a> [uptime](#module\_uptime) | ./uptime | n/a |
 
