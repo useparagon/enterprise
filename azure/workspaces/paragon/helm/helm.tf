@@ -166,11 +166,18 @@ resource "kubernetes_secret" "paragon_secrets" {
 
   type = "Opaque"
 
-  data = {
-    # Map global.env from helm_values into secret data
-    for key, value in nonsensitive(var.helm_values.global.env) :
-    key => value
-  }
+  data = merge(
+    {
+      # Map global.env from helm_values into secret data
+      for key, value in nonsensitive(var.helm_values.global.env) :
+      key => value
+    },
+    # Add Azure storage credentials if provided (for OpenObserve)
+    var.azure_storage_account_name != null && var.azure_storage_account_key != null ? {
+      AZURE_STORAGE_ACCOUNT_NAME = var.azure_storage_account_name
+      AZURE_STORAGE_ACCOUNT_KEY  = var.azure_storage_account_key
+    } : {}
+  )
 }
 
 # microservices deployment
