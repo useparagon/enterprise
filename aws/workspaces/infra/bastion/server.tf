@@ -42,7 +42,7 @@ resource "aws_key_pair" "bastion" {
 module "bastion" {
   source = "github.com/useparagon/terraform-aws-bastion"
 
-  name = local.bastion_name
+  name = !local.only_cloudflare_tunnel ? substr(local.bastion_name, 0, 22) : local.bastion_name
 
   # logging
   bucket_name     = local.bastion_name
