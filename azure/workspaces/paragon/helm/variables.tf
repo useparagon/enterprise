@@ -121,20 +121,6 @@ variable "k8s_version" {
   type        = string
 }
 
-variable "azure_storage_account_name" {
-  description = "Azure storage account name for OpenObserve."
-  type        = string
-  sensitive   = true
-  default     = null
-}
-
-variable "azure_storage_account_key" {
-  description = "Azure storage account key for OpenObserve."
-  type        = string
-  sensitive   = true
-  default     = null
-}
-
 locals {
   chart_names     = var.monitors_enabled ? ["paragon-logging", "paragon-monitoring", "paragon-onprem"] : ["paragon-logging", "paragon-onprem"]
   chart_directory = "../charts"
