@@ -44,6 +44,29 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   node_resource_group = "${local.cluster_name}-nodes"
   sku_tier            = var.k8s_sku_tier
 
+  # minimize disruption from automatic node image upgrades by limiting to monthly stable upgrades
+  automatic_upgrade_channel = "stable"
+  node_os_upgrade_channel   = "NodeImage"
+
+  maintenance_window_auto_upgrade {
+    day_of_week = "Monday"
+    duration    = "4"
+    frequency   = "RelativeMonthly"
+    interval    = "1"
+    start_time  = "14:00"
+    utc_offset  = "+00:00"
+    week_index  = "Second"
+  }
+  maintenance_window_node_os {
+    day_of_week = "Monday"
+    duration    = "4"
+    frequency   = "RelativeMonthly"
+    interval    = "1"
+    start_time  = "14:00"
+    utc_offset  = "+00:00"
+    week_index  = "Second"
+  }
+
   # NOTE: The configuration for the cluster can't change at all
   # We're intentionally setting very low settings.
   # This way, we can instead reconfigure the node pools using `azurerm_kubernetes_cluster_node_pool` resource.
@@ -57,6 +80,11 @@ resource "azurerm_kubernetes_cluster" "cluster" {
     type                 = "VirtualMachineScaleSets"
     auto_scaling_enabled = false
     vnet_subnet_id       = var.private_subnet.id
+
+    # Configure upgrade settings to minimize disruption from automatic node image upgrades
+    upgrade_settings {
+      max_surge = "1"
+    }
   }
 
   network_profile {
@@ -104,6 +132,11 @@ resource "azurerm_kubernetes_cluster_node_pool" "pool" {
 
   node_labels = {
     "useparagon.com/capacityType" = each.key
+  }
+
+  # Configure upgrade settings to minimize disruption from automatic node image upgrades
+  upgrade_settings {
+    max_surge = "1"
   }
 
   # Ensure new nodes are created before old ones are destroyed
