@@ -20,8 +20,8 @@ module "helm" {
   openobserve_password       = var.openobserve_password
   public_microservices       = local.public_microservices
   public_monitors            = local.public_monitors
-  resource_group = local.infra_vars.resource_group.value
-  workspace      = local.workspace
+  resource_group             = local.infra_vars.resource_group.value
+  workspace                  = local.workspace
 }
 
 module "monitors" {
