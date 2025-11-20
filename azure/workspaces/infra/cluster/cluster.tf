@@ -49,18 +49,22 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   node_os_upgrade_channel   = "NodeImage"
 
   maintenance_window_auto_upgrade {
-    frequency   = "RelativeMonthly"
+    day_of_week = "Monday"
     duration    = "4"
+    frequency   = "RelativeMonthly"
     interval    = "1"
     start_time  = "14:00"
-    day_of_week = "Monday"
+    utc_offset  = "+00:00"
+    week_index  = "Second"
   }
   maintenance_window_node_os {
-    frequency   = "RelativeMonthly"
+    day_of_week = "Monday"
     duration    = "4"
+    frequency   = "RelativeMonthly"
     interval    = "1"
     start_time  = "14:00"
-    day_of_week = "Monday"
+    utc_offset  = "+00:00"
+    week_index  = "Second"
   }
 
   # NOTE: The configuration for the cluster can't change at all
