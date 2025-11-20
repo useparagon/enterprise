@@ -1,0 +1,17 @@
+# .github/workflows/repository-dispatch-listener.yml
+name: Repository Dispatch Listener
+
+on:
+  repository_dispatch:
+    types: [custom-event]
+
+jobs:
+  handle-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log event information
+        run: |
+          echo "Received repository_dispatch event:"
+          echo "Event type: ${{ github.event.action }}"
+          echo "Client payload:"
+          echo "${{ toJson(github.event.client_payload) }}"
