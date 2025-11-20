@@ -135,8 +135,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "pool" {
   }
 
   # Configure upgrade settings to minimize disruption from automatic node image upgrades
-  # Note: To fully disable automatic OS image upgrades, you may need to use Azure CLI:
-  # az aks nodepool update --resource-group <rg> --cluster-name <cluster> --name <pool> --node-os-upgrade-channel None
   upgrade_settings {
     max_surge = "1"
   }
