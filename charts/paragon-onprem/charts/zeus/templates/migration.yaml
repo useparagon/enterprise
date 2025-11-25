@@ -32,7 +32,8 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
-            {{- $envKeys := fromYamlArray (include "paragon.serviceInputs.envKeys" (dict "root" $ "service" .Chart.Name)) }}
+            {{- $serviceData := fromJson (include "paragon.serviceInputs.data" (dict "root" $ "service" .Chart.Name)) }}
+            {{- $envKeys := $serviceData.envKeys | default (list) }}
             {{- range $key := $envKeys }}
             {{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
             - name: {{ $key }}
@@ -43,7 +44,7 @@ spec:
             {{- end }}
             {{- end }}
             {{- /* Handle secrets */}}
-            {{- $secretKeys := fromYamlArray (include "paragon.serviceInputs.secretKeys" (dict "root" $ "service" .Chart.Name)) }}
+            {{- $secretKeys := $serviceData.secretKeys | default (list) }}
             {{- range $key := $secretKeys }}
             - name: {{ $key }}
               valueFrom:

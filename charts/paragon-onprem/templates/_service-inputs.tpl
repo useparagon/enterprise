@@ -11,7 +11,7 @@ env/secret key lists without hardcoding them in values files.
 {{- end -}}
 {{- end -}}
 
-{{- define "paragon.serviceInputs.service" -}}
+{{- define "paragon.serviceInputs.data" -}}
 {{- $root := .root | default . -}}
 {{- $serviceName := include "paragon.serviceInputs.serviceName" . -}}
 {{- $raw := $root.Files.Get "files/service-inputs.json" -}}
@@ -24,16 +24,4 @@ env/secret key lists without hardcoding them in values files.
 {{- end -}}
 {{- $service := $match.service | default (dict "name" $serviceName "secretKeys" (list) "envKeys" (list)) -}}
 {{- toJson $service -}}
-{{- end -}}
-
-{{- define "paragon.serviceInputs.secretKeys" -}}
-{{- $service := fromJson (include "paragon.serviceInputs.service" .) -}}
-{{- $keys := $service.secretKeys | default (list) -}}
-{{- toYaml $keys -}}
-{{- end -}}
-
-{{- define "paragon.serviceInputs.envKeys" -}}
-{{- $service := fromJson (include "paragon.serviceInputs.service" .) -}}
-{{- $keys := $service.envKeys | default (list) -}}
-{{- toYaml $keys -}}
 {{- end -}}
