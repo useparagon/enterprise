@@ -1,0 +1,6 @@
+{
+  "name": "hades",
+  "category": "microservice",
+  "secretKeys": ["TEST_SECRET_KEY"],
+  "envKeys": ["TEST_ENV_KEY"]
+}
