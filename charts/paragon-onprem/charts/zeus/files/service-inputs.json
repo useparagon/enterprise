@@ -1,20 +1,6 @@
 {
   "name": "zeus",
   "category": "microservice",
-  "secretKeys": [
-    "ACCOUNT_ACCESS_TOKEN",
-    "CACHE_REDIS_URL",
-    "CLOUD_STORAGE_MICROSERVICE_PASS",
-    "CLOUD_STORAGE_MICROSERVICE_USER",
-    "LICENSE",
-    "ZEUS_POSTGRES_HOST",
-    "ZEUS_POSTGRES_PASSWORD"
-  ],
-  "envKeys": [
-    "ACCOUNT_PUBLIC_URL",
-    "ANALYTICS_ENABLED",
-    "AWS_REGION",
-    "HADES_PORT",
-    "LOG_LEVEL"
-  ]
+  "secretKeys": ["TEST_SECRET_KEY"],
+  "envKeys": ["TEST_ENV_KEY"]
 }
