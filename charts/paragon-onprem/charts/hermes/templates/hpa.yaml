@@ -10,10 +10,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "hermes.fullname" . }}
-
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
-
   metrics:
     {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
@@ -23,7 +21,6 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
     {{- end }}
-
     {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
@@ -32,7 +29,6 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
     {{- end }}
-
   {{- if .Values.autoscaling.behavior }}
   behavior:
     {{- if .Values.autoscaling.behavior.scaleUp }}
@@ -50,7 +46,6 @@ spec:
         {{- end }}
       {{- end }}
     {{- end }}
-
     {{- if .Values.autoscaling.behavior.scaleDown }}
     scaleDown:
       {{- if .Values.autoscaling.behavior.scaleDown.stabilizationWindowSeconds }}
@@ -67,5 +62,4 @@ spec:
       {{- end }}
     {{- end }}
   {{- end }}
-
 {{- end }}
