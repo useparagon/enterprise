@@ -1,0 +1,24 @@
+{{/*
+Standard RoleBinding for all microservices.
+Call with: include "global.rolebinding" $
+*/}}
+{{- define "global.rolebinding" -}}
+{{- if .Values.serviceAccount.create -}}
+{{- $name := .Chart.Name -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include (printf "%s.serviceAccountName" $name) . }}-modify-hpa
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include (printf "%s.serviceAccountName" $name) . }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: hpa-modifier
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+{{- end -}}
+
