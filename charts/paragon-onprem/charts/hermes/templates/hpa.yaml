@@ -10,8 +10,10 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "hermes.fullname" . }}
+
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+
   metrics:
     {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
@@ -21,6 +23,7 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
     {{- end }}
+
     {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
@@ -29,4 +32,40 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
     {{- end }}
+
+  {{- if .Values.autoscaling.behavior }}
+  behavior:
+    {{- if .Values.autoscaling.behavior.scaleUp }}
+    scaleUp:
+      {{- if .Values.autoscaling.behavior.scaleUp.stabilizationWindowSeconds }}
+      stabilizationWindowSeconds: {{ .Values.autoscaling.behavior.scaleUp.stabilizationWindowSeconds }}
+      {{- end }}
+
+      {{- if .Values.autoscaling.behavior.scaleUp.policies }}
+      policies:
+        {{- range .Values.autoscaling.behavior.scaleUp.policies }}
+        - type: {{ .type }}
+          value: {{ .value }}
+          periodSeconds: {{ .periodSeconds }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+
+    {{- if .Values.autoscaling.behavior.scaleDown }}
+    scaleDown:
+      {{- if .Values.autoscaling.behavior.scaleDown.stabilizationWindowSeconds }}
+      stabilizationWindowSeconds: {{ .Values.autoscaling.behavior.scaleDown.stabilizationWindowSeconds }}
+      {{- end }}
+
+      {{- if .Values.autoscaling.behavior.scaleDown.policies }}
+      policies:
+        {{- range .Values.autoscaling.behavior.scaleDown.policies }}
+        - type: {{ .type }}
+          value: {{ .value }}
+          periodSeconds: {{ .periodSeconds }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+
 {{- end }}
