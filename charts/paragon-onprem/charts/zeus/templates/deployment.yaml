@@ -71,7 +71,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
-            {{- $serviceData := fromJson (include "paragon.serviceInputs.data" (dict "root" $ "service" .Chart.Name)) }}
+            {{- $serviceData := fromJson (include "global.serviceInputs" $) }}
             {{- $envKeys := $serviceData.envKeys | default (list) }}
             {{- range $key := $envKeys }}
             {{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}

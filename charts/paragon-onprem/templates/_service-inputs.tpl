@@ -1,27 +1,14 @@
 {{/*
 Helpers to load service metadata from files/service-inputs.json so charts can derive
 env/secret key lists without hardcoding them in values files.
+
+Each subchart has its own files/service-inputs.json containing only that service's data.
 */}}
 
-{{- define "paragon.serviceInputs.serviceName" -}}
-{{- if and .service (ne .service "") -}}
-{{- .service -}}
-{{- else -}}
-{{- .root.Chart.Name -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "paragon.serviceInputs.data" -}}
+{{- define "global.serviceInputs" -}}
 {{- $root := .root | default . -}}
-{{- $serviceName := include "paragon.serviceInputs.serviceName" . -}}
+{{- /* Load the service-inputs.json - it contains this service's data */}}
 {{- $raw := $root.Files.Get "files/service-inputs.json" -}}
-{{- $inputs := fromJson $raw -}}
-{{- $match := dict "service" nil -}}
-{{- range $svc := $inputs.services }}
-  {{- if and (not $match.service) (eq $svc.name $serviceName) }}
-    {{- $_ := set $match "service" $svc -}}
-  {{- end -}}
-{{- end -}}
-{{- $service := $match.service | default (dict "name" $serviceName "secretKeys" (list) "envKeys" (list)) -}}
+{{- $service := fromJson $raw -}}
 {{- toJson $service -}}
 {{- end -}}
