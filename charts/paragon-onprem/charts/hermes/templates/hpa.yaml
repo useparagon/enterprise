@@ -36,7 +36,6 @@ spec:
       {{- if .Values.autoscaling.behavior.scaleUp.stabilizationWindowSeconds }}
       stabilizationWindowSeconds: {{ .Values.autoscaling.behavior.scaleUp.stabilizationWindowSeconds }}
       {{- end }}
-
       {{- if .Values.autoscaling.behavior.scaleUp.policies }}
       policies:
         {{- range .Values.autoscaling.behavior.scaleUp.policies }}
@@ -51,7 +50,6 @@ spec:
       {{- if .Values.autoscaling.behavior.scaleDown.stabilizationWindowSeconds }}
       stabilizationWindowSeconds: {{ .Values.autoscaling.behavior.scaleDown.stabilizationWindowSeconds }}
       {{- end }}
-
       {{- if .Values.autoscaling.behavior.scaleDown.policies }}
       policies:
         {{- range .Values.autoscaling.behavior.scaleDown.policies }}
