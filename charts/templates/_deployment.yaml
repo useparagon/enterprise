@@ -47,6 +47,9 @@ spec:
             - name: http
               containerPort: {{ $root.Values.service.port }}
               protocol: TCP
+          {{- $serviceData := fromJson (include "global.serviceInputs" $root) }}
+          {{- $category := $serviceData.category | default "" }}
+          {{- if or (eq $category "microservice") (eq $category "worker") }}
           lifecycle:
             preStop:
               exec:
@@ -75,6 +78,7 @@ spec:
             failureThreshold: 30
             periodSeconds: 10
             timeoutSeconds: 5
+          {{- end }}
           resources:
             {{- toYaml $root.Values.resources | nindent 12 }}
           env:
