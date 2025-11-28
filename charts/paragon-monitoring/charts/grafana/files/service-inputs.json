@@ -1,0 +1,6 @@
+{
+  "name": "grafana",
+  "category": "monitor",
+  "envKeys": [],
+  "secretKeys": []
+}

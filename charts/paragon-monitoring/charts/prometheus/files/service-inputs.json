@@ -1,0 +1,6 @@
+{
+  "name": "prometheus",
+  "category": "monitor",
+  "envKeys": [],
+  "secretKeys": []
+}

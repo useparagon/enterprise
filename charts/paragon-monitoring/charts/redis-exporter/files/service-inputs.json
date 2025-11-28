@@ -1,0 +1,6 @@
+{
+  "name": "redis-exporter",
+  "category": "monitor",
+  "envKeys": [],
+  "secretKeys": []
+}

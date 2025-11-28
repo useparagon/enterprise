@@ -1,0 +1,6 @@
+{
+  "name": "postgres-exporter",
+  "category": "monitor",
+  "envKeys": [],
+  "secretKeys": []
+}

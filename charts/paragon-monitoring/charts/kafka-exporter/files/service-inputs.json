@@ -1,0 +1,6 @@
+{
+  "name": "kafka-exporter",
+  "category": "monitor",
+  "envKeys": [],
+  "secretKeys": []
+}
