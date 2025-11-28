@@ -14,8 +14,8 @@ metadata:
   labels:
     {{- include (printf "%s.labels" $name) $root | nindent 4 }}
 spec:
-  {{- if not $root.Values.autoscaling.enabled }}
-  replicas: {{ $root.Values.replicaCount }}
+  {{- if not (and $root.Values.autoscaling $root.Values.autoscaling.enabled) }}
+  replicas: {{ $root.Values.replicaCount | default 1 }}
   {{- end }}
   selector:
     matchLabels:
