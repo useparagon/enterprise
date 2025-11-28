@@ -41,7 +41,9 @@ spec:
           securityContext:
             {{- toYaml $root.Values.securityContext | nindent 12 }}
           image: "{{ $root.Values.image.repository }}:{{ $root.Values.global.paragon_version | default $root.Values.global.env.VERSION }}"
+          {{- if $command }}
           command: [{{ $command | quote }}]
+          {{- end }}
           imagePullPolicy: {{ $root.Values.image.pullPolicy }}
           ports:
             - name: http
