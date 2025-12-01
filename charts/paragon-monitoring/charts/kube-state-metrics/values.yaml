@@ -420,10 +420,6 @@ volumes: []
 #      name: cm-for-volume
 #    name: config-volume
 
-envKeys:
-  - MONITOR_KUBE_STATE_METRICS_HOST
-  - MONITOR_KUBE_STATE_METRICS_PORT
-
 env:
   MONITOR_KUBE_STATE_METRICS_HOST: http://kube-state-metrics
   MONITOR_KUBE_STATE_METRICS_PORT: 2550
