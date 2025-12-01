@@ -1,16 +1,24 @@
 {{/*
 Standard deployment for all microservices.
-Call with: include "global.deployment" (dict "root" $ "command" "./service-name")
+Call with: include "global.deployment" (dict "root" $ "command" "./service-name" "namespaceTemplate" "service.namespace")
+Parameters:
+- root: Required. The root context ($)
+- command: Optional. Command to run
+- namespaceTemplate: Optional. Template name to use for namespace (e.g. "kube-state-metrics.namespace")
 */}}
 {{- define "global.deployment" -}}
 {{- $root := .root -}}
 {{- $command := .command -}}
+{{- $namespaceTemplate := .namespaceTemplate -}}
 {{- $name := $root.Chart.Name -}}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include (printf "%s.fullname" $name) $root }}
+  {{- if $namespaceTemplate }}
+  namespace: {{ include $namespaceTemplate $root }}
+  {{- end }}
   labels:
     {{- include (printf "%s.labels" $name) $root | nindent 4 }}
 spec:
