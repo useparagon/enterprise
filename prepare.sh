@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # version of charts, must be semver and doesn't have to match Paragon appVersion
-version="2025.11.20"
+version="2025.12.01"
 provider=${1:-aws}
 
 # allow calling from other directories

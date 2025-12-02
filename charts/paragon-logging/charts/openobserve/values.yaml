@@ -7,8 +7,8 @@ replicaCount: 2
 image:
   repository: public.ecr.aws/zinclabs/openobserve
   pullPolicy: IfNotPresent
-  tag: v0.15.2
-  # tag: v0.15.2-debug
+  tag: v0.20.1
+  # tag: v0.20.1-debug
 
 service:
   type: ClusterIP
@@ -17,10 +17,10 @@ service:
 resources:
   limits:
     cpu: 1
-    memory: 3Gi
+    memory: 6Gi
   requests:
     cpu: 0.5
-    memory: 3Gi
+    memory: 6Gi
 
 nameOverride: ""
 fullnameOverride: "openobserve"
@@ -69,6 +69,7 @@ envKeys:
   - RUST_LOG
   - ZO_PROMETHEUS_ENABLE
   - ZO_QUICK_MODE_FORCE_ENABLED
+  - ZO_ALLOW_USER_DEFINED_SCHEMAS
 
 env:
   ZO_COMPACT_DATA_RETENTION_DAYS: 365
@@ -76,15 +77,16 @@ env:
   ZO_LOCAL_MODE_STORAGE: s3
   ZO_TELEMETRY: false
   ZO_MEMORY_CACHE_ENABLED: true
-  ZO_MEMORY_CACHE_MAX_SIZE: 512
+  ZO_MEMORY_CACHE_MAX_SIZE: 1024
   ZO_MEMORY_CACHE_DATAFUSION_MAX_SIZE: 256
-  ZO_MAX_FILE_SIZE_IN_MEMORY: 64
+  ZO_MAX_FILE_SIZE_IN_MEMORY: 128
   ZO_FILE_MOVE_THREAD_NUM: 1
   ZO_COMPACT_FAST_MODE: false
   ZO_COMPACT_MAX_FILE_SIZE: 128
   RUST_LOG: warn
   ZO_PROMETHEUS_ENABLE: true
   ZO_QUICK_MODE_FORCE_ENABLED: false
+  ZO_ALLOW_USER_DEFINED_SCHEMAS: true
 
 podAnnotations:
   prometheus.io/scrape: "true"
