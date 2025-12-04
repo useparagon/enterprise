@@ -29,24 +29,6 @@ else
     rsync -aqv --delete --exclude='example.yaml' --exclude='bootstrap/' $script_dir/charts/ $destination
 fi
 
-# Create symlinks for each global template file from templates/ into all chart templates directories
-if [[ -d "$destination/templates" ]]; then
-    for chart_dir in $destination/*/; do
-        chart_name=$(basename "$chart_dir")
-        # Skip the templates directory itself
-        if [[ "$chart_name" != "templates" ]]; then
-            mkdir -p "$chart_dir/templates"
-            # Create symlink for each template file
-            for template_file in $destination/templates/*; do
-                if [[ -f "$template_file" ]]; then
-                    filename=$(basename "$template_file")
-                    # Create relative symlink to ../../templates/filename
-                    ln -sfn ../../templates/"$filename" "$chart_dir/templates/$filename"
-                fi
-            done
-        fi
-    done
-fi
 
 # update version using hash of chart folders
 charts=($destination/*/)
