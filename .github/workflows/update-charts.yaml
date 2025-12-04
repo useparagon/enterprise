@@ -1,0 +1,35 @@
+# .github/workflows/repository-dispatch-listener.yml
+name: Update Helm Charts
+
+on:
+  repository_dispatch:
+    types: [update-charts]
+
+jobs:
+  handle-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Store client payload
+        run: |
+          echo "Received Update Charts repository_dispatch event"
+          echo "  version: ${{ github.event.client_payload.version }}"
+          echo "  platformEnv: ${{ github.event.client_payload.platformEnv }}"
+          echo "  generatorBranch: ${{ github.event.client_payload.generatorBranch || 'main' }}"
+          echo "  payloadPath: $RUNNER_TEMP/client_payload.json"
+          jq <"$GITHUB_EVENT_PATH" '.client_payload' >"$RUNNER_TEMP/client_payload.json"
+
+          echo "Client payload:"
+          cat "$RUNNER_TEMP/client_payload.json"
+      - name: Checkout generator branch
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.client_payload.generatorBranch || 'main' }}
+      - name: Update Helm Charts
+        run: |
+          node scripts/update-charts.mjs "$RUNNER_TEMP/client_payload.json" "$GITHUB_WORKSPACE"
+      - name: Commit versioned changes
+        run: |
+          scripts/push-versioned-commit.sh \
+            '${{ github.event.client_payload.version }}' \
+            '${{ github.event.client_payload.platformEnv }}'
