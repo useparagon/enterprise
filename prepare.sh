@@ -29,7 +29,6 @@ else
     rsync -aqv --delete --exclude='example.yaml' --exclude='bootstrap/' $script_dir/charts/ $destination
 fi
 
-
 # update version using hash of chart folders
 charts=($destination/*/)
 for chart in "${charts[@]}"
