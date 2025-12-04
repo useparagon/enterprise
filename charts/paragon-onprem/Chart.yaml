@@ -94,3 +94,6 @@ dependencies:
     repository: file://charts/worker-workflows
     version: __PARAGON_VERSION__
     condition: subchart.worker-workflows.enabled
+  - name: paragon-templates
+    version: 1
+    repository: file://../paragon-templates
