@@ -72,6 +72,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "logs" {
     id     = "abort-incomplete"
     status = "Enabled"
 
+  filter {
+    prefix = "files/"
+  }
+
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
     }
@@ -80,6 +84,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "logs" {
   rule {
     id     = "expire"
     status = "Enabled"
+
+  filter {
+    prefix = "files/"
+  }
 
     expiration {
       days = 365
