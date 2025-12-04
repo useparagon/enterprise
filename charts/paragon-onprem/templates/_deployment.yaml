@@ -1,0 +1,112 @@
+{{/*
+Standard deployment for all microservices.
+Call with: include "global.deployment" (dict "root" $ "command" "./service-name")
+*/}}
+{{- define "global.deployment" -}}
+{{- $root := .root -}}
+{{- $command := .command -}}
+{{- $name := $root.Chart.Name -}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include (printf "%s.fullname" $name) $root }}
+  labels: {{ include (printf "%s.labels" $name) $root | nindent 4 }}
+spec:
+  {{- if not $root.Values.autoscaling.enabled }}
+  replicas: {{ $root.Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels: {{ include (printf "%s.selectorLabels" $name) $root | nindent 6 }}
+  template:
+    metadata:
+      {{- with $root.Values.podAnnotations }}
+      annotations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      labels: {{ include (printf "%s.selectorLabels" $name) $root | nindent 8 }}
+    spec:
+      {{- with $root.Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include (printf "%s.serviceAccountName" $name) $root }}
+      securityContext: {{ toYaml $root.Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ $name }}
+          securityContext: {{ toYaml $root.Values.securityContext | nindent 12 }}
+          image: "{{ $root.Values.image.repository }}:{{ $root.Values.global.paragon_version | default $root.Values.global.env.VERSION }}"
+          command: [{{ $command | quote }}]
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $root.Values.service.port }}
+              protocol: TCP
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 35"]
+          livenessProbe:
+            httpGet:
+              path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          startupProbe:
+            httpGet:
+              path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml $root.Values.resources | nindent 12 }}
+          env:
+            {{- include "global.deployment.env" $root | nindent 12 }}
+      {{- with $root.Values.nodeSelector }}
+      nodeSelector: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.affinity }}
+      affinity: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+{{- end -}}
+
+{{/*
+Environment variables helper - keeps the deployment YAML clean
+*/}}
+{{- define "global.deployment.env" -}}
+{{- $serviceData := fromJson (include "global.serviceInputs" .) }}
+{{- $envKeys := $serviceData.envKeys | default (list) }}
+{{- range $key := $envKeys }}
+{{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
+- name: {{ $key }}
+  value: {{ index $.Values.env $key | quote }}
+{{- else if and $.Values.global.env (kindIs "map" $.Values.global.env) (hasKey $.Values.global.env $key) }}
+- name: {{ $key }}
+  value: {{ index $.Values.global.env $key | quote }}
+{{- end }}
+{{- end }}
+{{- $secretKeys := $serviceData.secretKeys | default (list) }}
+{{- range $key := $secretKeys }}
+- name: {{ $key }}
+  valueFrom:
+    secretKeyRef:
+      name: {{- if and $.Values.secrets (kindIs "map" $.Values.secrets) (hasKey $.Values.secrets $key) }}
+               {{ $.Values.secretName }}-{{ $.Chart.Name }}
+             {{- else }}
+               {{ $.Values.secretName }}
+             {{- end }}
+      key: {{ $key }}
+      optional: true
+{{- end }}
+{{- end -}}
+
