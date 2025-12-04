@@ -89,6 +89,17 @@ spec:
                 port:
                   number: {{ $svcPort }}
     {{- end }}
+    {{- if and (eq .Values.global.env.HOST_ENV "AWS_K8") (eq $name "worker-proxy") }}
+    - http:
+        paths:
+          - path: /projects/*/sdk/proxy/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+    {{- end }}
     - host: {{ include (printf "%s.ingressHost" $name) . }}
       http:
         paths:
