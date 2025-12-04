@@ -48,8 +48,7 @@ spec:
         - name: {{ $name }}
           securityContext:
             {{- toYaml $root.Values.securityContext | nindent 12 }}
-          image: "{{ $root.Values.image.repository }}:{{ $root.Values.global.paragon_version | default $root.Values.image.tag | default $root.Chart.AppVersion | default $root.Values.global.env.VERSION }}"
-          {{- if $command }}
+          image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag | default $root.Values.global.env.VERSION }}"
           command: [{{ $command | quote }}]
           {{- end }}
           imagePullPolicy: {{ $root.Values.image.pullPolicy }}
