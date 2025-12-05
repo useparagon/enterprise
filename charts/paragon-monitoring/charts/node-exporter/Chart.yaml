@@ -1,0 +1,6 @@
+apiVersion: v2
+name: node-exporter
+description: Node Exporter for Prometheus
+type: application
+version: __PARAGON_VERSION__
+appVersion: 'v1'
