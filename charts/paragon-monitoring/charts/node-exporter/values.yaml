@@ -3,7 +3,7 @@ image:
   pullPolicy: IfNotPresent
   tag: 'latest'
 
-imagePullSecrets: []
+fullnameOverride: 'node-exporter'
 
 service:
   type: ClusterIP
@@ -20,11 +20,7 @@ nodeSelector: {}
 resources:
   requests:
     cpu: 100m
-    memory: 128Mi
+    memory: 64Mi
   limits:
     cpu: 200m
-    memory: 256Mi
-
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 65534
+    memory: 128Mi
