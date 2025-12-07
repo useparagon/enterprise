@@ -1,1 +1,1 @@
-{{- include "global.migration" (dict "root" $ "imageName" "postgres-cerberus") }}
+{{- include "migration.standard" (dict "root" $ "imageName" "postgres-cerberus") }}

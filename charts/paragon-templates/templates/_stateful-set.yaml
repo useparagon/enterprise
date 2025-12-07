@@ -1,8 +1,8 @@
 {{/*
 Standard StatefulSet for services requiring persistent storage.
-Call with: include "global.statefulset" (dict "root" $ "volumeName" "minio" "mountPath" "/var/paragon" "storageSize" "500M")
+Call with: include "statefulset.standard" (dict "root" $ "volumeName" "minio" "mountPath" "/var/paragon" "storageSize" "500M")
 */}}
-{{- define "global.statefulset" -}}
+{{- define "statefulset.standard" -}}
 {{- $root := .root -}}
 {{- $volumeName := .volumeName | default $root.Chart.Name -}}
 {{- $mountPath := .mountPath -}}
@@ -85,7 +85,7 @@ spec:
           resources:
             {{- toYaml $root.Values.resources | nindent 12 }}
           env:
-            {{- include "global.statefulset.env" $root | nindent 12 }}
+            {{- include "statefulset.standard.env" $root | nindent 12 }}
           volumeMounts:
             - name: {{ $volumeName }}
               mountPath: {{ $mountPath }}
@@ -118,8 +118,8 @@ spec:
 {{/*
 Environment variables helper for StatefulSet - uses service-inputs.json
 */}}
-{{- define "global.statefulset.env" -}}
-{{- $serviceData := fromJson (include "global.serviceInputs" .) }}
+{{- define "statefulset.standard.env" -}}
+{{- $serviceData := fromJson (include "service.inputs" .) }}
 {{- $envKeys := $serviceData.envKeys | default (list) }}
 {{- range $key := $envKeys }}
 {{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}

@@ -1,8 +1,8 @@
 {{/*
 Standard service for all microservices.
-Call with: include "global.service" $
+Call with: include "service.standard" $
 */}}
-{{- define "global.service" -}}
+{{- define "service.standard" -}}
 {{- $name := .Chart.Name -}}
 ---
 apiVersion: v1

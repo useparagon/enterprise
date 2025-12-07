@@ -1,1 +1,1 @@
-{{- include "global.service" $ }}
+{{- include "service.standard" $ }}

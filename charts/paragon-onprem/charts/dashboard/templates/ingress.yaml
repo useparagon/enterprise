@@ -1,1 +1,1 @@
-{{- include "global.ingress" $ }}
+{{- include "ingress.standard" $ }}

@@ -1,8 +1,8 @@
 {{/*
 Standard migration job for microservices with databases.
-Call with: include "global.migration" (dict "root" $ "imageName" "postgres-zeus")
+Call with: include "migration.standard" (dict "root" $ "imageName" "postgres-zeus")
 */}}
-{{- define "global.migration" -}}
+{{- define "migration.standard" -}}
 {{- $root := .root -}}
 {{- $imageName := .imageName -}}
 {{- $name := $root.Chart.Name -}}
@@ -41,7 +41,7 @@ spec:
           resources:
             {{- toYaml $root.Values.resources | nindent 12 }}
           env:
-            {{- include "global.deployment.env" $root | nindent 12 }}
+            {{- include "deployment.standard.env" $root | nindent 12 }}
       restartPolicy: Never
       {{- with $root.Values.nodeSelector }}
       nodeSelector:

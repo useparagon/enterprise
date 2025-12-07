@@ -1,8 +1,8 @@
 {{/*
 Standard HorizontalPodAutoscaler for all microservices.
-Call with: include "global.hpa" $
+Call with: include "hpa.standard" $
 */}}
-{{- define "global.hpa" -}}
+{{- define "hpa.standard" -}}
 {{- if .Values.autoscaling.enabled }}
 {{- $name := .Chart.Name -}}
 ---
