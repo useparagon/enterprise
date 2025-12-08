@@ -1,9 +1,8 @@
 {{/*
-Environment variables helper - keeps the deployment YAML clean
-Call with: include "env.standard" $
+Environment variables helper
 */}}
 {{- define "env.standard" -}}
-{{- $serviceData := fromJson (include "service.inputs" .) }}
+{{- $serviceData := include "service.inputs" . | fromJson }}
 {{- $envKeys := $serviceData.envKeys | default (list) }}
 {{- range $key := $envKeys }}
 {{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
