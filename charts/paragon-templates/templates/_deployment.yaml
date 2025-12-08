@@ -50,7 +50,7 @@ spec:
             {{- toYaml $root.Values.securityContext | nindent 12 }}
           image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag | default $root.Values.global.env.VERSION }}"
           {{- if $command }}
-            command: [{{ $command | quote }}]
+          command: [{{ $command | quote }}]
           {{- end }}
           imagePullPolicy: {{ $root.Values.image.pullPolicy }}
           ports:
