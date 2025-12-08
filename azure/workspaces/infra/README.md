@@ -19,6 +19,7 @@ No providers.
 |------|--------|---------|
 | <a name="module_bastion"></a> [bastion](#module\_bastion) | ./bastion | n/a |
 | <a name="module_cluster"></a> [cluster](#module\_cluster) | ./cluster | n/a |
+| <a name="module_kafka"></a> [kafka](#module\_kafka) | ./kafka | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ./network | n/a |
 | <a name="module_postgres"></a> [postgres](#module\_postgres) | ./postgres | n/a |
 | <a name="module_redis"></a> [redis](#module\_redis) | ./redis | n/a |
@@ -43,6 +44,10 @@ No resources.
 | <a name="input_cloudflare_tunnel_subdomain"></a> [cloudflare\_tunnel\_subdomain](#input\_cloudflare\_tunnel\_subdomain) | Subdomain under the Cloudflare Zone to create the tunnel | `string` | `""` | no |
 | <a name="input_cloudflare_tunnel_zone_id"></a> [cloudflare\_tunnel\_zone\_id](#input\_cloudflare\_tunnel\_zone\_id) | Zone ID for Cloudflare domain | `string` | `""` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Type of environment being deployed to. | `string` | `"enterprise"` | no |
+| <a name="input_eventhub_auto_inflate_enabled"></a> [eventhub\_auto\_inflate\_enabled](#input\_eventhub\_auto\_inflate\_enabled) | Whether to enable auto-inflate for the Event Hubs namespace. | `bool` | `true` | no |
+| <a name="input_eventhub_capacity"></a> [eventhub\_capacity](#input\_eventhub\_capacity) | The capacity units for the Event Hubs namespace (1-20 for Standard, 1-8 for Premium). | `number` | `1` | no |
+| <a name="input_eventhub_maximum_throughput_units"></a> [eventhub\_maximum\_throughput\_units](#input\_eventhub\_maximum\_throughput\_units) | The maximum throughput units for auto-inflate (only applicable when auto\_inflate\_enabled is true). | `number` | `20` | no |
+| <a name="input_eventhub_namespace_sku"></a> [eventhub\_namespace\_sku](#input\_eventhub\_namespace\_sku) | The SKU name for the Event Hubs namespace (Basic, Standard, Premium). | `string` | `"Standard"` | no |
 | <a name="input_k8s_max_node_count"></a> [k8s\_max\_node\_count](#input\_k8s\_max\_node\_count) | Maximum number of node Kubernetes can scale up to. | `number` | `20` | no |
 | <a name="input_k8s_min_node_count"></a> [k8s\_min\_node\_count](#input\_k8s\_min\_node\_count) | Minimum number of node Kubernetes can scale down to. | `number` | `3` | no |
 | <a name="input_k8s_ondemand_node_instance_type"></a> [k8s\_ondemand\_node\_instance\_type](#input\_k8s\_ondemand\_node\_instance\_type) | The compute instance type to use for Kubernetes on demand nodes. | `string` | `"Standard_B2ms"` | no |
@@ -50,6 +55,7 @@ No resources.
 | <a name="input_k8s_spot_instance_percent"></a> [k8s\_spot\_instance\_percent](#input\_k8s\_spot\_instance\_percent) | The percentage of spot instances to use for Kubernetes nodes. | `number` | `75` | no |
 | <a name="input_k8s_spot_node_instance_type"></a> [k8s\_spot\_node\_instance\_type](#input\_k8s\_spot\_node\_instance\_type) | The compute instance type to use for Kubernetes spot nodes. | `string` | `"Standard_B2ms"` | no |
 | <a name="input_k8s_version"></a> [k8s\_version](#input\_k8s\_version) | The version of Kubernetes to run in the cluster. | `string` | `"1.32"` | no |
+| <a name="input_kafka_enabled"></a> [kafka\_enabled](#input\_kafka\_enabled) | Whether to enable Kafka (Event Hubs for Kafka) in the infrastructure. | `bool` | `false` | no |
 | <a name="input_location"></a> [location](#input\_location) | Azure geographic region to deploy resources in. | `string` | n/a | yes |
 | <a name="input_organization"></a> [organization](#input\_organization) | Name of organization to include in resource names. | `string` | n/a | yes |
 | <a name="input_postgres_base_sku_name"></a> [postgres\_base\_sku\_name](#input\_postgres\_base\_sku\_name) | Default PostgreSQL SKU name for instances that don't use the main postgres\_sku\_name (e.g. `B_Standard_B2s` or `GP_Standard_D2ds_v5`) | `string` | `"B_Standard_B2s"` | no |
@@ -72,6 +78,7 @@ No resources.
 |------|-------------|
 | <a name="output_bastion"></a> [bastion](#output\_bastion) | Bastion server connection info. |
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | The name of the AKS cluster. |
+| <a name="output_kafka"></a> [kafka](#output\_kafka) | Connection info for Kafka (Event Hubs for Kafka). |
 | <a name="output_logs_container"></a> [logs\_container](#output\_logs\_container) | The bucket used to store system logs. |
 | <a name="output_minio"></a> [minio](#output\_minio) | MinIO server connection info. |
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | Connection info for Postgres. |

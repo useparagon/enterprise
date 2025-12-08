@@ -55,3 +55,18 @@ output "resource_group" {
     location = module.network.resource_group.location
   }
 }
+
+output "kafka" {
+  description = "Connection info for Kafka (Event Hubs for Kafka)."
+  value = var.kafka_enabled ? {
+    bootstrap_servers        = module.kafka[0].bootstrap_servers
+    bootstrap_servers_private = module.kafka[0].bootstrap_servers_private
+    namespace_name           = module.kafka[0].namespace_name
+    eventhub_name           = module.kafka[0].eventhub_name
+    username                = module.kafka[0].kafka_credentials.username
+    password                = module.kafka[0].kafka_credentials.password
+    mechanism              = module.kafka[0].kafka_credentials.mechanism
+    tls_enabled            = module.kafka[0].tls_enabled
+  } : null
+  sensitive = true
+}
