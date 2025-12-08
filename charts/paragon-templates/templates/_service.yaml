@@ -1,0 +1,24 @@
+{{/*
+Standard service for all microservices.
+Call with: include "service.standard" $
+*/}}
+{{- define "service.standard" -}}
+{{- $name := .Chart.Name -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include (printf "%s.fullname" $name) . }}
+  labels:
+    {{- include (printf "%s.labels" $name) . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include (printf "%s.selectorLabels" $name) . | nindent 4 }}
+{{- end -}}
+
