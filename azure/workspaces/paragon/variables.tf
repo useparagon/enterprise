@@ -534,6 +534,10 @@ locals {
         CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
         CLOUD_STORAGE_TYPE              = local.cloud_storage_type
 
+        # OpenObserve Azure Storage credentials (for Azure Blob Storage)
+        AZURE_STORAGE_ACCOUNT_NAME = try(local.infra_vars.minio.value.root_user, null)
+        AZURE_STORAGE_ACCOUNT_KEY  = try(local.infra_vars.minio.value.root_password, null)
+
         CLOUD_STORAGE_PUBLIC_URL = coalesce(
           try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
           local.cloud_storage_type == "AZURE" ? "https://${local.infra_vars.minio.value.root_user}.blob.core.windows.net" : null,

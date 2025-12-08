@@ -21,8 +21,13 @@ resource "azurerm_subnet_network_security_group_association" "postgres" {
   network_security_group_id = azurerm_network_security_group.postgres.id
 }
 
+locals {
+  # azure does not allow dns name to match the database name
+  postgres_dns_name = length(local.postgres_instances) == 1 ? "${var.workspace}-dns.postgres.database.azure.com" : "${var.workspace}.postgres.database.azure.com"
+}
+
 resource "azurerm_private_dns_zone" "postgres" {
-  name                = "${length("${var.workspace}.postgres.database.azure.com") > 63 ? replace(var.workspace, "paragon-", "") : var.workspace}.postgres.database.azure.com"
+  name                = local.postgres_dns_name
   resource_group_name = var.resource_group.name
 
   depends_on = [azurerm_subnet_network_security_group_association.postgres]
