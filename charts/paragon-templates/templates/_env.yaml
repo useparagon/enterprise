@@ -1,0 +1,30 @@
+{{/*
+Environment variables helper - keeps the deployment YAML clean
+Call with: include "env.standard" $
+*/}}
+{{- define "env.standard" -}}
+{{- $serviceData := fromJson (include "service.inputs" .) }}
+{{- $envKeys := $serviceData.envKeys | default (list) }}
+{{- range $key := $envKeys }}
+{{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
+- name: {{ $key }}
+  value: {{ index $.Values.env $key | quote }}
+{{- else if and $.Values.global.env (kindIs "map" $.Values.global.env) (hasKey $.Values.global.env $key) }}
+- name: {{ $key }}
+  value: {{ index $.Values.global.env $key | quote }}
+{{- end }}
+{{- end }}
+{{- $secretKeys := $serviceData.secretKeys | default (list) }}
+{{- range $key := $secretKeys }}
+- name: {{ $key }}
+  valueFrom:
+    secretKeyRef:
+      name: {{- if and $.Values.secrets (kindIs "map" $.Values.secrets) (hasKey $.Values.secrets $key) }}
+               {{ $.Values.secretName }}-{{ $.Chart.Name }}
+             {{- else }}
+               {{ $.Values.secretName }}
+             {{- end }}
+      key: {{ $key }}
+      optional: true
+{{- end }}
+{{- end -}}

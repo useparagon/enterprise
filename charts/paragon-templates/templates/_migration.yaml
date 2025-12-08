@@ -41,7 +41,7 @@ spec:
           resources:
             {{- toYaml $root.Values.resources | nindent 12 }}
           env:
-            {{- include "deployment.standard.env" $root | nindent 12 }}
+            {{- include "env.standard" $root | nindent 12 }}
       restartPolicy: Never
       {{- with $root.Values.nodeSelector }}
       nodeSelector:
@@ -56,4 +56,3 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end -}}
-
