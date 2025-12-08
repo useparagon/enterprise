@@ -1,1 +1,1 @@
-{{- include "global.statefulset" (dict "root" $ "volumeName" "health-checker" "mountPath" "/var/lib/health-checker" "storageSize" "5Gi") }}
+{{- include "statefulset.standard" (dict "root" $ "volumeName" "health-checker" "mountPath" "/var/lib/health-checker" "storageSize" "5Gi") }}

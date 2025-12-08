@@ -1,8 +1,8 @@
 {{/*
 Standard RoleBinding for all microservices.
-Call with: include "global.rolebinding" $
+Call with: include "rolebinding.standard" $
 */}}
-{{- define "global.rolebinding" -}}
+{{- define "rolebinding.standard" -}}
 {{- if .Values.serviceAccount.create -}}
 {{- $name := .Chart.Name -}}
 ---

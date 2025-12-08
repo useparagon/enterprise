@@ -1,8 +1,8 @@
 {{/*
 Standard Ingress for all microservices.
-Call with: include "global.ingress" $
+Call with: include "ingress.standard" $
 */}}
-{{- define "global.ingress" -}}
+{{- define "ingress.standard" -}}
 {{- if .Values.ingress.enabled -}}
 {{- $name := .Chart.Name -}}
 {{- $fullName := include (printf "%s.fullname" $name) . -}}

@@ -1,1 +1,1 @@
-{{- include "global.deployment" (dict "root" $ "command" "./passport") }}
+{{- include "deployment.standard" (dict "root" $ "command" "./passport") }}

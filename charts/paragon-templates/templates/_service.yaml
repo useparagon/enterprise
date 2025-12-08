@@ -1,8 +1,8 @@
 {{/*
 Standard service for all microservices.
-Call with: include "global.service" $ or (dict "root" $ "namespaceTemplate" "service.namespace")
+Call with: include "service.standard" $ or (dict "root" $ "namespaceTemplate" "service.namespace")
 */}}
-{{- define "global.service" -}}
+{{- define "service.standard" -}}
 {{- $root := . -}}
 {{- $namespaceTemplate := "" -}}
 {{- if kindIs "map" . -}}

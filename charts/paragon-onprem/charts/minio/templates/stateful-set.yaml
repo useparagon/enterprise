@@ -1,1 +1,1 @@
-{{- include "global.statefulset" (dict "root" $ "volumeName" "minio" "mountPath" "/var/paragon" "storageSize" "500M" "healthCheckPath" "/minio/health/live") }}
+{{- include "statefulset.standard" (dict "root" $ "volumeName" "minio" "mountPath" "/var/paragon" "storageSize" "500M" "healthCheckPath" "/minio/health/live") }}
