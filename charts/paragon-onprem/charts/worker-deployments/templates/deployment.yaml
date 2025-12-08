@@ -1,1 +1,1 @@
-{{- include "global.deployment" (dict "root" $ "command" "./worker-deployments") }}
+{{- include "deployment.standard" (dict "root" $ "command" "./worker-deployments") }}
