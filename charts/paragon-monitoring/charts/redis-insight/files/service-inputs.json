@@ -1,0 +1,6 @@
+{
+  "name": "redis-insight",
+  "category": "monitor",
+  "envKeys": ["TEST_ENV_KEY"],
+  "secretKeys": ["TEST_SECRET_KEY"]
+}
