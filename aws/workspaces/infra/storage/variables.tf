@@ -15,3 +15,9 @@ variable "managed_sync_enabled" {
   description = "Whether to enable managed sync."
   type        = bool
 }
+
+variable "migrated" {
+  description = "Whether the workspace is being migrated from a legacy workspace."
+  type        = bool
+  default     = false
+}
