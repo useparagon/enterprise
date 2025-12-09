@@ -14,6 +14,13 @@ git config --global user.name 'Automated Helm Chart Updates'
 git config --global user.email 'paragonbot@useparagon.com'
 
 git add .
+
+# Skip if no staged changes exist
+if git diff --cached --quiet; then
+  echo "No changes detected — skipping commit and tag."
+  exit 0
+fi
+
 git commit -m "Automated update $TAG"
 
 git tag -f "$TAG"
