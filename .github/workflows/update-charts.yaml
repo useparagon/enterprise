@@ -10,11 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Store client payload
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+          PLATFORM_ENV: ${{ github.event.client_payload.platformEnv }}
+          GENERATOR_BRANCH: ${{ github.event.client_payload.generatorBranch || 'main' }}
         run: |
           echo "Received Update Charts repository_dispatch event"
-          echo "  version: ${{ github.event.client_payload.version }}"
-          echo "  platformEnv: ${{ github.event.client_payload.platformEnv }}"
-          echo "  generatorBranch: ${{ github.event.client_payload.generatorBranch || 'main' }}"
+          echo "  version: $VERSION"
+          echo "  platformEnv: $PLATFORM_ENV"
+          echo "  generatorBranch: $GENERATOR_BRANCH"
           echo "  payloadPath: $RUNNER_TEMP/client_payload.json"
           jq <"$GITHUB_EVENT_PATH" '.client_payload' >"$RUNNER_TEMP/client_payload.json"
 
@@ -29,7 +33,10 @@ jobs:
         run: |
           node scripts/update-charts.mjs "$RUNNER_TEMP/client_payload.json" "$GITHUB_WORKSPACE"
       - name: Commit versioned changes
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+          PLATFORM_ENV: ${{ github.event.client_payload.platformEnv }}
         run: |
           scripts/push-versioned-commit.sh \
-            '${{ github.event.client_payload.version }}' \
-            '${{ github.event.client_payload.platformEnv }}'
+            "$VERSION" \
+            "$PLATFORM_ENV"
