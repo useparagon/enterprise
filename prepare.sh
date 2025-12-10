@@ -3,6 +3,29 @@
 # version of charts, must be semver and doesn't have to match Paragon appVersion
 version="2025.12.05"
 provider=${1:-aws}
+version=${2:?version is required}
+
+# Fetch services inputs from tag based on the version
+# Create a temp directory
+temp_dir=$(mktemp -d)
+trap "rm -rf $temp_dir" EXIT
+
+# Fetch the tags from the remote repository
+git fetch --tags
+
+# Extract files from the git tag to temp directory
+git archive --format=tar "$version" | tar -xf - -C "$temp_dir"
+
+# Path to the input JSON file from the tag
+input_json="$temp_dir/charts/files/service-inputs.json"
+
+if [[ ! -f "$input_json" ]]; then
+  echo "Error: Input JSON file not found: $input_json"
+  exit 1
+fi
+
+# Execute update-charts.mjs with the input JSON
+node scripts/update-charts.mjs "$input_json"
 
 # allow calling from other directories
 script_dir=$(dirname "$(realpath "$0")")
