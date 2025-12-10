@@ -145,6 +145,9 @@ function writeChartFixtures(service) {
     writeFileSync(`${chartDirectory}/files/service-inputs.json`, JSON.stringify(service, null, 2));
     return true;
   } else {
+    if (['prometheus-ecs-discovery', 'redis-streams-exporter'].includes(serviceName)) {
+      return true;
+    }
     console.error(`  Helm chart does not exist for service ${serviceName}!`);
     console.error(`  Expected path: ${chartYamlPath}`);
     console.error(`  Are you missing a helm chart for a newly-added service?`);
