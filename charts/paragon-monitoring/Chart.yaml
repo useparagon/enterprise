@@ -22,6 +22,10 @@ dependencies:
     version: __PARAGON_VERSION__
     condition: subchart.kube-state-metrics.enabled
     repository: file://charts/kube-state-metrics
+  - name: node-exporter
+    version: __PARAGON_VERSION__
+    condition: subchart.node-exporter.enabled
+    repository: file://charts/node-exporter
   - name: pgadmin
     version: __PARAGON_VERSION__
     condition: subchart.pgadmin.enabled
