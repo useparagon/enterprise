@@ -16,7 +16,10 @@ const USAGE = `Usage: node ${SCRIPT_NAME} <input-json> [workspace-directory]\n` 
 // For any service NOT in this list, a corresponding helm chart
 // must exist in the repo.
 const ignoredServices = [
-
+  'embassy',
+  'prometheus-ecs-discovery',
+  'redis-streams-exporter',
+  'alb-log-parser',
 ];
 
 /**
@@ -145,9 +148,6 @@ function writeChartFixtures(service) {
     writeFileSync(`${chartDirectory}/files/service-inputs.json`, JSON.stringify(service, null, 2));
     return true;
   } else {
-    if (['prometheus-ecs-discovery', 'redis-streams-exporter'].includes(serviceName)) {
-      return true;
-    }
     console.error(`  Helm chart does not exist for service ${serviceName}!`);
     console.error(`  Expected path: ${chartYamlPath}`);
     console.error(`  Are you missing a helm chart for a newly-added service?`);
