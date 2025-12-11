@@ -27,12 +27,13 @@ output "logs_container" {
 output "minio" {
   description = "MinIO server connection info."
   value = {
-    public_bucket     = module.storage.blob.public_container
-    private_bucket    = module.storage.blob.private_container
-    microservice_user = module.storage.blob.minio_microservice_user
-    microservice_pass = module.storage.blob.minio_microservice_pass
-    root_user         = module.storage.blob.name
-    root_password     = module.storage.blob.access_key
+    public_bucket       = module.storage.blob.public_container
+    private_bucket      = module.storage.blob.private_container
+    managed_sync_bucket = module.storage.blob.managed_sync_container
+    microservice_user   = module.storage.blob.minio_microservice_user
+    microservice_pass   = module.storage.blob.minio_microservice_pass
+    root_user           = module.storage.blob.name
+    root_password       = module.storage.blob.access_key
   }
   sensitive = true
 }
@@ -58,15 +59,15 @@ output "resource_group" {
 
 output "kafka" {
   description = "Connection info for Kafka (Event Hubs for Kafka)."
-  value = var.kafka_enabled ? {
-    bootstrap_servers        = module.kafka[0].bootstrap_servers
+  value = var.managed_sync_enabled ? {
+    cluster_bootstrap_brokers = module.kafka[0].bootstrap_servers
     bootstrap_servers_private = module.kafka[0].bootstrap_servers_private
-    namespace_name           = module.kafka[0].namespace_name
-    eventhub_name           = module.kafka[0].eventhub_name
-    username                = module.kafka[0].kafka_credentials.username
-    password                = module.kafka[0].kafka_credentials.password
-    mechanism              = module.kafka[0].kafka_credentials.mechanism
-    tls_enabled            = module.kafka[0].tls_enabled
+    namespace_name            = module.kafka[0].namespace_name
+    eventhub_name             = module.kafka[0].eventhub_name
+    cluster_username          = module.kafka[0].kafka_credentials.username
+    cluster_password          = module.kafka[0].kafka_credentials.password
+    cluster_mechanism         = module.kafka[0].kafka_credentials.mechanism
+    cluster_tls_enabled       = module.kafka[0].tls_enabled
   } : null
   sensitive = true
 }

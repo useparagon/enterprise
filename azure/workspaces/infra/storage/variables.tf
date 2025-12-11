@@ -16,3 +16,8 @@ variable "tags" {
   description = "Default tags to apply to resources"
   type        = map(string)
 }
+
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+}

@@ -18,6 +18,7 @@ locals {
   public_microservice_values = yamlencode({
     for microservice_name, microservice_config in var.public_microservices : microservice_name => {
       ingress = {
+        class     = "nginx" # used for managed sync
         className = "nginx"
         host      = replace(replace(microservice_config.public_url, "https://", ""), "http://", "")
         annotations = {
@@ -104,6 +105,15 @@ locals {
     }
   ))
 
+  global_values_minus_env = yamlencode(merge(
+    nonsensitive(var.helm_values),
+    {
+      global = merge(nonsensitive(var.helm_values).global, { env = {
+        HOST_ENV = "AZURE_K8"
+      } })
+    }
+  ))
+
   # changes to secrets should trigger redeploy
   secret_hash = yamlencode({
     secret_hash = sha256(jsonencode(nonsensitive(var.helm_values)))
@@ -159,8 +169,16 @@ resource "kubernetes_secret" "docker_login" {
 
 # shared secrets
 resource "kubernetes_secret" "paragon_secrets" {
+  for_each = toset(
+    var.managed_sync_enabled ? [
+      "paragon-secrets",
+      "paragon-managed-sync-secrets"
+      ] : [
+      "paragon-secrets"
+    ]
+  )
   metadata {
-    name      = "paragon-secrets"
+    name      = each.value
     namespace = kubernetes_namespace.paragon.id
   }
 

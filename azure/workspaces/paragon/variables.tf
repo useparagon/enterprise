@@ -158,6 +158,18 @@ variable "helm_yaml" {
   default     = null
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+  default     = false
+}
+
+variable "managed_sync_version" {
+  description = "The version of the Managed Sync helm chart to install."
+  type        = string
+  default     = "latest"
+}
+
 locals {
   # hash of subscription ID to help ensure uniqueness of resources like bucket names
   hash      = substr(sha256(var.azure_subscription_id), 0, 8)
@@ -177,7 +189,7 @@ locals {
 
   cloud_storage_type = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "AZURE")
 
-  all_microservices = {
+  monorepo_microservices = {
     "account" = {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["ACCOUNT_PORT"], 1708)
@@ -294,6 +306,31 @@ locals {
       "public_url"       = try(local.helm_vars.global.env["WORKER_WORKFLOWS_PUBLIC_URL"], "https://worker-workflows.${var.domain}")
     }
   }
+
+  managed_sync_microservices = {
+    "api-sync" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["API_SYNC_HTTP_PORT"], 1800)
+      "public_url"       = try(local.helm_vars.global.env["API_SYNC_PUBLIC_URL"], "https://sync.${var.domain}")
+    }
+    "api-project" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["API_PROJECT_HTTP_PORT"], 1804)
+      "public_url"       = null
+    }
+    "worker-sync" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["WORKER_SYNC_HTTP_PORT"], 1802)
+      "public_url"       = null
+    }
+    "queue-exporter" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["MONITOR_QUEUE_EXPORTER_HTTP_PORT"], 1806)
+      "public_url"       = null
+    }
+  }
+
+  all_microservices = merge(local.monorepo_microservices, var.managed_sync_enabled ? local.managed_sync_microservices : {})
 
   microservices = {
     for microservice, config in local.all_microservices :
@@ -593,7 +630,9 @@ locals {
         }, {
         for key, value in local.helm_vars.global.env :
         key => value if value != null && !contains(local.helm_keys_to_remove, key) && !startswith(key, "FLIPT_")
-      })
+        },
+        var.managed_sync_enabled ? module.managed_sync_config[0].config : {}
+      )
     })
   })
 

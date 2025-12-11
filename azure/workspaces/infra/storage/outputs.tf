@@ -5,6 +5,7 @@ output "blob" {
     private_container       = azurerm_storage_container.app.name
     public_container        = azurerm_storage_container.cdn.name
     logs_container          = azurerm_storage_container.logs.name
+    managed_sync_container  = var.managed_sync_enabled ? azurerm_storage_container.managed_sync[0].name : null
     minio_microservice_user = random_string.minio_microservice_user.result
     minio_microservice_pass = random_password.minio_microservice_pass.result
   }

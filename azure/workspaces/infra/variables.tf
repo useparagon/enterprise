@@ -228,9 +228,8 @@ variable "k8s_sku_tier" {
   }
 }
 
-# kafka
-variable "kafka_enabled" {
-  description = "Whether to enable Kafka (Event Hubs for Kafka) in the infrastructure."
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
   type        = bool
   default     = false
 }

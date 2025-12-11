@@ -41,6 +41,14 @@ resource "azurerm_storage_container" "logs" {
   storage_account_id    = azurerm_storage_account.blob.id
 }
 
+resource "azurerm_storage_container" "managed_sync" {
+  count = var.managed_sync_enabled ? 1 : 0
+
+  name                  = "${var.workspace}-managed-sync"
+  container_access_type = "private"
+  storage_account_id    = azurerm_storage_account.blob.id
+}
+
 resource "azurerm_storage_account_network_rules" "storage" {
   storage_account_id = azurerm_storage_account.blob.id
 

@@ -12,6 +12,8 @@ module "helm" {
   ingress_scheme         = var.ingress_scheme
   k8s_version            = var.k8s_version
   logs_bucket            = local.logs_bucket
+  managed_sync_enabled   = var.managed_sync_enabled
+  managed_sync_version   = var.managed_sync_version
   microservices          = local.microservices
   monitor_version        = local.monitor_version
   monitors               = local.monitors
@@ -22,6 +24,16 @@ module "helm" {
   public_monitors        = local.public_monitors
   resource_group         = local.infra_vars.resource_group.value
   workspace              = local.workspace
+}
+
+module "managed_sync_config" {
+  source = "./helm-config"
+  count  = var.managed_sync_enabled ? 1 : 0
+
+  base_helm_values = local.helm_vars
+  infra_values     = local.infra_vars
+  domain           = var.domain
+  microservices    = local.microservices
 }
 
 module "monitors" {
