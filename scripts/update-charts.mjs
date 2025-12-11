@@ -136,6 +136,12 @@ function writeChartFixtures(service) {
   const { name: serviceName, category: serviceCategory, envKeys, secretKeys } = service;
   const chartCategory = getChartCategory(serviceName, serviceCategory);
 
+  const flattenedService = {
+    ...service,
+    envKeys: Object.keys(envKeys),
+    secretKeys: Object.keys(secretKeys),
+  }
+
   // TODO: This is just a stub. Implement actual chart fixture writing logic here.
   console.log(`Writing chart fixtures for service: ${serviceName}`);
   const chartDirectory = `charts/${chartCategory.subdir}/charts/${serviceName}`;
@@ -145,7 +151,7 @@ function writeChartFixtures(service) {
   if (existsSync(chartYamlPath)) {
     console.log(`  Found chart directory: ${chartDirectory}`);
     mkdirSync(`${chartDirectory}/files`, { recursive: true });
-    writeFileSync(`${chartDirectory}/files/service-inputs.json`, JSON.stringify(service, null, 2));
+    writeFileSync(`${chartDirectory}/files/service-inputs.json`, JSON.stringify(flattenedService, null, 2));
     return true;
   } else {
     console.error(`  Helm chart does not exist for service ${serviceName}!`);
