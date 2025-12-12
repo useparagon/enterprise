@@ -202,6 +202,12 @@ variable "helm_yaml" {
   default     = null
 }
 
+variable "use_storage_account_key" {
+  description = "Whether to use the storage service account privatekey for the storage service account."
+  type        = bool
+  default     = false
+}
+
 locals {
   creds_json     = try(jsondecode(file(var.gcp_credential_json_file)), {})
   gcp_project_id = try(local.creds_json.project_id, var.gcp_project_id)
@@ -365,7 +371,7 @@ locals {
   microservices = {
     for microservice, config in local.all_microservices :
     microservice => config
-    if !contains(var.excluded_microservices, microservice) && !(microservice == "minio" && local.cloud_storage_type == "AZURE")
+    if !contains(var.excluded_microservices, microservice) && !(microservice == "minio" && local.cloud_storage_type == "GCP")
   }
 
   public_microservices = {
@@ -595,7 +601,7 @@ locals {
         WORKFLOW_REDIS_URL             = try("${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
 
         # Cloud Storage configurations
-        CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "GCP" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
+        CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "GCP" && var.use_storage_account_key ? local.infra_vars.minio.value.root_password : (var.use_storage_account_key ? local.infra_vars.minio.value.microservice_pass : null)
         CLOUD_STORAGE_MICROSERVICE_USER = local.cloud_storage_type == "GCP" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
         CLOUD_STORAGE_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
         CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
