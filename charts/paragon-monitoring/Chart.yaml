@@ -46,3 +46,6 @@ dependencies:
     version: __PARAGON_VERSION__
     condition: subchart.redis-insight.enabled
     repository: file://charts/redis-insight
+  - name: paragon-templates
+    version: 1
+    repository: file://../paragon-templates
