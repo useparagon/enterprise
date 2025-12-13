@@ -61,6 +61,8 @@ spec:
           {{- $category := $serviceData.category | default "" }}
           {{- if or (eq $category "microservice") (eq $category "worker") }}
           lifecycle:
+            # need to sleep for `deregistration_delay` + 5s to prevent downtime on deployments
+            # https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/1719#issuecomment-743452334
             preStop:
               exec:
                 command:
