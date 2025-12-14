@@ -138,8 +138,8 @@ function writeChartFixtures(service) {
 
   const flattenedService = {
     ...service,
-    envKeys: Object.keys(envKeys),
-    secretKeys: Object.keys(secretKeys),
+    envKeys: Object.keys(envKeys).sort(),
+    secretKeys: Object.keys(secretKeys).sort(),
   }
 
   // TODO: This is just a stub. Implement actual chart fixture writing logic here.
