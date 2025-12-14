@@ -94,3 +94,9 @@ affinity:
           - spot
 
 secretName: "paragon-secrets"
+
+envKeys:
+  - PLATFORM
+
+env:
+  PLATFORM: k8s
