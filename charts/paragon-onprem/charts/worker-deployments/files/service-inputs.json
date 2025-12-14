@@ -1,6 +1,0 @@
-{
-  "name": "worker-deployments",
-  "category": "worker",
-  "secretKeys": ["TEST_SECRET_KEY"],
-  "envKeys": ["TEST_ENV_KEY"]
-}
