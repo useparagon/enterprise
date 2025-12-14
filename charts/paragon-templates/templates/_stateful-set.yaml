@@ -9,7 +9,6 @@ Call with: include "statefulset.standard" (dict "root" $ "volumeName" "minio" "m
 {{- $storageSize := .storageSize | default "5Gi" -}}
 {{- $name := $root.Chart.Name -}}
 {{- $command := .command | default "" -}}
-{{- $healthCheckPath := .healthCheckPath | default "/healthz" -}}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -65,21 +64,21 @@ spec:
                   - sleep 35
           livenessProbe:
             httpGet:
-              path: {{ $healthCheckPath }}
+              path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
-              path: {{ $healthCheckPath }}
+              path: {{ $root.Values.ingress.readycheck_path | default $root.Values.ingress.healthcheck_path | default "/healthz" }}
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
           startupProbe:
             httpGet:
-              path: {{ $healthCheckPath }}
+              path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
               port: http
             failureThreshold: 30
             periodSeconds: 10

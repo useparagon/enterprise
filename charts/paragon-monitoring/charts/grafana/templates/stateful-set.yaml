@@ -1,1 +1,1 @@
-{{- include "statefulset.standard" (dict "root" $ "volumeName" "grafana" "mountPath" "/var/lib/grafana" "storageSize" "5Gi" "healthCheckPath" "/api/health") }}
+{{- include "statefulset.standard" (dict "root" $ "volumeName" "grafana" "mountPath" "/var/lib/grafana" "storageSize" "5Gi") }}
