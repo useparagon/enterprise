@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "app" {
-  bucket        = "${var.workspace}-app"
+  bucket        = var.migrated ? var.workspace : "${var.workspace}-app"
   force_destroy = var.force_destroy
 }
 
