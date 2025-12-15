@@ -40,6 +40,7 @@ module "storage" {
   disable_deletion_protection = var.disable_deletion_protection
   gcp_project_id              = local.gcp_project_id
   region                      = var.region
+  use_storage_account_key     = var.use_storage_account_key
   workspace                   = local.workspace
 }
 

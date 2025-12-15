@@ -206,6 +206,12 @@ variable "k8s_spot_node_instance_type" {
   default     = "e2-standard-4"
 }
 
+variable "use_storage_account_key" {
+  description = "Whether to use the storage service account privatekey for the storage service account."
+  type        = bool
+  default     = false
+}
+
 locals {
   creds_json     = try(jsondecode(file(var.gcp_credential_json_file)), {})
   gcp_project_id = try(local.creds_json.project_id, var.gcp_project_id)
