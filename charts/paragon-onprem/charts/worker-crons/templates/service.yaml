@@ -1,15 +1,1 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "worker-crons.fullname" . }}
-  labels:
-    {{- include "worker-crons.labels" . | nindent 4 }}
-spec:
-  type: {{ .Values.service.type }}
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
-      protocol: TCP
-      name: http
-  selector:
-    {{- include "worker-crons.selectorLabels" . | nindent 4 }}
+{{- include "service.standard" $ }}
