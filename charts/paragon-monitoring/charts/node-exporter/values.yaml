@@ -24,3 +24,11 @@ resources:
   limits:
     cpu: 200m
     memory: 128Mi
+
+priorityClassName: "monitoring-critical"
+
+priorityClass:
+  create: true
+  name: "monitoring-critical"
+  value: 1000000
+  description: "Priority class for critical monitoring components like node-exporter"

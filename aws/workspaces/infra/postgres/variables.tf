@@ -86,6 +86,11 @@ locals {
       size = var.rds_instance_class
       db   = "hermes"
     }
+    triggerkit = {
+      name = "${var.workspace}-triggerkit"
+      size = "db.t4g.micro"
+      db   = "triggerkit"
+    }
     zeus = {
       name = "${var.workspace}-zeus"
       size = "db.t4g.small"
