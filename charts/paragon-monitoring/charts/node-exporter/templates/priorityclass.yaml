@@ -1,0 +1,11 @@
+{{- if .Values.priorityClass.create }}
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {{ .Values.priorityClass.name | default "monitoring-critical" }}
+  labels:
+    {{- include "node-exporter.labels" . | nindent 4 }}
+value: {{ .Values.priorityClass.value | default 1000000 }}
+globalDefault: false
+description: {{ .Values.priorityClass.description | default "Priority class for critical monitoring components like node-exporter" }}
+{{- end }} 

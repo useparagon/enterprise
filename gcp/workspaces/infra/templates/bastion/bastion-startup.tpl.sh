@@ -171,7 +171,7 @@ alias kg="kubectl get"
 alias kl="kubectl logs"
 alias krr="kubectl get deployments --no-headers -o custom-columns=\":metadata.name\" | xargs -I {} kubectl rollout restart deployment/{}"
 alias kw="watch kubectl get pods"
-alias kwf="watch -- 'kubectl get pods | grep -v fluent'"
+alias kwf="watch -- 'kubectl get pods | grep -v fluent | grep -v node-exporter'"
 
 kls() {
   local name=$1
