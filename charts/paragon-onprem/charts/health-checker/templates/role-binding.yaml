@@ -1,6 +1,6 @@
 # we only need to create the role binding if we create a custom service account for this service
 {{- if and .Values.serviceAccount .Values.serviceAccount.create -}}
-{{- $serviceAccountName := include "worker-crons.serviceAccountName" . }}
+{{- $serviceAccountName := include "health-checker.serviceAccountName" . }}
 {{- if $serviceAccountName }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

@@ -63,6 +63,7 @@ No resources.
 | <a name="input_region_zone"></a> [region\_zone](#input\_region\_zone) | The zone in the region where to host Google Cloud Organization resources. | `string` | n/a | yes |
 | <a name="input_uptime_api_token"></a> [uptime\_api\_token](#input\_uptime\_api\_token) | Optional API Token for setting up BetterStack Uptime monitors. | `string` | `null` | no |
 | <a name="input_uptime_company"></a> [uptime\_company](#input\_uptime\_company) | Optional pretty company name to include in BetterStack Uptime monitors. | `string` | `null` | no |
+| <a name="input_use_storage_account_key"></a> [use\_storage\_account\_key](#input\_use\_storage\_account\_key) | Whether to use the storage service account privatekey for the storage service account. | `bool` | `false` | no |
 
 ## Outputs
 

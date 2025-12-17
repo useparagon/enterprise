@@ -70,6 +70,7 @@ No resources.
 | <a name="input_region_zone"></a> [region\_zone](#input\_region\_zone) | The zone in the region where to host Google Cloud Organization resources. | `string` | n/a | yes |
 | <a name="input_region_zone_backup"></a> [region\_zone\_backup](#input\_region\_zone\_backup) | The backup zone in the region where to host Google Cloud Organization resources. | `string` | n/a | yes |
 | <a name="input_ssh_whitelist"></a> [ssh\_whitelist](#input\_ssh\_whitelist) | An optional list of IP addresses to whitelist ssh access. | `string` | `""` | no |
+| <a name="input_use_storage_account_key"></a> [use\_storage\_account\_key](#input\_use\_storage\_account\_key) | Whether to use the storage service account privatekey for the storage service account. | `bool` | `false` | no |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | CIDR for the virtual network. A `/16` (65,536 IPs) or larger is recommended. | `string` | `"10.0.0.0/16"` | no |
 
 ## Outputs

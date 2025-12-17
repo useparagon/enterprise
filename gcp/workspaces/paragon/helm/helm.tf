@@ -95,8 +95,36 @@ locals {
     }
   })
 
+  cloud_storage_services = [
+    "cache-replay",
+    "hades",
+    "health-checker",
+    "hermes",
+    "release",
+    "worker-actionkit",
+    "worker-actions",
+    "worker-credentials",
+    "worker-crons",
+    "worker-deployments",
+    "worker-proxy",
+    "worker-triggers",
+    "zeus"
+  ]
+
+  service_account_values = !var.use_storage_account_key && var.storage_service_account != null ? {
+    for service_name in local.cloud_storage_services : service_name => {
+      serviceAccount = {
+        create = true
+        annotations = {
+          "iam.gke.io/gcp-service-account" = var.storage_service_account
+        }
+      }
+    }
+  } : {}
+
   global_values = yamlencode(merge(
     nonsensitive(var.helm_values),
+    local.service_account_values,
     {
       global = merge(
         nonsensitive(var.helm_values.global),
@@ -228,7 +256,7 @@ resource "helm_release" "paragon_logging" {
   values = fileexists("${path.root}/../.secure/values.yaml") ? [
     local.global_values,
     file("${path.root}/../.secure/values.yaml")
-  ] : [
+    ] : [
     local.global_values
   ]
 
