@@ -69,40 +69,16 @@ resource "google_compute_instance_template" "bastion_v2" {
   }
 }
 
-# Health check for the bastion SSH service
-resource "google_compute_health_check" "bastion" {
-  name                = "${local.bastion_name}-health-check"
-  description         = "Health check for bastion SSH service"
-  check_interval_sec  = 30
-  healthy_threshold   = 3
-  timeout_sec         = 30
-  unhealthy_threshold = 5
-
-  tcp_health_check {
-    port = 22
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-# Managed instance group for auto-recovery
+# Managed instance group for bastion (auto-healing disabled due to no exposed ports)
 resource "google_compute_instance_group_manager" "bastion" {
   name               = "${local.bastion_name}-mig"
-  description        = "Managed instance group for bastion with auto-recovery"
+  description        = "Managed instance group for bastion (auto-healing disabled - uses Cloudflare tunnel)"
   base_instance_name = local.bastion_name
   project            = var.gcp_project_id
   zone               = var.region_zone
 
   version {
     instance_template = google_compute_instance_template.bastion_v2.id
-  }
-
-  # Auto-healing policy
-  auto_healing_policies {
-    health_check      = google_compute_health_check.bastion.id
-    initial_delay_sec = 600 # 10 minutes before starting health checks
   }
 
   # Update policy for rolling updates - allows template changes

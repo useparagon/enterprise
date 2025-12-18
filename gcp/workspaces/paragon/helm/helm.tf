@@ -57,9 +57,18 @@ locals {
         # loadBalancerName = google_compute_global_address.loadbalancer.name
         # scheme           = var.ingress_scheme
       }
-      service = {
-        type = "NodePort"
-      }
+      service = merge(
+        {
+          type = "NodePort"
+        },
+        monitor_name == "grafana" ? {
+          annotations = {
+            "cloud.google.com/backend-config" = jsonencode({
+              default = "grafana-backendconfig"
+            })
+          }
+        } : {}
+      )
     }
   })
 
@@ -100,6 +109,7 @@ locals {
     "hades",
     "health-checker",
     "hermes",
+    "openobserve",
     "release",
     "worker-actionkit",
     "worker-actions",
@@ -111,7 +121,7 @@ locals {
     "zeus"
   ]
 
-  service_account_values = !var.use_storage_account_key && var.storage_service_account != null ? {
+  service_account_values = var.storage_service_account != null ? {
     for service_name in local.cloud_storage_services : service_name => {
       serviceAccount = {
         create = true
@@ -280,9 +290,12 @@ resource "helm_release" "paragon_logging" {
     value = local.openobserve_password
   }
 
-  set_sensitive {
-    name  = "openobserve.credsJson"
-    value = base64encode(var.gcp_creds)
+  dynamic "set_sensitive" {
+    for_each = var.gcp_creds != null ? [1] : []
+    content {
+      name  = "openobserve.credsJson"
+      value = base64encode(var.gcp_creds)
+    }
   }
 
   set {
@@ -295,9 +308,12 @@ resource "helm_release" "paragon_logging" {
     value = var.region
   }
 
-  set {
-    name  = "openobserve.secrets.ZO_S3_ACCESS_KEY"
-    value = "/creds/creds.json"
+  dynamic "set_sensitive" {
+    for_each = var.gcp_creds != null ? [1] : []
+    content {
+      name  = "openobserve.secrets.ZO_S3_ACCESS_KEY"
+      value = "/creds/creds.json"
+    }
   }
 
   set {
@@ -309,7 +325,6 @@ resource "helm_release" "paragon_logging" {
     name  = "openobserve.env.ZO_S3_SERVER_URL"
     value = "https://storage.googleapis.com"
   }
-
 
   depends_on = [
     kubernetes_secret.docker_login,
@@ -342,6 +357,7 @@ resource "helm_release" "paragon_monitoring" {
   depends_on = [
     helm_release.paragon_on_prem,
     kubernetes_secret.docker_login,
-    kubernetes_secret.paragon_secrets
+    kubernetes_secret.paragon_secrets,
+    kubectl_manifest.grafana_backendconfig
   ]
 }
