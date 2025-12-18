@@ -185,6 +185,7 @@ resource "helm_release" "paragon_on_prem" {
   atomic           = true
   verify           = false
   timeout          = 900 # 15 minutes
+  dependency_update = true
 
   values = [
     local.subchart_values,
@@ -215,6 +216,7 @@ resource "helm_release" "paragon_logging" {
   atomic           = true
   verify           = false
   timeout          = 900 # 15 minutes
+  dependency_update = true
 
   values = fileexists("${path.root}/../.secure/values.yaml") ? [
     local.global_values,
