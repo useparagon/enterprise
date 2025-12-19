@@ -109,9 +109,19 @@ resource "aws_iam_access_key" "app" {
   user = aws_iam_user.app.name
 }
 
-resource "aws_iam_user_policy" "app" {
-  name = "${var.workspace}-s3-policy"
-  user = aws_iam_user.app.name
+resource "aws_iam_group" "app_group" {
+  name = "${var.workspace}-s3-user-group"
+}
+
+resource "aws_iam_group_membership" "app_group_membership" {
+  name  = "${var.workspace}-s3-user-group-membership"
+  group = aws_iam_group.app_group.name
+  users = [aws_iam_user.app.name]
+}
+
+resource "aws_iam_group_policy" "app" {
+  name = "${var.workspace}-s3-user-group-policy"
+  group = aws_iam_group.app_group.name
 
   policy = jsonencode(
     {
