@@ -105,6 +105,7 @@ locals {
   })
 
   cloud_storage_services = [
+    "api-triggerkit",
     "cache-replay",
     "hades",
     "health-checker",
@@ -118,6 +119,8 @@ locals {
     "worker-deployments",
     "worker-proxy",
     "worker-triggers",
+    "worker-triggerkit",
+    "worker-workflows",
     "zeus"
   ]
 
