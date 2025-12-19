@@ -94,3 +94,25 @@ resource "kubectl_manifest" "ingress" {
     helm_release.paragon_logging
   ]
 }
+
+# Grafana backend config for health checks
+resource "kubectl_manifest" "grafana_backendconfig" {
+  yaml_body = yamlencode({
+    apiVersion = "cloud.google.com/v1"
+    kind       = "BackendConfig"
+    metadata = {
+      name      = "grafana-backendconfig"
+      namespace = kubernetes_namespace.paragon.id
+    }
+    spec = {
+      healthCheck = {
+        requestPath        = "/api/health"
+        port               = 4500
+        checkIntervalSec   = 10
+        timeoutSec         = 5
+        healthyThreshold   = 2
+        unhealthyThreshold = 2
+      }
+    }
+  })
+}

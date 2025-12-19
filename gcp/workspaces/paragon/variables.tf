@@ -46,6 +46,12 @@ variable "gcp_client_x509_cert_url" {
   default     = null
 }
 
+variable "gcp_assume_role" {
+  description = "Whether to assume a role for the service account instead of using JSON credentials."
+  type        = bool
+  default     = false
+}
+
 # account
 variable "organization" {
   description = "Name of organization to include in resource names."
@@ -202,28 +208,9 @@ variable "helm_yaml" {
   default     = null
 }
 
-variable "use_storage_account_key" {
-  description = "Whether to use the storage service account privatekey for the storage service account."
-  type        = bool
-  default     = false
-}
-
 locals {
   creds_json     = try(jsondecode(file(var.gcp_credential_json_file)), {})
   gcp_project_id = try(local.creds_json.project_id, var.gcp_project_id)
-
-  gcp_creds = jsonencode({
-    type                        = "service_account",
-    auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs",
-    auth_uri                    = "https://accounts.google.com/o/oauth2/auth",
-    token_uri                   = "https://oauth2.googleapis.com/token",
-    client_email                = try(local.creds_json.client_email, var.gcp_client_email),
-    client_id                   = try(local.creds_json.client_id, var.gcp_client_id),
-    client_x509_cert_url        = try(local.creds_json.client_x509_cert_url, var.gcp_client_x509_cert_url),
-    gcp_project_id              = try(local.creds_json.gcp_project_id, var.gcp_project_id),
-    private_key                 = try(local.creds_json.private_key, var.gcp_private_key),
-    private_key_id              = try(local.creds_json.private_key_id, var.gcp_private_key_id),
-  })
 
   # hash of project ID to help ensure uniqueness of resources like bucket names
   hash      = substr(sha256(local.gcp_project_id), 0, 8)
@@ -247,6 +234,19 @@ locals {
 
   helm_yaml_path = abspath(var.helm_yaml_path)
   helm_vars      = yamldecode(fileexists(local.helm_yaml_path) && var.helm_yaml == null ? file(local.helm_yaml_path) : var.helm_yaml)
+
+  gcp_creds = var.gcp_assume_role ? try(base64decode(local.infra_vars.minio.value.root_password), null) : jsonencode({
+    type                        = "service_account",
+    auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs",
+    auth_uri                    = "https://accounts.google.com/o/oauth2/auth",
+    token_uri                   = "https://oauth2.googleapis.com/token",
+    client_email                = try(local.creds_json.client_email, var.gcp_client_email),
+    client_id                   = try(local.creds_json.client_id, var.gcp_client_id),
+    client_x509_cert_url        = try(local.creds_json.client_x509_cert_url, var.gcp_client_x509_cert_url),
+    gcp_project_id              = try(local.creds_json.gcp_project_id, var.gcp_project_id),
+    private_key                 = try(local.creds_json.private_key, var.gcp_private_key),
+    private_key_id              = try(local.creds_json.private_key_id, var.gcp_private_key_id),
+  })
 
   cloud_storage_type = try(local.helm_vars.global.env["CLOUD_STORAGE_TYPE"], "GCP")
 
@@ -622,7 +622,7 @@ locals {
         WORKFLOW_REDIS_URL             = try("${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
 
         # Cloud Storage configurations
-        CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "GCP" && var.use_storage_account_key ? local.infra_vars.minio.value.root_password : (var.use_storage_account_key ? local.infra_vars.minio.value.microservice_pass : null)
+        CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "GCP" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass
         CLOUD_STORAGE_MICROSERVICE_USER = local.cloud_storage_type == "GCP" ? local.infra_vars.minio.value.root_user : local.infra_vars.minio.value.microservice_user
         CLOUD_STORAGE_PUBLIC_BUCKET     = try(local.infra_vars.minio.value.public_bucket, "${local.workspace}-cdn")
         CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")

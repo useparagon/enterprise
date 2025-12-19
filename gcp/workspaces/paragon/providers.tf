@@ -1,5 +1,5 @@
 provider "google" {
-  credentials    = local.gcp_creds
+  credentials    = var.gcp_assume_role ? null : local.gcp_creds
   default_labels = local.default_labels
   project        = local.gcp_project_id
   region         = var.region
@@ -7,7 +7,7 @@ provider "google" {
 }
 
 provider "google-beta" {
-  credentials    = local.gcp_creds
+  credentials    = var.gcp_assume_role ? null : local.gcp_creds
   default_labels = local.default_labels
   project        = local.gcp_project_id
   region         = var.region

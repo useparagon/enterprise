@@ -10,19 +10,3 @@ resource "google_service_account_key" "minio" {
 
   service_account_id = google_service_account.minio.name
 }
-
-# Custom role for listing buckets only (minimal permissions)
-resource "google_project_iam_custom_role" "bucket_lister" {
-  role_id     = "storageBucketLister"
-  title       = "Storage Bucket Lister"
-  description = "Minimal role that only allows listing buckets in the project"
-  permissions = ["storage.buckets.list"]
-  project     = var.gcp_project_id
-}
-
-# Grant project-level permission to allow listing buckets for health-checker
-resource "google_project_iam_member" "minio_bucket_lister" {
-  project = var.gcp_project_id
-  role    = google_project_iam_custom_role.bucket_lister.name
-  member  = "serviceAccount:${google_service_account.minio.email}"
-}

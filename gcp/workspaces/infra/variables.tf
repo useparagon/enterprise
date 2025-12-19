@@ -46,6 +46,12 @@ variable "gcp_client_x509_cert_url" {
   default     = null
 }
 
+variable "gcp_assume_role" {
+  description = "Whether to assume a role for the service account instead of using JSON credentials."
+  type        = bool
+  default     = false
+}
+
 # account
 variable "organization" {
   description = "Name of organization to include in resource names."

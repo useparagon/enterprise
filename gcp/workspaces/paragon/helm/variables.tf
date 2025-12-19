@@ -146,12 +146,6 @@ variable "storage_service_account" {
   default     = null
 }
 
-variable "use_storage_account_key" {
-  description = "Whether to use the storage service account private key for the storage service account."
-  type        = bool
-  default     = false
-}
-
 locals {
   chart_names     = var.monitors_enabled ? ["paragon-logging", "paragon-monitoring", "paragon-onprem"] : ["paragon-logging", "paragon-onprem"]
   chart_directory = "../charts"
