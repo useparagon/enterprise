@@ -1,0 +1,34 @@
+image:
+  repository: prom/node-exporter
+  pullPolicy: IfNotPresent
+  tag: 'latest'
+
+fullnameOverride: 'node-exporter'
+
+service:
+  type: ClusterIP
+  port: 9100
+
+hostNetwork: true
+hostPID: true
+
+tolerations:
+  - operator: Exists
+
+nodeSelector: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+priorityClassName: "monitoring-critical"
+
+priorityClass:
+  create: true
+  name: "monitoring-critical"
+  value: 1000000
+  description: "Priority class for critical monitoring components like node-exporter"

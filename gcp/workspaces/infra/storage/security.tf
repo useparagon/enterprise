@@ -6,5 +6,7 @@ resource "google_service_account" "minio" {
 }
 
 resource "google_service_account_key" "minio" {
+  count = var.use_storage_account_key ? 1 : 0
+
   service_account_id = google_service_account.minio.name
 }

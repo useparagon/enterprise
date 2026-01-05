@@ -140,6 +140,12 @@ variable "k8s_version" {
   type        = string
 }
 
+variable "storage_service_account" {
+  description = "The GCP service account email for cloud storage access."
+  type        = string
+  default     = null
+}
+
 locals {
   chart_names     = var.monitors_enabled ? ["paragon-logging", "paragon-monitoring", "paragon-onprem"] : ["paragon-logging", "paragon-onprem"]
   chart_directory = "../charts"

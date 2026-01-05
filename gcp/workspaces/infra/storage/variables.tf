@@ -16,3 +16,8 @@ variable "disable_deletion_protection" {
   description = "Used to disable deletion protection on RDS and S3 resources."
   type        = bool
 }
+
+variable "use_storage_account_key" {
+  description = "Whether to use the storage service account privatekey for the storage service account."
+  type        = bool
+}

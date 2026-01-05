@@ -47,6 +47,9 @@ locals {
     hermes = {
       tier = var.postgres_tier
     },
+    triggerkit = {
+      tier = "db-custom-1-3840"
+    },
     zeus = {
       tier = "db-custom-2-7680"
     }
