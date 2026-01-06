@@ -57,7 +57,7 @@ spec:
               fieldPath: metadata.namespace
         {{- end }}
         {{- if ne (trim $standardEnv) "" }}
-        {{- $standardEnv | nindent 8 }}
+        {{- $standardEnv | nindent 10 }}
         {{- end }}
         {{- end }}
         args:
