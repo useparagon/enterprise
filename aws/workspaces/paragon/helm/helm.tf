@@ -248,6 +248,7 @@ resource "helm_release" "paragon_on_prem" {
   atomic           = true
   verify           = false
   timeout          = 900 # 15 minutes
+  dependency_update = true
 
   values = [
     local.supported_microservices_values,
@@ -346,6 +347,7 @@ resource "helm_release" "paragon_logging" {
   atomic           = true
   verify           = false
   timeout          = 900 # 15 minutes
+  dependency_update = true
 
   values = fileexists("${path.root}/../.secure/values.yaml") ? [
     local.global_values,
@@ -401,16 +403,17 @@ resource "helm_release" "paragon_logging" {
 resource "helm_release" "paragon_monitoring" {
   count = var.monitors_enabled ? 1 : 0
 
-  name             = "paragon-monitoring"
-  description      = "Paragon monitors"
-  chart            = "./charts/paragon-monitoring"
-  version          = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
-  namespace        = "paragon"
-  cleanup_on_fail  = true
-  create_namespace = false
-  atomic           = true
-  verify           = false
-  timeout          = 900 # 15 minutes
+  name              = "paragon-monitoring"
+  description       = "Paragon monitors"
+  chart             = "./charts/paragon-monitoring"
+  version           = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
+  namespace         = "paragon"
+  cleanup_on_fail   = true
+  create_namespace  = false
+  atomic            = true
+  verify            = false
+  timeout           = 900 # 15 minutes
+  dependency_update = true
 
   values = [
     local.global_values,

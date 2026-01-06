@@ -56,3 +56,6 @@ build/
 # os and local files
 .DS_Store
 node_modules/
+
+# atlas generated service-inputs.json files
+**/service-inputs.json

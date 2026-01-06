@@ -1,0 +1,39 @@
+{{/*
+Standard service for all microservices.
+Call with: include "service.standard" $ or (dict "root" $ "namespaceTemplate" "service.namespace")
+*/}}
+{{- define "service.standard" -}}
+{{- $root := . -}}
+{{- $namespaceTemplate := "" -}}
+{{- if kindIs "map" . -}}
+  {{- if hasKey . "root" -}}
+    {{- $root = .root -}}
+    {{- $namespaceTemplate = .namespaceTemplate | default "" -}}
+  {{- end -}}
+{{- end -}}
+{{- $name := $root.Chart.Name -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include (printf "%s.fullname" $name) $root }}
+  {{- if $namespaceTemplate }}
+  namespace: {{ include $namespaceTemplate $root }}
+  {{- end }}
+  labels:
+    {{- include (printf "%s.labels" $name) $root | nindent 4 }}
+  {{- if $root.Values.service.annotations }}
+  annotations:
+    {{- toYaml $root.Values.service.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ $root.Values.service.type }}
+  ports:
+    - port: {{ $root.Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include (printf "%s.selectorLabels" $name) $root | nindent 4 }}
+{{- end -}}
+
