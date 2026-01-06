@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "worker-triggerkit.fullname" . }}-test-connection"
+  labels:
+    {{- include "worker-triggerkit.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "worker-triggerkit.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

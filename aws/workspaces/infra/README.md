@@ -66,6 +66,8 @@ See [setup-policy.json](../../setup-policy.json) for permissions that are requir
 | <a name="input_managed_sync_enabled"></a> [managed\_sync\_enabled](#input\_managed\_sync\_enabled) | Whether to enable managed sync. | `bool` | `false` | no |
 | <a name="input_master_guardduty_account_id"></a> [master\_guardduty\_account\_id](#input\_master\_guardduty\_account\_id) | Optional AWS account id to delegate GuardDuty control to. | `string` | `null` | no |
 | <a name="input_mfa_enabled"></a> [mfa\_enabled](#input\_mfa\_enabled) | Whether to require MFA for certain configurations (e.g. cloudtrail s3 bucket deletion) | `bool` | `false` | no |
+| <a name="input_migrated_passwords"></a> [migrated\_passwords](#input\_migrated\_passwords) | Override credentials to preserve complexity conventions when migrating from legacy workspaces | `map(string)` | `{}` | no |
+| <a name="input_migrated_workspace"></a> [migrated\_workspace](#input\_migrated\_workspace) | Override the workspace name to preserve naming conventions when migrating from legacy workspaces | `string` | `null` | no |
 | <a name="input_msk_autoscaling_enabled"></a> [msk\_autoscaling\_enabled](#input\_msk\_autoscaling\_enabled) | Whether to enable autoscaling for the MSK cluster. | `bool` | `true` | no |
 | <a name="input_msk_instance_type"></a> [msk\_instance\_type](#input\_msk\_instance\_type) | The instance type for the MSK cluster. | `string` | `"kafka.t3.small"` | no |
 | <a name="input_msk_kafka_num_broker_nodes"></a> [msk\_kafka\_num\_broker\_nodes](#input\_msk\_kafka\_num\_broker\_nodes) | The number of broker nodes for the MSK cluster. | `number` | `2` | no |

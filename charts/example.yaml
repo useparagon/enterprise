@@ -1,3 +1,9 @@
+# *************************************************************************************
+# WARNING: This file and the use of the bootstrap chart are deprecated and unsupported.
+# Terraform workspaces are the only supported way to deploy Paragon. This file and 
+# the bootstrap chart will be removed in a future release.
+# *************************************************************************************
+#
 # Example values.yaml for Helm-based Paragon deployment
 #
 # This file serves as a template for creating your .secure/values.yaml when deploying
@@ -89,6 +95,10 @@ global:
     ACCOUNT_PRIVATE_URL: http://account:1708
     ACCOUNT_PUBLIC_URL: "https://account.your-domain.com"
 
+    API_TRIGGERKIT_PORT: 1725
+    API_TRIGGERKIT_PRIVATE_URL: http://api-triggerkit:1725
+    API_TRIGGERKIT_PUBLIC_URL: "https://api-triggerkit.your-domain.com"
+
     CERBERUS_PORT: 1700
     CERBERUS_PRIVATE_URL: http://cerberus:1700
     CERBERUS_PUBLIC_URL: "https://cerberus.your-domain.com"
@@ -161,6 +171,10 @@ global:
     WORKER_PROXY_PORT: 1715
     WORKER_PROXY_PRIVATE_URL: http://worker-proxy:1715
     WORKER_PROXY_PUBLIC_URL: "https://worker-proxy.your-domain.com"
+
+    WORKER_TRIGGERKIT_PORT: 1726
+    WORKER_TRIGGERKIT_PRIVATE_URL: http://worker-triggerkit:1726
+    WORKER_TRIGGERKIT_PUBLIC_URL: "https://worker-triggerkit.your-domain.com"
 
     WORKER_TRIGGERS_PORT: 1716
     WORKER_TRIGGERS_PRIVATE_URL: http://worker-triggers:1716
@@ -239,6 +253,13 @@ secrets:
   PHEME_POSTGRES_PASSWORD: "your-hermes-db-password"
   PHEME_POSTGRES_PORT: 5432
   PHEME_POSTGRES_USERNAME: "your-hermes-db-username"
+  
+  # Database Connections - Triggerkit
+  TRIGGERKIT_POSTGRES_DATABASE: triggerkit
+  TRIGGERKIT_POSTGRES_HOST: "your-triggerkit-db-host"
+  TRIGGERKIT_POSTGRES_PASSWORD: "your-triggerkit-db-password"
+  TRIGGERKIT_POSTGRES_PORT: 5432
+  TRIGGERKIT_POSTGRES_USERNAME: "your-triggerkit-db-username"
   
   # Database Connections - Zeus
   ZEUS_POSTGRES_DATABASE: zeus

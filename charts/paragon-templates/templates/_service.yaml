@@ -22,6 +22,10 @@ metadata:
   {{- end }}
   labels:
     {{- include (printf "%s.labels" $name) $root | nindent 4 }}
+  {{- if $root.Values.service.annotations }}
+  annotations:
+    {{- toYaml $root.Values.service.annotations | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ $root.Values.service.type }}
   ports:

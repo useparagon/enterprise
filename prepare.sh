@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # version of charts, must be semver and doesn't have to match Paragon appVersion
-version="2025.12.05"
+version="2025.12.16"
 
 # defaults
 provider="aws"

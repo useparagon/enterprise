@@ -33,6 +33,7 @@ output "minio" {
     microservice_pass = module.storage.storage.minio_microservice_pass
     root_user         = module.storage.storage.project_id
     root_password     = module.storage.storage.private_key
+    service_account   = module.storage.storage.service_account
   }
   sensitive = true
 }

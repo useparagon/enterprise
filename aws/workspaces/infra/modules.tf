@@ -32,6 +32,7 @@ module "postgres" {
   rds_final_snapshot_enabled  = var.rds_final_snapshot_enabled
   disable_deletion_protection = var.disable_deletion_protection
   managed_sync_enabled        = var.managed_sync_enabled
+  migrated_passwords          = var.migrated_passwords
 
   vpc                = module.network.vpc
   public_subnet      = module.network.public_subnet
@@ -61,6 +62,8 @@ module "storage" {
   force_destroy         = var.disable_deletion_protection
   app_bucket_expiration = var.app_bucket_expiration
   managed_sync_enabled  = var.managed_sync_enabled
+
+  migrated = var.migrated_workspace != null
 }
 
 module "kafka" {

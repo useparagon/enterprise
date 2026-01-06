@@ -46,6 +46,12 @@ variable "gcp_client_x509_cert_url" {
   default     = null
 }
 
+variable "gcp_assume_role" {
+  description = "Whether to assume a role for the service account instead of using JSON credentials."
+  type        = bool
+  default     = false
+}
+
 # account
 variable "organization" {
   description = "Name of organization to include in resource names."
@@ -204,6 +210,12 @@ variable "k8s_spot_node_instance_type" {
   description = "The compute instance type to use for Kubernetes spot nodes."
   type        = string
   default     = "e2-standard-4"
+}
+
+variable "use_storage_account_key" {
+  description = "Whether to use the storage service account privatekey for the storage service account."
+  type        = bool
+  default     = false
 }
 
 locals {

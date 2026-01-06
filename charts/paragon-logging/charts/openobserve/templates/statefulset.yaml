@@ -21,6 +21,7 @@ spec:
       labels:
         {{- include "openobserve.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "openobserve.serviceAccountName" . }}
       securityContext:
         fsGroup: 2000
         runAsUser: 10000
