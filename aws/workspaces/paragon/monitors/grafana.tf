@@ -15,11 +15,25 @@ resource "aws_iam_access_key" "grafana" {
   user = aws_iam_user.grafana[0].name
 }
 
-resource "aws_iam_user_policy" "grafana_ro" {
+resource "aws_iam_group" "grafana" {
   count = var.grafana_aws_access_key_id == null && var.grafana_aws_secret_access_key == null ? 1 : 0
 
-  name = "${var.workspace}-iam-grafana-policy"
-  user = aws_iam_user.grafana[0].name
+  name = "${var.workspace}-iam-grafana-group"
+}
+
+resource "aws_iam_group_membership" "grafana" {
+  count = var.grafana_aws_access_key_id == null && var.grafana_aws_secret_access_key == null ? 1 : 0
+
+  name  = "${var.workspace}-iam-grafana-group-membership"
+  group = aws_iam_group.grafana[0].name
+  users = [aws_iam_user.grafana[0].name]
+}
+
+resource "aws_iam_group_policy" "grafana_ro" {
+  count = var.grafana_aws_access_key_id == null && var.grafana_aws_secret_access_key == null ? 1 : 0
+
+  name  = "${var.workspace}-iam-grafana-group-policy"
+  group = aws_iam_group.grafana[0].name
 
   policy = jsonencode({
     "Version" : "2012-10-17",
