@@ -58,4 +58,4 @@ build/
 node_modules/
 
 # atlas generated service-inputs.json files
-**/service-inputs.json
+charts/*/**/files/service-inputs.json
