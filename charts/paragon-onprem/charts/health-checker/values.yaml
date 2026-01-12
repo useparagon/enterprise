@@ -21,6 +21,12 @@ resources:
     cpu: 100m
     memory: 128Mi
 
+terminationGracePeriodSeconds: 120
+
+pdb:
+  enabled: true
+  maxUnavailable: 0
+
 autoscaling:
   enabled: true
   minReplicas: 1
