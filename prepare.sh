@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # version of charts, must be semver and doesn't have to match Paragon appVersion
-version="2025.12.16"
+version="2026.01.13"
 
 # defaults
 provider="aws"
@@ -54,23 +54,36 @@ fi
 temp_dir=$(mktemp -d)
 trap "rm -rf $temp_dir" EXIT
 
+# Get the repository root directory (where .git folder is)
+# This ensures git archive works correctly even when script is run from a subdirectory
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+if [[ -z "$repo_root" ]]; then
+  echo "Error: Not in a git repository"
+  exit 1
+fi
 
 # Extract files from the git tag to temp directory
-git archive --format=tar "$tag" | tar -xf - -C "$temp_dir"
+# Run git archive from the repo root to ensure we get all files
+if ! (cd "$repo_root" && git archive --format=tar "$tag") | tar -xf - -C "$temp_dir"; then
+  echo "Error: Failed to extract files from git tag '$tag'"
+  exit 1
+fi
 
 # Path to the input JSON file from the tag
 input_json="$temp_dir/charts/files/service-inputs.json"
 
 if [[ ! -f "$input_json" ]]; then
   echo "Error: Input JSON file not found in temp directory: $input_json"
+  ls -al $temp_dir
   exit 1
 fi
 
-# Execute update-charts.mjs with the input JSON
-node scripts/update-charts.mjs "$input_json"
-
 # allow calling from other directories
 script_dir=$(dirname "$(realpath "$0")")
+
+# Execute update-charts.mjs with the input JSON
+# Use script_dir to ensure the path is correct regardless of where the script is run from
+node "$script_dir/scripts/update-charts.mjs" "$input_json"
 workspaces=$script_dir/$provider/workspaces
 
 # aws, azure and gcp use terraform, k8s uses helm from dist
