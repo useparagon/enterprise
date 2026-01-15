@@ -507,4 +507,3 @@ resource "helm_release" "paragon_monitoring" {
     kubernetes_storage_class_v1.gp3_encrypted
   ]
 }
-
