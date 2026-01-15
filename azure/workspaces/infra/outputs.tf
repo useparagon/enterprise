@@ -55,3 +55,9 @@ output "resource_group" {
     location = module.network.resource_group.location
   }
 }
+
+output "hoop_tokens" {
+  description = "Hoop ServiceAccount tokens for cluster access."
+  value       = var.hoop_enabled ? module.hoop.tokens : null
+  sensitive   = true
+}

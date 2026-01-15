@@ -83,3 +83,17 @@ module "bastion" {
   ssh_whitelist  = local.ssh_whitelist
   workspace      = local.workspace
 }
+
+module "hoop" {
+  source = "./hoop"
+
+  workspace              = local.workspace
+  organization           = var.organization
+  cluster_host           = module.cluster.kubernetes.host
+  cluster_token          = module.cluster.kubernetes.token
+  cluster_ca_certificate = module.cluster.kubernetes.cluster_ca_certificate
+  hoop_enabled           = var.hoop_enabled
+  hoop_version           = var.hoop_version
+  hoop_server            = var.hoop_server
+  hoop_key               = var.hoop_key
+}

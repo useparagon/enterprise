@@ -60,3 +60,9 @@ output "cluster_name" {
   description = "The name of the EKS cluster."
   value       = module.cluster.eks_cluster.name
 }
+
+output "hoop_tokens" {
+  description = "Hoop ServiceAccount tokens for cluster access."
+  value       = var.hoop_enabled ? module.hoop.tokens : null
+  sensitive   = true
+}

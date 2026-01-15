@@ -48,3 +48,9 @@ output "cluster_name" {
   description = "The name of the GKE cluster."
   value       = module.cluster.kubernetes.name
 }
+
+output "hoop_tokens" {
+  description = "Hoop ServiceAccount tokens for cluster access."
+  value       = var.hoop_enabled ? module.hoop.tokens : null
+  sensitive   = true
+}

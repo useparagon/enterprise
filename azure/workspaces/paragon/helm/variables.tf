@@ -121,6 +121,17 @@ variable "k8s_version" {
   type        = string
 }
 
+
+variable "organization" {
+  description = "The name of the organization that's deploying Paragon."
+  type        = string
+}
+
+variable "cluster_name" {
+  description = "The name of the AKS cluster."
+  type        = string
+}
+
 locals {
   chart_names     = var.monitors_enabled ? ["paragon-logging", "paragon-monitoring", "paragon-onprem"] : ["paragon-logging", "paragon-onprem"]
   chart_directory = "../charts"

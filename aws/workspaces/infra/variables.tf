@@ -273,6 +273,31 @@ variable "msk_instance_type" {
   default     = "kafka.t3.small"
 }
 
+variable "hoop_enabled" {
+  description = "Whether to enable Hoop agent."
+  type        = bool
+  default     = true
+}
+
+variable "hoop_version" {
+  description = "The version of Hoop agent to install."
+  type        = string
+  default     = "1.47.2"
+}
+
+variable "hoop_server" {
+  description = "Hoop gRPC server address."
+  type        = string
+  default     = "hoop-grpc.ops.paragoninternal.com:8443"
+}
+
+variable "hoop_key" {
+  description = "Hoop agent key (token)."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
 locals {
   # hash of account ID to help ensure uniqueness of resources like S3 bucket names
   hash        = substr(sha256(data.aws_caller_identity.current.account_id), 0, 8)

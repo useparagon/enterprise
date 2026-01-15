@@ -367,3 +367,4 @@ resource "helm_release" "paragon_monitoring" {
     kubectl_manifest.grafana_backendconfig
   ]
 }
+

@@ -8,6 +8,11 @@ variable "workspace" {
   type        = string
 }
 
+variable "organization" {
+  description = "The name of the organization that's deploying Paragon."
+  type        = string
+}
+
 variable "cluster_name" {
   description = "The name of the EKS cluster."
   type        = string

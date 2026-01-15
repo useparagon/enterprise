@@ -20,6 +20,7 @@ module "helm" {
   monitors_enabled        = var.monitors_enabled
   openobserve_email       = var.openobserve_email
   openobserve_password    = var.openobserve_password
+  organization            = var.organization
   public_microservices    = local.public_microservices
   public_monitors         = local.public_monitors
   public_services         = local.public_services

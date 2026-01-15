@@ -291,3 +291,4 @@ resource "helm_release" "paragon_monitoring" {
     kubernetes_secret.docker_login
   ]
 }
+

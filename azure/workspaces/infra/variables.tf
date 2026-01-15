@@ -228,6 +228,31 @@ variable "k8s_sku_tier" {
   }
 }
 
+variable "hoop_enabled" {
+  description = "Whether to enable Hoop agent."
+  type        = bool
+  default     = true
+}
+
+variable "hoop_version" {
+  description = "The version of Hoop agent to install."
+  type        = string
+  default     = "1.47.2"
+}
+
+variable "hoop_server" {
+  description = "Hoop gRPC server address."
+  type        = string
+  default     = "hoop-grpc.ops.paragoninternal.com:8443"
+}
+
+variable "hoop_key" {
+  description = "Hoop agent key (token)."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
 locals {
   # hash of subscription ID to help ensure uniqueness of resources like bucket names
   hash      = substr(sha256(var.azure_subscription_id), 0, 8)

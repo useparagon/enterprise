@@ -121,3 +121,16 @@ module "cluster" {
   vpc_id             = module.network.vpc.id
   private_subnet_ids = module.network.private_subnet[*].id
 }
+
+module "hoop" {
+  source = "./hoop"
+
+  workspace                        = local.workspace
+  organization                     = var.organization
+  cluster_endpoint                 = module.cluster.eks_cluster.cluster_endpoint
+  cluster_certificate_authority_data = module.cluster.eks_cluster.cluster_certificate_authority_data
+  hoop_enabled                     = var.hoop_enabled
+  hoop_version                     = var.hoop_version
+  hoop_server                      = var.hoop_server
+  hoop_key                         = var.hoop_key
+}

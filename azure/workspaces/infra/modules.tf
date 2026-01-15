@@ -88,3 +88,16 @@ module "cluster" {
   tags                            = local.default_tags
   workspace                       = local.workspace
 }
+
+module "hoop" {
+  source = "./hoop"
+
+  workspace          = local.workspace
+  organization       = var.organization
+  cluster_name       = module.cluster.kubernetes.name
+  resource_group_name = module.network.resource_group.name
+  hoop_enabled       = var.hoop_enabled
+  hoop_version       = var.hoop_version
+  hoop_server        = var.hoop_server
+  hoop_key           = var.hoop_key
+}
