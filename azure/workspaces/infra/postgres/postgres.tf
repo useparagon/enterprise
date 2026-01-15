@@ -38,6 +38,14 @@ resource "azurerm_postgresql_flexible_server" "postgres" {
   public_network_access_enabled = false
   tags                          = merge(var.tags, { Name = each.value.name })
 
+  # Maintenance window: Monday at 14:00 UTC (same as AKS had before)
+  # Note: PostgreSQL only supports weekly schedule, not monthly like AKS
+  maintenance_window {
+    day_of_week  = 1  # Monday (0=Sunday, 1=Monday, ..., 6=Saturday)
+    start_hour   = 14 # 14:00 UTC
+    start_minute = 0
+  }
+
   dynamic "high_availability" {
     for_each = each.value.ha ? [1] : []
     content {
