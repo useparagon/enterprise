@@ -80,8 +80,7 @@ resource "azurerm_kubernetes_cluster" "cluster" {
 
   lifecycle {
     ignore_changes = [
-      default_node_pool[0].upgrade_settings,
-      kubernetes_version
+      default_node_pool[0].upgrade_settings
     ]
   }
 }
@@ -127,8 +126,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "pool" {
   lifecycle {
     create_before_destroy = true
     ignore_changes = [
-      upgrade_settings,
-      orchestrator_version
+      upgrade_settings
     ]
   }
 }
