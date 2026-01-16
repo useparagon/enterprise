@@ -2,7 +2,6 @@ output "tokens" {
   description = "Hoop ServiceAccount tokens for cluster access."
   value = var.hoop_enabled ? {
     cluster_admin = try(data.kubernetes_secret.hoop_cluster_admin_token[0].data["token"], "")
-    paragon_admin = try(data.kubernetes_secret.hoop_paragon_admin_token[0].data["token"], "")
   } : null
   sensitive = true
 }
