@@ -51,7 +51,7 @@ spec:
                   - /bin/sh
                   - -c
                   - |
-                    marker="/var/lib/health-checker/prestop.done"
+                    marker="/tmp/health-checker-prestop.done"
                     if [ -f "$marker" ]; then
                       exit 0
                     fi
