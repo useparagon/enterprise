@@ -1,0 +1,14 @@
+{{- if (.Values.pdb).enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ template "health-checker.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "health-checker.labels" . | nindent 4 }}
+spec:
+  maxUnavailable: {{ default 0 .Values.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      {{- include "health-checker.selectorLabels" . | nindent 6 }}
+{{- end }}
