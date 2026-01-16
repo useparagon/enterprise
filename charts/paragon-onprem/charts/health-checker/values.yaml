@@ -138,6 +138,6 @@ affinity:
             - key: useparagon.com/capacityType
               operator: In
               values:
-                - spot
+                - ondemand
 
 tls_secret: ''
