@@ -55,6 +55,16 @@ resource "azurerm_redis_cache" "redis" {
     }
   }
 
+  # Maintenance window: Monday at 14:00 UTC (same as PostgreSQL)
+  # Note: patch_schedule only applies to Premium SKU, duration is fixed at 5 hours
+  dynamic "patch_schedule" {
+    for_each = each.value.sku == "Premium" ? [1] : []
+    content {
+      day_of_week    = "Monday"
+      start_hour_utc = 14
+    }
+  }
+
   lifecycle {
     ignore_changes = [redis_configuration.0.rdb_storage_connection_string]
   }
