@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # version of charts, must be semver and doesn't have to match Paragon appVersion
-version="2026.01.13"
+version="2026.01.21"
 
 # defaults
 provider="aws"
@@ -74,7 +74,6 @@ input_json="$temp_dir/charts/files/service-inputs.json"
 
 if [[ ! -f "$input_json" ]]; then
   echo "Error: Input JSON file not found in temp directory: $input_json"
-  ls -al $temp_dir
   exit 1
 fi
 
