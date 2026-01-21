@@ -74,6 +74,12 @@ variable "excluded_microservices" {
   default     = []
 }
 
+variable "private_services" {
+  description = "Services that should not be publicly exposed (filtered from public_microservices and public_monitors)."
+  type        = list(string)
+  default     = []
+}
+
 variable "feature_flags" {
   description = "Optional path to feature flags YAML file."
   type        = string
@@ -370,7 +376,7 @@ locals {
   public_microservices = {
     for microservice, config in local.microservices :
     microservice => config
-    if config.public_url != null && config.public_url != ""
+    if config.public_url != null && config.public_url != "" && !contains(var.private_services, microservice)
   }
 
   uptime_services = {
@@ -421,7 +427,7 @@ locals {
   public_monitors = var.monitors_enabled ? {
     for monitor, config in local.monitors :
     monitor => config
-    if lookup(config, "public_url", null) != null
+    if lookup(config, "public_url", null) != null && !contains(var.private_services, monitor)
   } : {}
 
   helm_keys_to_remove = [
