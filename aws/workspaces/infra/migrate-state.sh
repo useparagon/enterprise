@@ -148,9 +148,9 @@ if [ "$BASTION_ROLE_EXISTS" = "false" ]; then
     echo "  These can be imported later after the bastion is created:"
     echo "    terraform apply -target=module.bastion"
     echo ""
-    SKIP_IMPORTS="true"
+    IMPORT_WARN="true"
 else
-    SKIP_IMPORTS="false"
+    IMPORT_WARN="false"
 fi
 
 if [ -n "$CALLER_ARN" ] && [ -n "$CLUSTER_NAME" ]; then
@@ -194,7 +194,7 @@ if [ -n "$CALLER_ARN" ] && [ -n "$CLUSTER_NAME" ]; then
             fi
             echo "  Importing: ${IMPORT_RESOURCE} -> ${IMPORT_ID}"
             
-            if [ "$SKIP_IMPORTS" = "true" ]; then
+            if [ "$IMPORT_WARN" = "true" ]; then
                 echo "  ⚠ NOTE: Bastion doesn't exist yet - import may fail due to validation, but attempting anyway..."
             fi
             
