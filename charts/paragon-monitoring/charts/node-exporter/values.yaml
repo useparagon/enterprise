@@ -25,10 +25,10 @@ resources:
     cpu: 200m
     memory: 128Mi
 
-priorityClassName: "monitoring-critical"
+priorityClassName: "paragon-node-high"
 
 priorityClass:
   create: true
-  name: "monitoring-critical"
+  name: "paragon-node-high"
   value: 1000000
-  description: "Priority class for critical monitoring components like node-exporter"
+  description: "High priority for node-level Paragon services like logging and metrics"
