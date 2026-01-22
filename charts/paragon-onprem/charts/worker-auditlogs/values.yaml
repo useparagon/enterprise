@@ -12,7 +12,7 @@ image:
 
 service:
   type: ClusterIP
-  port: 1723
+  port: 1727
 
 resources:
   limits:
