@@ -33,6 +33,8 @@ subchart:
     enabled: true
   worker-actions:
     enabled: true
+  worker-auditlogs:
+    enabled: true
   worker-credentials:
     enabled: true
   worker-crons:
