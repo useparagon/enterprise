@@ -218,6 +218,13 @@ variable "use_storage_account_key" {
   default     = false
 }
 
+variable "tfc_agent_token" {
+  description = "Terraform Cloud Agent token to support Terraform runs from the bastion"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 locals {
   creds_json     = try(jsondecode(file(var.gcp_credential_json_file)), {})
   gcp_project_id = try(local.creds_json.project_id, var.gcp_project_id)
