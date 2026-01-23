@@ -99,7 +99,9 @@ module "aws_ebs_csi_driver_iam_role" {
   ]
 }
 
-# Annotate the Kubernetes service account to use the IAM Role
+# Create the service account for EBS CSI driver
+# Note: AWS should automatically create this when service_account_role_arn is provided,
+# but in some cases it may not be created. This ensures it exists with the correct annotation.
 resource "kubernetes_service_account" "ebs_csi_controller" {
   automount_service_account_token = true
 
@@ -115,4 +117,8 @@ resource "kubernetes_service_account" "ebs_csi_controller" {
   lifecycle {
     ignore_changes = [metadata[0].labels]
   }
+
+  depends_on = [
+    module.aws_ebs_csi_driver_iam_role
+  ]
 }
