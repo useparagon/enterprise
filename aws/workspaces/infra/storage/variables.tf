@@ -11,6 +11,16 @@ variable "app_bucket_expiration" {
   description = "The number of days to retain S3 app data before deleting"
 }
 
+variable "auditlogs_retention_days" {
+  description = "The number of days to retain audit logs before deletion."
+  type        = number
+}
+
+variable "auditlogs_lock_enabled" {
+  description = "Whether to enable S3 Object Lock for the audit logs bucket."
+  type        = bool
+}
+
 variable "managed_sync_enabled" {
   description = "Whether to enable managed sync."
   type        = bool
