@@ -35,7 +35,7 @@ resource "kubectl_manifest" "frontend_config" {
     kind       = "FrontendConfig"
     metadata = {
       name      = google_compute_region_url_map.frontend_config.name
-      namespace = kubernetes_namespace.paragon.id
+      namespace = kubernetes_namespace_v1.paragon.id
     }
     spec = {
       redirect_to_https = {
@@ -53,7 +53,7 @@ resource "kubectl_manifest" "ingress" {
     kind       = "Ingress"
     metadata = {
       name      = "shared-ingress"
-      namespace = kubernetes_namespace.paragon.id
+      namespace = kubernetes_namespace_v1.paragon.id
       annotations = {
         "kubernetes.io/ingress.allow-http"            = "true"
         "kubernetes.io/ingress.class"                 = var.ingress_scheme == "internal" ? "gce-internal" : "gce"
@@ -102,7 +102,7 @@ resource "kubectl_manifest" "grafana_backendconfig" {
     kind       = "BackendConfig"
     metadata = {
       name      = "grafana-backendconfig"
-      namespace = kubernetes_namespace.paragon.id
+      namespace = kubernetes_namespace_v1.paragon.id
     }
     spec = {
       healthCheck = {
