@@ -140,6 +140,79 @@ variable "openobserve_password" {
   default     = null
 }
 
+variable "hoop_agent_id" {
+  description = "Hoop agent ID for connections. Only used if hoop_enabled is true."
+  type        = string
+  default     = null
+}
+
+variable "hoop_api_key" {
+  description = "Hoop API key. Only used if hoop_enabled is true."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "hoop_custom_connections" {
+  description = "Custom Hoop connections defined via tfvars. Map of connection names to their configuration."
+  type = map(object({
+    type                  = string
+    subtype               = optional(string)
+    access_mode_runbooks  = optional(string, "enabled")
+    access_mode_exec      = optional(string, "enabled")
+    access_mode_connect   = optional(string, "disabled")
+    access_schema         = optional(string, "disabled")
+    command               = optional(list(string))
+    secrets               = map(string)
+    tags                  = optional(map(string), {})
+    guardrail_rules       = optional(list(string), [])
+    reviewers             = optional(list(string), [])
+    access_control_groups = optional(list(string), [])
+  }))
+  default = {}
+}
+
+variable "hoop_enabled" {
+  description = "Whether to enable Hoop agent. hoop_key, hoop_api_key, and hoop_agent_id must be set if this is true."
+  type        = bool
+  default     = true
+}
+
+variable "hoop_k8s_connections" {
+  description = "Kubernetes Hoop connections defined via tfvars. Map of connection names to their configuration. If empty, a default k8s-admin connection will be created."
+  type = map(object({
+    type                  = optional(string, "custom")
+    subtype               = optional(string)
+    access_mode_runbooks  = optional(string, "enabled")
+    access_mode_exec      = optional(string, "enabled")
+    access_mode_connect   = optional(string, "enabled")
+    access_schema         = optional(string, "disabled")
+    command               = optional(list(string), ["bash"])
+    remote_url            = optional(string, "https://kubernetes.default.svc.cluster.local")
+    insecure              = optional(string, "true")
+    namespace             = optional(string, "paragon")
+    secrets               = optional(map(string), {})
+    tags                  = optional(map(string), {})
+    guardrail_rules       = optional(list(string), [])
+    reviewers             = optional(list(string), [])
+    access_control_groups = optional(list(string), [])
+  }))
+  default = {}
+}
+
+variable "hoop_key" {
+  description = "Hoop agent key (token). Only used if hoop_enabled is true."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "customer_facing" {
+  description = "Whether the connections are customer-facing (true limits access to dev-oncall/paragon-admin, false adds dev-engineering)."
+  type        = bool
+  default     = true
+}
+
 variable "infra_json_path" {
   description = "Path to `infra` workspace output JSON file."
   type        = string
