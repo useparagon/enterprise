@@ -74,11 +74,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "auditlogs" {
     id = "expiration"
 
     expiration {
-      days = var.app_bucket_expiration
+      days = var.auditlogs_retention_days
     }
 
     noncurrent_version_expiration {
-      noncurrent_days = var.app_bucket_expiration
+      noncurrent_days = var.auditlogs_retention_days
     }
 
     status = "Enabled"
