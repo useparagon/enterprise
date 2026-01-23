@@ -16,6 +16,8 @@ locals {
     )
   ) : "aws" # Default to aws if no host available
 
+  connection_environment = var.customer_facing ? "prod" : "staging"
+
   postgres_connections = try(var.infra_vars.postgres.value, null) != null ? {
     for db_schema, db_config in var.infra_vars.postgres.value :
     "postgres-${db_schema}" => {
@@ -37,7 +39,7 @@ locals {
       access_schema        = "enabled"
       guardrail_rules      = ["a85115f6-5ef3-4618-b70c-f7cccdc62c5a"]
       tags = {
-        environment     = var.workspace
+        environment = local.connection_environment
         customer_facing = var.customer_facing
         criticality   = "critical"
         access-level  = "private"
@@ -70,7 +72,7 @@ locals {
         access_schema        = "disabled"
         guardrail_rules      = ["182f59b2-5d5d-4ab8-978e-94472b3915fc"]
         tags = {
-          environment     = var.workspace
+          environment = local.connection_environment
           customer_facing = var.customer_facing
           criticality   = "critical"
           access-level  = "private"
@@ -99,7 +101,7 @@ locals {
         access_schema        = "disabled"
         reviewers            = var.customer_facing ? ["admin", "paragon-admin"] : null
         tags = {
-          environment     = var.workspace
+          environment = local.connection_environment
           customer_facing = var.customer_facing
           criticality  = "critical"
           access-level = "private"
@@ -125,7 +127,7 @@ locals {
         access_mode_connect  = "enabled"
         access_schema        = "disabled"
         tags = {
-          environment     = var.workspace
+          environment = local.connection_environment
           customer_facing = var.customer_facing
           criticality  = "normal"
           access-level = "private"
@@ -152,7 +154,7 @@ locals {
         access_schema        = "disabled"
         reviewers            = var.customer_facing ? ["admin", "paragon-admin"] : null
         tags = {
-          environment     = var.workspace
+          environment = local.connection_environment
           customer_facing = var.customer_facing
           criticality  = "critical"
           access-level = "private"
@@ -186,7 +188,7 @@ locals {
         guardrail_rules      = try(conn_config.guardrail_rules, null) != null && length(try(conn_config.guardrail_rules, [])) > 0 ? conn_config.guardrail_rules : null
         reviewers            = try(conn_config.reviewers, null) != null && length(try(conn_config.reviewers, [])) > 0 ? conn_config.reviewers : null
         tags = merge({
-          environment     = var.workspace
+          environment = local.connection_environment
           customer_facing = var.customer_facing
           criticality  = "critical"
           access-level = "private"
@@ -216,7 +218,7 @@ locals {
         guardrail_rules      = null
         reviewers            = null
         tags = {
-          environment     = var.workspace
+          environment = local.connection_environment
           customer_facing = var.customer_facing
           criticality  = "critical"
           access-level = "private"
@@ -243,7 +245,7 @@ locals {
         guardrail_rules      = try(conn_config.guardrail_rules, null) != null && length(try(conn_config.guardrail_rules, [])) > 0 ? conn_config.guardrail_rules : null
         reviewers            = try(conn_config.reviewers, null) != null && length(try(conn_config.reviewers, [])) > 0 ? conn_config.reviewers : null
         tags = merge({
-          environment     = var.workspace
+          environment = local.connection_environment
           customer_facing = var.customer_facing
           cloud           = try(conn_config.tags["cloud"], local.detected_cloud)
         }, try(conn_config.tags, {}))
