@@ -212,6 +212,12 @@ variable "k8s_spot_node_instance_type" {
   default     = "e2-standard-4"
 }
 
+variable "k8s_disable_public_endpoint" {
+  description = "Used to disable public endpoint on GKE cluster."
+  type        = bool
+  default     = true
+}
+
 variable "use_storage_account_key" {
   description = "Whether to use the storage service account privatekey for the storage service account."
   type        = bool

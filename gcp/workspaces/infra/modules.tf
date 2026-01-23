@@ -48,6 +48,7 @@ module "cluster" {
   source = "./cluster"
 
   disable_deletion_protection     = var.disable_deletion_protection
+  disable_public_endpoint         = var.k8s_disable_public_endpoint
   gcp_project_id                  = local.gcp_project_id
   k8s_max_node_count              = var.k8s_max_node_count
   k8s_min_node_count              = var.k8s_min_node_count
