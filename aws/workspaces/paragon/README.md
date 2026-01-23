@@ -1,7 +1,3 @@
-# Paragon AWS Deployment
-
-See [setup-policy.json](../../setup-policy.json) for permissions that are required to execute this. Note that `<AWS_ACCOUNT_ID>` must be replaced to match target account.
-
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -22,6 +18,7 @@ See [setup-policy.json](../../setup-policy.json) for permissions that are requir
 |------|--------|---------|
 | <a name="module_alb"></a> [alb](#module\_alb) | ./alb | n/a |
 | <a name="module_helm"></a> [helm](#module\_helm) | ./helm | n/a |
+| <a name="module_hoop"></a> [hoop](#module\_hoop) | ./hoop | n/a |
 | <a name="module_managed_sync_config"></a> [managed\_sync\_config](#module\_managed\_sync\_config) | ./helm-config | n/a |
 | <a name="module_monitors"></a> [monitors](#module\_monitors) | ./monitors | n/a |
 | <a name="module_uptime"></a> [uptime](#module\_uptime) | ./uptime | n/a |
@@ -43,6 +40,7 @@ See [setup-policy.json](../../setup-policy.json) for permissions that are requir
 | <a name="input_certificate"></a> [certificate](#input\_certificate) | Optional ACM certificate ARN of an existing certificate to use with the load balancer. | `string` | `null` | no |
 | <a name="input_cloudflare_dns_api_token"></a> [cloudflare\_dns\_api\_token](#input\_cloudflare\_dns\_api\_token) | Cloudflare DNS API token for SSL certificate creation and verification. | `string` | `null` | no |
 | <a name="input_cloudflare_zone_id"></a> [cloudflare\_zone\_id](#input\_cloudflare\_zone\_id) | Cloudflare zone id to set CNAMEs. | `string` | `null` | no |
+| <a name="input_customer_facing"></a> [customer\_facing](#input\_customer\_facing) | Whether the connections are customer-facing (true limits access to dev-oncall/paragon-admin, false adds dev-engineering). | `bool` | `true` | no |
 | <a name="input_dns_provider"></a> [dns\_provider](#input\_dns\_provider) | DNS provider to use. | `string` | `"none"` | no |
 | <a name="input_docker_email"></a> [docker\_email](#input\_docker\_email) | Docker email to pull images. | `string` | n/a | yes |
 | <a name="input_docker_password"></a> [docker\_password](#input\_docker\_password) | Docker password to pull images. | `string` | n/a | yes |
@@ -54,6 +52,12 @@ See [setup-policy.json](../../setup-policy.json) for permissions that are requir
 | <a name="input_health_checker_enabled"></a> [health\_checker\_enabled](#input\_health\_checker\_enabled) | Specifies that health checker is enabled. | `bool` | `false` | no |
 | <a name="input_helm_yaml"></a> [helm\_yaml](#input\_helm\_yaml) | YAML string of helm values to use instead of `helm_yaml_path` | `string` | `null` | no |
 | <a name="input_helm_yaml_path"></a> [helm\_yaml\_path](#input\_helm\_yaml\_path) | Path to helm values.yaml file. | `string` | `".secure/values.yaml"` | no |
+| <a name="input_hoop_agent_id"></a> [hoop\_agent\_id](#input\_hoop\_agent\_id) | Hoop agent ID for connections. Only used if hoop\_enabled is true. | `string` | `null` | no |
+| <a name="input_hoop_api_key"></a> [hoop\_api\_key](#input\_hoop\_api\_key) | Hoop API key. Only used if hoop\_enabled is true. | `string` | `null` | no |
+| <a name="input_hoop_custom_connections"></a> [hoop\_custom\_connections](#input\_hoop\_custom\_connections) | Custom Hoop connections defined via tfvars. Map of connection names to their configuration. | <pre>map(object({<br/>    type                  = string<br/>    subtype               = optional(string)<br/>    access_mode_runbooks  = optional(string, "enabled")<br/>    access_mode_exec      = optional(string, "enabled")<br/>    access_mode_connect   = optional(string, "disabled")<br/>    access_schema         = optional(string, "disabled")<br/>    command               = optional(list(string))<br/>    secrets               = map(string)<br/>    tags                  = optional(map(string), {})<br/>    guardrail_rules       = optional(list(string), [])<br/>    reviewers             = optional(list(string), [])<br/>    access_control_groups = optional(list(string), [])<br/>  }))</pre> | `{}` | no |
+| <a name="input_hoop_enabled"></a> [hoop\_enabled](#input\_hoop\_enabled) | Whether to enable Hoop agent. hoop\_key, hoop\_api\_key, and hoop\_agent\_id must be set if this is true. | `bool` | `true` | no |
+| <a name="input_hoop_k8s_connections"></a> [hoop\_k8s\_connections](#input\_hoop\_k8s\_connections) | Kubernetes Hoop connections defined via tfvars. Map of connection names to their configuration. If empty, a default k8s-admin connection will be created. | <pre>map(object({<br/>    type                  = optional(string, "custom")<br/>    subtype               = optional(string)<br/>    access_mode_runbooks  = optional(string, "enabled")<br/>    access_mode_exec      = optional(string, "enabled")<br/>    access_mode_connect   = optional(string, "enabled")<br/>    access_schema         = optional(string, "disabled")<br/>    command               = optional(list(string), ["bash"])<br/>    remote_url            = optional(string, "https://kubernetes.default.svc.cluster.local")<br/>    insecure              = optional(string, "true")<br/>    namespace             = optional(string, "paragon")<br/>    secrets               = optional(map(string), {})<br/>    tags                  = optional(map(string), {})<br/>    guardrail_rules       = optional(list(string), [])<br/>    reviewers             = optional(list(string), [])<br/>    access_control_groups = optional(list(string), [])<br/>  }))</pre> | `{}` | no |
+| <a name="input_hoop_key"></a> [hoop\_key](#input\_hoop\_key) | Hoop agent key (token). Only used if hoop\_enabled is true. | `string` | `null` | no |
 | <a name="input_infra_json"></a> [infra\_json](#input\_infra\_json) | JSON string of `infra` workspace variables to use instead of `infra_json_path` | `string` | `null` | no |
 | <a name="input_infra_json_path"></a> [infra\_json\_path](#input\_infra\_json\_path) | Path to `infra` workspace output JSON file. | `string` | `".secure/infra-output.json"` | no |
 | <a name="input_ingress_scheme"></a> [ingress\_scheme](#input\_ingress\_scheme) | Whether the load balancer is 'internet-facing' (public) or 'internal' (private) | `string` | `"internet-facing"` | no |
@@ -83,11 +87,3 @@ See [setup-policy.json](../../setup-policy.json) for permissions that are requir
 | <a name="output_pgadmin_admin_password"></a> [pgadmin\_admin\_password](#output\_pgadmin\_admin\_password) | PGAdmin admin login password. |
 | <a name="output_uptime_webhook"></a> [uptime\_webhook](#output\_uptime\_webhook) | Uptime webhook URL |
 <!-- END_TF_DOCS -->
-
-## Updates
-
-This Terraform documentation can be automatically regenerated with:
-
-```
-terraform-docs markdown table --output-file README.md --output-mode inject .
-```
