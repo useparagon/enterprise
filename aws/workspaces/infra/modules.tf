@@ -58,12 +58,12 @@ module "redis" {
 module "storage" {
   source = "./storage"
 
-  workspace             = local.workspace
-  force_destroy         = var.disable_deletion_protection
-  app_bucket_expiration = var.app_bucket_expiration
+  workspace                = local.workspace
+  force_destroy            = var.disable_deletion_protection
+  app_bucket_expiration    = var.app_bucket_expiration
   auditlogs_retention_days = var.auditlogs_retention_days
   auditlogs_lock_enabled   = var.auditlogs_lock_enabled
-  managed_sync_enabled  = var.managed_sync_enabled
+  managed_sync_enabled     = var.managed_sync_enabled
 
   migrated = var.migrated_workspace != null
 }
