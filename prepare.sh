@@ -103,7 +103,7 @@ if [[ "$provider" == "k8s" ]]; then
     rsync -aqv --delete $script_dir/charts/ $destination
 else
     # For terraform providers (aws, azure, gcp), exclude example.yaml and bootstrap
-    rsync -aqv --delete --exclude='example.yaml' --exclude='bootstrap/' $script_dir/charts/ $destination
+    rsync -aqv --delete --exclude='example.yaml' --exclude='values.placeholder.yaml' --exclude='bootstrap/' $script_dir/charts/ $destination
 fi
 
 # update version using hash of chart folders
