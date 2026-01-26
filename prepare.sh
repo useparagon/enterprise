@@ -126,6 +126,30 @@ if [[ "$provider" != "k8s" ]]; then
     if [[ ! -f "$workspaces/paragon/main.tf" ]]; then
         cp "$workspaces/paragon/main.tf.example" "$workspaces/paragon/main.tf"
     fi
+
+    create_values_yaml() {
+        local file="$1"
+        local source="$script_dir/charts/values.placeholder.yaml"
+
+        if [[ ! -f "$file" ]]; then
+            cp "$source" "$file"
+        fi
+    }
+
+    generate_tfvars() {
+        local vars_file="$1"
+        local out_file="$2"
+
+        if [[ -f "$out_file" ]]; then
+            return
+        fi
+
+        node "$script_dir/scripts/generate-tfvars.mjs" "$vars_file" "$out_file"
+    }
+
+    generate_tfvars "$workspaces/infra/variables.tf" "$workspaces/infra/vars.auto.tfvars"
+    generate_tfvars "$workspaces/paragon/variables.tf" "$workspaces/paragon/vars.auto.tfvars"
+    create_values_yaml "$workspaces/paragon/.secure/values.yaml"
 fi
 
 echo "✅ preparations complete!"
