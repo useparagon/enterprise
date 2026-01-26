@@ -39,14 +39,14 @@ locals {
       access_schema        = "enabled"
       guardrail_rules      = ["a85115f6-5ef3-4618-b70c-f7cccdc62c5a"]
       tags = {
-        environment = local.connection_environment
+        environment     = local.connection_environment
         customer_facing = var.customer_facing
-        criticality   = "critical"
-        access-level  = "private"
-        impact        = "high"
-        service-type  = "database"
-        database-type = "postgres"
-        cloud         = local.detected_cloud
+        criticality     = "critical"
+        access-level    = "private"
+        impact          = "high"
+        service-type    = "database"
+        database-type   = "postgres"
+        cloud           = local.detected_cloud
       }
     }
   } : {}
@@ -72,14 +72,14 @@ locals {
         access_schema        = "disabled"
         guardrail_rules      = ["182f59b2-5d5d-4ab8-978e-94472b3915fc"]
         tags = {
-          environment = local.connection_environment
+          environment     = local.connection_environment
           customer_facing = var.customer_facing
-          criticality   = "critical"
-          access-level  = "private"
-          impact        = "high"
-          service-type  = "cache"
-          database-type = "redis"
-          cloud         = local.detected_cloud
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "cache"
+          database-type   = "redis"
+          cloud           = local.detected_cloud
         }
       }
     } : {},
@@ -99,15 +99,15 @@ locals {
         access_mode_exec     = "enabled"
         access_mode_connect  = "enabled"
         access_schema        = "disabled"
-        reviewers            = var.customer_facing ? ["admin", "paragon-admin"] : null
+        reviewers            = var.customer_facing ? var.reviewers_access_groups : null
         tags = {
-          environment = local.connection_environment
+          environment     = local.connection_environment
           customer_facing = var.customer_facing
-          criticality  = "critical"
-          access-level = "private"
-          impact       = "high"
-          service-type = "database"
-          cloud        = local.detected_cloud
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "database"
+          cloud           = local.detected_cloud
         }
       }
     } : {},
@@ -127,13 +127,13 @@ locals {
         access_mode_connect  = "enabled"
         access_schema        = "disabled"
         tags = {
-          environment = local.connection_environment
+          environment     = local.connection_environment
           customer_facing = var.customer_facing
-          criticality  = "normal"
-          access-level = "private"
-          impact       = "low"
-          service-type = "storage"
-          cloud        = local.detected_cloud
+          criticality     = "normal"
+          access-level    = "private"
+          impact          = "low"
+          service-type    = "storage"
+          cloud           = local.detected_cloud
         }
       }
     },
@@ -152,15 +152,15 @@ locals {
         access_mode_exec     = "enabled"
         access_mode_connect  = "enabled"
         access_schema        = "disabled"
-        reviewers            = var.customer_facing ? ["admin", "paragon-admin"] : null
+        reviewers            = var.customer_facing ? var.reviewers_access_groups : null
         tags = {
-          environment = local.connection_environment
+          environment     = local.connection_environment
           customer_facing = var.customer_facing
-          criticality  = "critical"
-          access-level = "private"
-          impact       = "high"
-          service-type = "database"
-          cloud        = local.detected_cloud
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "database"
+          cloud           = local.detected_cloud
         }
       }
     } : {},
@@ -188,14 +188,14 @@ locals {
         guardrail_rules      = try(conn_config.guardrail_rules, null) != null && length(try(conn_config.guardrail_rules, [])) > 0 ? conn_config.guardrail_rules : null
         reviewers            = try(conn_config.reviewers, null) != null && length(try(conn_config.reviewers, [])) > 0 ? conn_config.reviewers : null
         tags = merge({
-          environment = local.connection_environment
+          environment     = local.connection_environment
           customer_facing = var.customer_facing
-          criticality  = "critical"
-          access-level = "private"
-          impact       = "high"
-          service-type = "compute"
-          cloud        = local.detected_cloud
-          team         = "platform-eng"
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "compute"
+          cloud           = local.detected_cloud
+          team            = "platform-eng"
         }, try(conn_config.tags, {}))
       }
       } : {
@@ -218,14 +218,14 @@ locals {
         guardrail_rules      = null
         reviewers            = null
         tags = {
-          environment = local.connection_environment
+          environment     = local.connection_environment
           customer_facing = var.customer_facing
-          criticality  = "critical"
-          access-level = "private"
-          impact       = "high"
-          service-type = "compute"
-          cloud        = local.detected_cloud
-          team         = "platform-eng"
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "compute"
+          cloud           = local.detected_cloud
+          team            = "platform-eng"
         }
       }
     },
@@ -245,7 +245,7 @@ locals {
         guardrail_rules      = try(conn_config.guardrail_rules, null) != null && length(try(conn_config.guardrail_rules, [])) > 0 ? conn_config.guardrail_rules : null
         reviewers            = try(conn_config.reviewers, null) != null && length(try(conn_config.reviewers, [])) > 0 ? conn_config.reviewers : null
         tags = merge({
-          environment = local.connection_environment
+          environment     = local.connection_environment
           customer_facing = var.customer_facing
           cloud           = try(conn_config.tags["cloud"], local.detected_cloud)
         }, try(conn_config.tags, {}))
@@ -257,8 +257,8 @@ locals {
     for conn_name, conn_config in local.all_connections :
     conn_name => (
       var.customer_facing
-        ? ["dev-oncall", "paragon-admin"]
-        : ["dev-oncall", "paragon-admin", "dev-engineering"]
+      ? var.restricted_access_groups
+      : concat(var.restricted_access_groups, var.all_access_groups)
     )
   }
 
@@ -266,8 +266,8 @@ locals {
     for conn_name, conn_config in local.postgres_connections :
     conn_name => (
       var.customer_facing
-        ? ["dev-oncall", "paragon-admin"]
-        : ["dev-oncall", "paragon-admin", "dev-engineering"]
+      ? var.restricted_access_groups
+      : concat(var.restricted_access_groups, var.all_access_groups)
     )
   }
 

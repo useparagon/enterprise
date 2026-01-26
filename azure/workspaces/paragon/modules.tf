@@ -27,19 +27,22 @@ module "helm" {
 module "hoop" {
   source = "./hoop"
 
-  workspace          = local.workspace
-  organization       = var.organization
-  cluster_name       = local.cluster_name
-  resource_group     = local.infra_vars.resource_group.value
-  hoop_enabled       = var.hoop_enabled
-  hoop_key           = var.hoop_key
-  hoop_agent_id      = var.hoop_agent_id
-  hoop_api_key       = var.hoop_api_key
-  customer_facing    = var.customer_facing
-  namespace_paragon  = module.helm.namespace_paragon
-  custom_connections = var.hoop_custom_connections
-  k8s_connections    = var.hoop_k8s_connections
-  infra_vars         = {
+  workspace                = local.workspace
+  organization             = var.organization
+  cluster_name             = local.cluster_name
+  resource_group           = local.infra_vars.resource_group.value
+  hoop_enabled             = var.hoop_enabled
+  hoop_key                 = var.hoop_key
+  hoop_agent_id            = var.hoop_agent_id
+  hoop_api_key             = var.hoop_api_key
+  all_access_groups        = var.hoop_all_access_groups
+  restricted_access_groups = var.hoop_restricted_access_groups
+  reviewers_access_groups  = var.hoop_reviewers_access_groups
+  customer_facing          = var.customer_facing
+  namespace_paragon        = module.helm.namespace_paragon
+  custom_connections       = var.hoop_custom_connections
+  k8s_connections          = var.hoop_k8s_connections
+  infra_vars = {
     postgres = try(local.infra_vars.postgres, null)
     redis    = try(local.infra_vars.redis, null)
   }

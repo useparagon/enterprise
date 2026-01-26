@@ -203,6 +203,12 @@ variable "hoop_api_key" {
   default     = null
 }
 
+variable "hoop_all_access_groups" {
+  description = "Additional access-control groups allowed when customer_facing is false."
+  type        = list(string)
+  default     = ["dev-team-engineering"]
+}
+
 variable "hoop_custom_connections" {
   description = "Custom Hoop connections defined via tfvars. Map of connection names to their configuration."
   type = map(object({
@@ -257,8 +263,20 @@ variable "hoop_key" {
   default     = null
 }
 
+variable "hoop_restricted_access_groups" {
+  description = "Base access-control groups allowed for all connections."
+  type        = list(string)
+  default     = ["dev-team-oncall", "dev-team-managers", "admin"]
+}
+
+variable "hoop_reviewers_access_groups" {
+  description = "Reviewer groups required for customer-facing app connections."
+  type        = list(string)
+  default     = ["dev-team-managers", "admin"]
+}
+
 variable "customer_facing" {
-  description = "Whether the connections are customer-facing (true limits access to dev-oncall/paragon-admin, false adds dev-engineering)."
+  description = "Whether the connections are customer-facing (true limits access to dev-team-oncall/dev-team-managers/admin, false adds dev-team-engineering)."
   type        = bool
   default     = true
 }
