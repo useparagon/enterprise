@@ -17,6 +17,12 @@ locals {
   ) : "aws" # Default to aws if no host available
 
   connection_environment = var.customer_facing ? "prod" : "staging"
+  slack_enabled = (
+    var.hoop_enabled &&
+    try(var.hoop_slack_bot_token, null) != null && var.hoop_slack_bot_token != "" &&
+    try(var.hoop_slack_app_token, null) != null && var.hoop_slack_app_token != "" &&
+    length(var.hoop_slack_channel_ids) > 0
+  )
 
   postgres_connections = try(var.infra_vars.postgres.value, null) != null ? {
     for db_schema, db_config in var.infra_vars.postgres.value :
@@ -269,6 +275,12 @@ locals {
       ? var.restricted_access_groups
       : concat(var.restricted_access_groups, var.all_access_groups)
     )
+  }
+
+  review_required_connections = {
+    for conn_name, conn_config in local.all_connections :
+    conn_name => conn_config
+    if try(length(try(conn_config.reviewers, [])), 0) > 0
   }
 
   all_connections = local.connections_merge

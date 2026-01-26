@@ -164,6 +164,26 @@ variable "hoop_api_key" {
   default     = null
 }
 
+variable "hoop_slack_bot_token" {
+  description = "Slack bot token for the Hoop Slack plugin."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "hoop_slack_app_token" {
+  description = "Slack app token for the Hoop Slack plugin."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "hoop_slack_channel_ids" {
+  description = "Slack channel IDs to notify for connections that require reviews."
+  type        = list(string)
+  default     = []
+}
+
 variable "hoop_all_access_groups" {
   description = "Additional access-control groups allowed when customer_facing is false."
   type        = list(string)

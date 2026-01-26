@@ -39,6 +39,9 @@ module "hoop" {
   hoop_key                 = var.hoop_key
   hoop_agent_id            = var.hoop_agent_id
   hoop_api_key             = var.hoop_api_key
+  hoop_slack_bot_token     = var.hoop_slack_bot_token
+  hoop_slack_app_token     = var.hoop_slack_app_token
+  hoop_slack_channel_ids   = var.hoop_slack_channel_ids
   all_access_groups        = var.hoop_all_access_groups
   restricted_access_groups = var.hoop_restricted_access_groups
   reviewers_access_groups  = var.hoop_reviewers_access_groups
