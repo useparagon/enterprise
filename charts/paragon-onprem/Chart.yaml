@@ -70,6 +70,10 @@ dependencies:
     repository: file://charts/worker-actions
     version: __PARAGON_VERSION__
     condition: subchart.worker-actions.enabled
+  - name: worker-auditlogs
+    repository: file://charts/worker-auditlogs
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-auditlogs.enabled
   - name: worker-credentials
     repository: file://charts/worker-credentials
     version: __PARAGON_VERSION__

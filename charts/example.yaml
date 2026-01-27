@@ -152,6 +152,9 @@ global:
     WORKER_ACTIONS_PRIVATE_URL: http://worker-actions:1712
     WORKER_ACTIONS_PUBLIC_URL: "https://worker-actions.your-domain.com"
 
+    WORKER_AUDIT_LOGS_PORT: 1727
+    WORKER_AUDIT_LOGS_PRIVATE_URL: http://worker-auditlogs:1727
+    WORKER_AUDIT_LOGS_PUBLIC_URL: "https://worker-auditlogs.your-domain.com"
     AUDIT_LOGS_EVENT_BATCH_SIZE: 1000
 
     WORKER_CREDENTIALS_PORT: 1713
