@@ -24,6 +24,12 @@ output "logs_container" {
   sensitive   = true
 }
 
+output "auditlogs_bucket" {
+  description = "The bucket used to store audit logs."
+  value       = module.storage.blob.auditlogs_container
+  sensitive   = true
+}
+
 output "minio" {
   description = "MinIO server connection info."
   value = {

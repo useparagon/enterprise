@@ -1,0 +1,31 @@
+global:
+  env:
+    # Paragon release version. Example: 2025.0903.0729-7d7d9767
+    VERSION: "your-paragon-version"
+
+    # Licensing credentials provided by Paragon.
+    LICENSE: "your-license"
+    # LICENSE_CONFIG: "your-license-config"
+
+    # Feature flag service storage configuration.
+    FLIPT_STORAGE_TYPE: local
+    FLIPT_STORAGE_LOCAL_PATH: /etc/flipt
+
+# Optional examples. Uncomment to customize per chart.
+# subchart:
+#   cache-replay:
+#     enabled: false
+#   health-checker:
+#     enabled: false
+#   kafka-exporter:
+#     enabled: false
+
+# Optional example for per-service resource tuning.
+# hades:
+#   resources:
+#     limits:
+#       cpu: 1000m
+#       memory: 3Gi
+#     requests:
+#       cpu: 500m
+#       memory: 3Gi

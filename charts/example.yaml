@@ -155,6 +155,7 @@ global:
     WORKER_AUDIT_LOGS_PORT: 1727
     WORKER_AUDIT_LOGS_PRIVATE_URL: http://worker-auditlogs:1727
     WORKER_AUDIT_LOGS_PUBLIC_URL: "https://worker-auditlogs.your-domain.com"
+    AUDIT_LOGS_EVENT_BATCH_SIZE: 1000
 
     WORKER_CREDENTIALS_PORT: 1713
     WORKER_CREDENTIALS_PRIVATE_URL: http://worker-credentials:1713

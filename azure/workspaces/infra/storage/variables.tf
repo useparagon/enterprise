@@ -16,3 +16,13 @@ variable "tags" {
   description = "Default tags to apply to resources"
   type        = map(string)
 }
+
+variable "auditlogs_retention_days" {
+  description = "The number of days to retain audit logs before deletion."
+  type        = number
+}
+
+variable "auditlogs_lock_enabled" {
+  description = "Whether to lock the audit logs container immutability policy."
+  type        = bool
+}
