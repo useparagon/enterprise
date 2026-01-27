@@ -161,7 +161,7 @@ variable "hoop_api_key" {
   description = "Hoop API key. Only used if hoop_enabled is true."
   type        = string
   sensitive   = true
-  default     = null
+  default     = "xapi-1q23w3e4r5t..."
 }
 
 variable "hoop_slack_bot_token" {
