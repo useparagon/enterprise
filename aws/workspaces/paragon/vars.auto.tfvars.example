@@ -1,8 +1,0 @@
-# Hoop Configuration
-# hoop_enabled    = # default is true
-# customer_facing = # default is true
-
-# Only set these if hoop_enabled is true
-# hoop_key      = "HOOP_KEY"
-# hoop_agent_id = "HOOP_AGENT_ID"
-# hoop_api_key  = "HOOP_API_KEY"

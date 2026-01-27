@@ -45,6 +45,5 @@ provider "helm" {
 
 provider "hoop" {
   api_url = var.hoop_api_url
-  # If api_key is null, provider will read from HOOP_APIKEY environment variable
-  api_key = var.hoop_enabled ? var.hoop_api_key : "disabled"
+  api_key = var.hoop_enabled ? var.hoop_api_key : "dummy-token"
 }

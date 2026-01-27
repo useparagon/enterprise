@@ -35,7 +35,5 @@ provider "helm" {
 
 provider "hoop" {
   api_url = var.hoop_api_url
-  # Always use a valid API key so Terraform can read/destroy resources when hoop_enabled is set to false.
-  # If api_key is null, provider will read from HOOP_APIKEY environment variable.
-  api_key = var.hoop_api_key
+  api_key = var.hoop_enabled ? var.hoop_api_key : "dummy-token"
 }
