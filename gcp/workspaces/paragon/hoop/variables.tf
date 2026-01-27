@@ -59,7 +59,7 @@ variable "hoop_server" {
 variable "hoop_version" {
   description = "The version of Hoop agent to install."
   type        = string
-  default     = "1.48.1"
+  default     = "1.49.0"
 }
 
 variable "customer_facing" {
