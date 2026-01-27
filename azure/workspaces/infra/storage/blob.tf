@@ -41,6 +41,20 @@ resource "azurerm_storage_container" "logs" {
   storage_account_id    = azurerm_storage_account.blob.id
 }
 
+resource "azurerm_storage_container" "auditlogs" {
+  name                  = "${var.workspace}-auditlogs"
+  container_access_type = "private"
+  storage_account_id    = azurerm_storage_account.blob.id
+}
+
+resource "azurerm_storage_container_immutability_policy" "auditlogs" {
+  count = var.auditlogs_lock_enabled ? 1 : 0
+
+  storage_container_id        = azurerm_storage_container.auditlogs.id
+  immutability_period_in_days = var.auditlogs_retention_days
+  state                       = "Locked"
+}
+
 resource "azurerm_storage_account_network_rules" "storage" {
   storage_account_id = azurerm_storage_account.blob.id
 
