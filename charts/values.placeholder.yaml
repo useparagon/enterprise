@@ -5,7 +5,7 @@ global:
 
     # Licensing credentials provided by Paragon.
     LICENSE: "your-license"
-    LICENSE_CONFIG: "your-license-config"
+    # LICENSE_CONFIG: "your-license-config"
 
     # Feature flag service storage configuration.
     FLIPT_STORAGE_TYPE: local
