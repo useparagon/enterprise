@@ -302,8 +302,8 @@ locals {
     }
     "worker-auditlogs" = {
       "healthcheck_path" = "/healthz"
-      "port"             = try(local.helm_vars.global.env["WORKER_AUDITLOGS_PORT"], 1727)
-      "public_url"       = try(local.helm_vars.global.env["WORKER_AUDITLOGS_PUBLIC_URL"], "https://worker-auditlogs.${var.domain}")
+      "port"             = try(local.helm_vars.global.env["WORKER_AUDIT_LOGS_PORT"], 1727)
+      "public_url"       = try(local.helm_vars.global.env["WORKER_AUDIT_LOGS_PUBLIC_URL"], "https://worker-auditlogs.${var.domain}")
     }
     "worker-credentials" = {
       "healthcheck_path" = "/healthz"
