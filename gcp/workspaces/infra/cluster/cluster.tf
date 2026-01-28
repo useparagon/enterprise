@@ -2,10 +2,12 @@
 data "google_client_openid_userinfo" "me" {}
 
 module "gke" {
-  source  = "terraform-google-modules/kubernetes-engine/google"
-  version = "36.2.0"
+  source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
+  version = "41.0.0"
 
-  name = "${var.workspace}-cluster"
+  # Using different name to allow cluster replacement when toggling public/private endpoint
+  # WARNING: This is destructive and will delete the existing cluster!
+  name = var.disable_public_endpoint ? "${var.workspace}-private" : "${var.workspace}-cluster"
 
   create_service_account     = true
   default_max_pods_per_node  = 20
@@ -23,6 +25,12 @@ module "gke" {
   remove_default_node_pool   = true
   subnetwork                 = var.private_subnet.name
   zones                      = [var.region_zone, var.region_zone_backup]
+
+  # Private cluster configuration
+  # Note: these are immutable and will trigger a cluster replacement if changed
+  enable_private_endpoint         = var.disable_public_endpoint
+  enable_private_nodes            = var.disable_public_endpoint
+  gcp_public_cidrs_access_enabled = !var.disable_public_endpoint
 
   node_pools = flatten([
     var.k8s_spot_instance_percent < 100 ? [
