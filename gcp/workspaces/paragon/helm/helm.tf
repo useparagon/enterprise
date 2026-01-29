@@ -1,5 +1,6 @@
 locals {
   namespace = "paragon"
+  version   = var.helm_values.global.env["VERSION"]
 
   subchart_values = yamlencode({
     subchart = {
@@ -149,7 +150,7 @@ locals {
               secretName  = "paragon-secrets"
             }
           ),
-          paragon_version = var.helm_values.global.env["VERSION"]
+          paragon_version = local.version
         }
       )
     }
@@ -224,18 +225,61 @@ resource "kubernetes_secret_v1" "paragon_secrets" {
   }
 }
 
+# Redis CA certificate secret (for TLS connections)
+# Use infra_vars passed from parent module (already parsed from infra-output.json)
+locals {
+  # Extract all Redis CA certificates
+  redis_ca_certificates = {
+    cache  = try(var.infra_vars.redis.value.cache.ca_certificate, null)
+    queue  = try(var.infra_vars.redis.value.queue.ca_certificate, null)
+    system = try(var.infra_vars.redis.value.system.ca_certificate, null)
+  }
+  # Check if any certificates are available
+  has_redis_ca_certs = local.redis_ca_certificates.cache != null || local.redis_ca_certificates.queue != null || local.redis_ca_certificates.system != null
+  # Combine all certificates into a single bundle (Node.js can use this)
+  # Each certificate already contains newlines (\n escape sequences from JSON)
+  # Filter out null/empty values before joining with double newline separator
+  redis_ca_cert_bundle = length(compact([
+    for cert in [local.redis_ca_certificates.cache, local.redis_ca_certificates.queue, local.redis_ca_certificates.system] :
+    cert if cert != null && cert != ""
+    ])) > 0 ? "${join("\n\n", compact([
+      for cert in [local.redis_ca_certificates.cache, local.redis_ca_certificates.queue, local.redis_ca_certificates.system] :
+      cert if cert != null && cert != ""
+  ]))}\n" : ""
+}
+
+# Redis CA certificate secret (for TLS connections)
+# Contains all Redis instance CA certificates
+resource "kubernetes_secret_v1" "redis_ca_cert" {
+  # Only create if at least one certificate is available
+  count = local.has_redis_ca_certs ? 1 : 0
+
+  metadata {
+    name      = "redis-ca-cert"
+    namespace = kubernetes_namespace_v1.paragon.id
+  }
+
+  type = "Opaque"
+
+  data = {
+    # Combined bundle for NODE_EXTRA_CA_CERTS (all certificates in one file)
+    # Note: Kubernetes secrets automatically base64 encode the data field, so we don't encode here
+    "server-ca.pem" = local.redis_ca_cert_bundle
+  }
+}
+
 # microservices deployment
 resource "helm_release" "paragon_on_prem" {
-  name             = "paragon-on-prem"
-  description      = "Paragon microservices"
-  chart            = "./charts/paragon-onprem"
-  version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
-  namespace        = kubernetes_namespace_v1.paragon.id
-  create_namespace = false
-  cleanup_on_fail  = true
-  atomic           = true
-  verify           = false
-  timeout          = 900 # 15 minutes
+  name              = "paragon-on-prem"
+  description       = "Paragon microservices"
+  chart             = "./charts/paragon-onprem"
+  version           = "${local.version}-${local.chart_hashes["paragon-onprem"]}"
+  namespace         = kubernetes_namespace_v1.paragon.id
+  create_namespace  = false
+  cleanup_on_fail   = true
+  atomic            = true
+  verify            = false
+  timeout           = 900 # 15 minutes
   dependency_update = true
 
   values = [
@@ -250,22 +294,23 @@ resource "helm_release" "paragon_on_prem" {
   depends_on = [
     kubernetes_secret_v1.docker_login,
     kubernetes_secret_v1.paragon_secrets,
-    kubernetes_config_map_v1.feature_flag_content
+    kubernetes_config_map_v1.feature_flag_content,
+    kubernetes_secret_v1.redis_ca_cert
   ]
 }
 
 # paragon logging stack fluent bit and openobserve
 resource "helm_release" "paragon_logging" {
-  name             = "paragon-logging"
-  description      = "Paragon logging services"
-  chart            = "./charts/paragon-logging"
-  version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
-  namespace        = kubernetes_namespace_v1.paragon.id
-  create_namespace = false
-  cleanup_on_fail  = true
-  atomic           = true
-  verify           = false
-  timeout          = 900 # 15 minutes
+  name              = "paragon-logging"
+  description       = "Paragon logging services"
+  chart             = "./charts/paragon-logging"
+  version           = "${local.version}-${local.chart_hashes["paragon-logging"]}"
+  namespace         = kubernetes_namespace_v1.paragon.id
+  create_namespace  = false
+  cleanup_on_fail   = true
+  atomic            = true
+  verify            = false
+  timeout           = 900 # 15 minutes
   dependency_update = true
 
   values = fileexists("${path.root}/../.secure/values.yaml") ? [
