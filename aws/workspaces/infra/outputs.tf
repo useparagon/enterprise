@@ -33,6 +33,12 @@ output "logs_bucket" {
   sensitive   = true
 }
 
+output "auditlogs_bucket" {
+  description = "The bucket used to store audit logs."
+  value       = module.storage.s3.auditlogs_bucket
+  sensitive   = true
+}
+
 output "minio" {
   description = "MinIO server connection info."
   value = {

@@ -11,6 +11,8 @@ module "postgres" {
   source = "./postgres"
 
   disable_deletion_protection = var.disable_deletion_protection
+  auditlogs_retention_days    = var.auditlogs_retention_days
+  auditlogs_lock_enabled      = var.auditlogs_lock_enabled
   gcp_project_id              = local.gcp_project_id
   network                     = module.network.network
   postgres_multiple_instances = var.postgres_multiple_instances

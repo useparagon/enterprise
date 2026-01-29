@@ -144,6 +144,18 @@ variable "disable_deletion_protection" {
   default     = false
 }
 
+variable "auditlogs_retention_days" {
+  description = "The number of days to retain audit logs before deletion."
+  type        = number
+  default     = 365
+}
+
+variable "auditlogs_lock_enabled" {
+  description = "Whether to lock the GCS audit logs bucket retention policy."
+  type        = bool
+  default     = true
+}
+
 # postgres
 variable "postgres_tier" {
   description = "The instance type to use for Postgres."

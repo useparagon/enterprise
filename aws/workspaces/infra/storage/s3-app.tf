@@ -142,7 +142,8 @@ resource "aws_iam_group_policy" "app" {
           "Effect" : "Allow",
           "Resource" : concat([
             "${aws_s3_bucket.app.arn}",
-            "${aws_s3_bucket.cdn.arn}"
+            "${aws_s3_bucket.cdn.arn}",
+            "${aws_s3_bucket.auditlogs.arn}"
             ], var.managed_sync_enabled ? [
             "${aws_s3_bucket.managed_sync[0].arn}"
           ] : [])
@@ -158,7 +159,8 @@ resource "aws_iam_group_policy" "app" {
           "Effect" : "Allow",
           "Resource" : concat([
             "${aws_s3_bucket.app.arn}/*",
-            "${aws_s3_bucket.cdn.arn}/*"
+            "${aws_s3_bucket.cdn.arn}/*",
+            "${aws_s3_bucket.auditlogs.arn}/*"
             ], var.managed_sync_enabled ? [
             "${aws_s3_bucket.managed_sync[0].arn}/*"
           ] : [])
@@ -175,7 +177,8 @@ resource "aws_iam_group_policy" "app" {
           "Effect" : "Allow",
           "Resource" : concat([
             "${aws_s3_bucket.app.arn}/*",
-            "${aws_s3_bucket.cdn.arn}/*"
+            "${aws_s3_bucket.cdn.arn}/*",
+            "${aws_s3_bucket.auditlogs.arn}/*"
             ], var.managed_sync_enabled ? [
             "${aws_s3_bucket.managed_sync[0].arn}/*"
           ] : [])

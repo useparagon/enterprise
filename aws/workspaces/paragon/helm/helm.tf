@@ -91,6 +91,8 @@ subchart:
     enabled: ${contains(keys(var.microservices), "worker-actionkit")}
   worker-actions:
     enabled: ${contains(keys(var.microservices), "worker-actions")}
+  worker-auditlogs:
+    enabled: ${contains(keys(var.microservices), "worker-auditlogs")}
   worker-credentials:
     enabled: ${contains(keys(var.microservices), "worker-credentials")}
   worker-crons:
