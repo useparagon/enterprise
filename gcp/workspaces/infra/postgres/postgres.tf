@@ -34,9 +34,35 @@ resource "google_sql_database_instance" "paragon" {
       value = 5000
     }
 
+    database_flags {
+      name  = "log_checkpoints"
+      value = "on"
+    }
+
+    database_flags {
+      name  = "log_connections"
+      value = "on"
+    }
+
+    database_flags {
+      name  = "log_disconnections"
+      value = "on"
+    }
+
+    database_flags {
+      name  = "log_lock_waits"
+      value = "on"
+    }
+
+    database_flags {
+      name  = "log_statement"
+      value = "all"
+    }
+
     ip_configuration {
       ipv4_enabled    = false
       private_network = var.network.id
+      ssl_mode        = "ENCRYPTED_ONLY"
     }
 
     insights_config {

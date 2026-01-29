@@ -3,9 +3,21 @@ resource "tls_private_key" "bastion" {
   rsa_bits  = 4096
 }
 
-# Generate suffix based on startup script content
+# Generate suffix based on rendered startup script content (includes all template variables)
 locals {
-  startup_script_hash = substr(sha256(file("${path.module}/../templates/bastion/bastion-startup.tpl.sh")), 0, 6)
+  rendered_startup_script = templatefile("${path.module}/../templates/bastion/bastion-startup.tpl.sh", {
+    account_id      = var.cloudflare_tunnel_account_id,
+    admin_user      = "ubuntu",
+    cluster_name    = var.cluster_name,
+    cluster_version = var.k8s_version,
+    project         = var.gcp_project_id,
+    region          = var.region,
+    tfc_agent_token = var.tfc_agent_token,
+    tunnel_id       = local.tunnel_id,
+    tunnel_name     = local.tunnel_domain,
+    tunnel_secret   = local.tunnel_secret,
+  })
+  startup_script_hash = substr(sha256(local.rendered_startup_script), 0, 8)
 }
 
 
@@ -38,17 +50,7 @@ resource "google_compute_instance_template" "bastion_v2" {
   metadata = {
     ssh-keys = "ubuntu:${tls_private_key.bastion.public_key_openssh}"
 
-    startup-script = templatefile("${path.module}/../templates/bastion/bastion-startup.tpl.sh", {
-      account_id      = var.cloudflare_tunnel_account_id,
-      admin_user      = "ubuntu",
-      cluster_name    = var.cluster_name,
-      cluster_version = var.k8s_version,
-      project         = var.gcp_project_id,
-      region          = var.region,
-      tunnel_id       = local.tunnel_id,
-      tunnel_name     = local.tunnel_domain,
-      tunnel_secret   = local.tunnel_secret,
-    })
+    startup-script = local.rendered_startup_script
   }
 
   service_account {

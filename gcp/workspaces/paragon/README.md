@@ -1,13 +1,23 @@
 # Paragon GCP Deployment
 
+There are several ways to provide GCP credentials. Here are how they are evaluated in order with the first provided option being used.
+
+1. `gcp_credential_json_file` = The file path to the local GCP credential JSON file. This only works if executing Terraform locally since the file won't exist on remote or agent executions.
+
+2. `gcp_credential_json` = The contents of the GCP credential JSON file. Unlike the first option this will work with remote executions.
+
+3. Other `gcp_*` variables (e.g. `gcp_project_id`) = The individual values that should be used without JSON formatting.
+
+NOTE: The credentials above may refer to a Workload Identity Pool account instead of a service account. This would require additional configuration in Terraform Cloud as detailed [here](https://developer.hashicorp.com/terraform/cloud-docs/dynamic-provider-credentials/gcp-configuration).
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7.0 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | ~> 6.16.0 |
-| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | ~> 6.16.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | ~> 7.0.0 |
+| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | ~> 7.0.0 |
 
 ## Providers
 
@@ -44,6 +54,7 @@ No resources.
 | <a name="input_gcp_client_email"></a> [gcp\_client\_email](#input\_gcp\_client\_email) | The client email for the service account. Required if not using `gcp_credential_json_file`. | `string` | `null` | no |
 | <a name="input_gcp_client_id"></a> [gcp\_client\_id](#input\_gcp\_client\_id) | The client id for the service account. Required if not using `gcp_credential_json_file`. | `string` | `null` | no |
 | <a name="input_gcp_client_x509_cert_url"></a> [gcp\_client\_x509\_cert\_url](#input\_gcp\_client\_x509\_cert\_url) | The client certificate url for the service account. Required if not using `gcp_credential_json_file`. | `string` | `null` | no |
+| <a name="input_gcp_credential_json"></a> [gcp\_credential\_json](#input\_gcp\_credential\_json) | Contents of the GCP credential JSON file. All other `gcp_` variables are ignored if this is provided. | `map(any)` | `{}` | no |
 | <a name="input_gcp_credential_json_file"></a> [gcp\_credential\_json\_file](#input\_gcp\_credential\_json\_file) | The path to the GCP credential JSON file. All other `gcp_` variables are ignored if this is provided. | `string` | `null` | no |
 | <a name="input_gcp_private_key"></a> [gcp\_private\_key](#input\_gcp\_private\_key) | The private key for the service account. Required if not using `gcp_credential_json_file`. | `string` | `null` | no |
 | <a name="input_gcp_private_key_id"></a> [gcp\_private\_key\_id](#input\_gcp\_private\_key\_id) | The id of the private key for the service account. Required if not using `gcp_credential_json_file`. | `string` | `null` | no |
