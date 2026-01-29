@@ -88,7 +88,7 @@ locals {
           {
             name = "feature-flags-content"
             configMap = {
-              name = kubernetes_config_map.feature_flag_content[0].metadata[0].name
+              name = kubernetes_config_map_v1.feature_flag_content[0].metadata[0].name
             }
           }
         ] : []
@@ -162,7 +162,7 @@ locals {
 }
 
 # creates the `paragon` namespace
-resource "kubernetes_namespace" "paragon" {
+resource "kubernetes_namespace_v1" "paragon" {
   metadata {
     name = "paragon"
 
@@ -172,12 +172,12 @@ resource "kubernetes_namespace" "paragon" {
   }
 }
 
-resource "kubernetes_config_map" "feature_flag_content" {
+resource "kubernetes_config_map_v1" "feature_flag_content" {
   count = var.feature_flags_content != null ? 1 : 0
 
   metadata {
     name      = "feature-flags-content"
-    namespace = kubernetes_namespace.paragon.id
+    namespace = kubernetes_namespace_v1.paragon.id
   }
 
   data = {
@@ -186,10 +186,10 @@ resource "kubernetes_config_map" "feature_flag_content" {
 }
 
 # kubernetes secret to pull docker image from docker hub
-resource "kubernetes_secret" "docker_login" {
+resource "kubernetes_secret_v1" "docker_login" {
   metadata {
     name      = "docker-cfg"
-    namespace = kubernetes_namespace.paragon.id
+    namespace = kubernetes_namespace_v1.paragon.id
   }
 
   type = "kubernetes.io/dockerconfigjson"
@@ -209,10 +209,10 @@ resource "kubernetes_secret" "docker_login" {
 }
 
 # shared secrets
-resource "kubernetes_secret" "paragon_secrets" {
+resource "kubernetes_secret_v1" "paragon_secrets" {
   metadata {
     name      = "paragon-secrets"
-    namespace = kubernetes_namespace.paragon.id
+    namespace = kubernetes_namespace_v1.paragon.id
   }
 
   type = "Opaque"
@@ -230,7 +230,7 @@ resource "helm_release" "paragon_on_prem" {
   description      = "Paragon microservices"
   chart            = "./charts/paragon-onprem"
   version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
-  namespace        = kubernetes_namespace.paragon.id
+  namespace        = kubernetes_namespace_v1.paragon.id
   create_namespace = false
   cleanup_on_fail  = true
   atomic           = true
@@ -248,9 +248,9 @@ resource "helm_release" "paragon_on_prem" {
   ]
 
   depends_on = [
-    kubernetes_secret.docker_login,
-    kubernetes_secret.paragon_secrets,
-    kubernetes_config_map.feature_flag_content
+    kubernetes_secret_v1.docker_login,
+    kubernetes_secret_v1.paragon_secrets,
+    kubernetes_config_map_v1.feature_flag_content
   ]
 }
 
@@ -260,7 +260,7 @@ resource "helm_release" "paragon_logging" {
   description      = "Paragon logging services"
   chart            = "./charts/paragon-logging"
   version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
-  namespace        = kubernetes_namespace.paragon.id
+  namespace        = kubernetes_namespace_v1.paragon.id
   create_namespace = false
   cleanup_on_fail  = true
   atomic           = true
@@ -332,8 +332,8 @@ resource "helm_release" "paragon_logging" {
   }
 
   depends_on = [
-    kubernetes_secret.docker_login,
-    kubernetes_secret.paragon_secrets
+    kubernetes_secret_v1.docker_login,
+    kubernetes_secret_v1.paragon_secrets
   ]
 }
 
@@ -362,8 +362,8 @@ resource "helm_release" "paragon_monitoring" {
 
   depends_on = [
     helm_release.paragon_on_prem,
-    kubernetes_secret.docker_login,
-    kubernetes_secret.paragon_secrets,
+    kubernetes_secret_v1.docker_login,
+    kubernetes_secret_v1.paragon_secrets,
     kubectl_manifest.grafana_backendconfig
   ]
 }

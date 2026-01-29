@@ -5,6 +5,12 @@ variable "gcp_credential_json_file" {
   default     = null
 }
 
+variable "gcp_credential_json" {
+  description = "Contents of the GCP credential JSON file. All other `gcp_` variables are ignored if this is provided."
+  type        = map(any)
+  default     = {}
+}
+
 variable "gcp_project_id" {
   description = "The id of the Google Cloud Project. Required if not using `gcp_credential_json_file`."
   type        = string
@@ -215,7 +221,7 @@ variable "helm_yaml" {
 }
 
 locals {
-  creds_json     = try(jsondecode(file(var.gcp_credential_json_file)), {})
+  creds_json     = try(jsondecode(file(var.gcp_credential_json_file)), var.gcp_credential_json)
   gcp_project_id = try(local.creds_json.project_id, var.gcp_project_id)
 
   # hash of project ID to help ensure uniqueness of resources like bucket names
