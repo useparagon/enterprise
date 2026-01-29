@@ -120,7 +120,7 @@ resource "aws_iam_group_membership" "app_group_membership" {
 }
 
 resource "aws_iam_group_policy" "app" {
-  name = "${var.workspace}-s3-user-group-policy"
+  name  = "${var.workspace}-s3-user-group-policy"
   group = aws_iam_group.app_group.name
 
   policy = jsonencode(

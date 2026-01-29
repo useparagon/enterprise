@@ -10,3 +10,7 @@ output "openobserve_password" {
   value     = local.openobserve_password
   sensitive = true
 }
+
+output "namespace_paragon" {
+  value = kubernetes_namespace.paragon
+}
