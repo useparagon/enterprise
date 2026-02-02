@@ -190,6 +190,18 @@ variable "hoop_all_access_groups" {
   default     = ["dev-team-engineering"]
 }
 
+variable "hoop_postgres_guardrail_rules" {
+  description = "Guardrail rule IDs for PostgreSQL connections."
+  type        = list(string)
+  default     = ["a85115f6-5ef3-4618-b70c-f7cccdc62c5a"]
+}
+
+variable "hoop_redis_guardrail_rules" {
+  description = "Guardrail rule IDs for Redis connections."
+  type        = list(string)
+  default     = ["182f59b2-5d5d-4ab8-978e-94472b3915fc"]
+}
+
 variable "hoop_custom_connections" {
   description = "Custom Hoop connections defined via tfvars. Map of connection names to their configuration."
   type = map(object({

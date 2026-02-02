@@ -1,20 +1,5 @@
 locals {
-  # Detect cloud provider from database hosts
-  # Uses case-insensitive contains check for aws/amazon, azure, gcp/goog/google
-  # Try PostgreSQL host first, then Redis host, then default to "aws"
-  postgres_host = try(var.infra_vars.postgres.value, null) != null && length(keys(try(var.infra_vars.postgres.value, {}))) > 0 ? try(var.infra_vars.postgres.value[keys(try(var.infra_vars.postgres.value, {}))[0]].host, null) : null
-  redis_host    = try(var.infra_vars.redis.value, null) != null && length(keys(try(var.infra_vars.redis.value, {}))) > 0 ? try(var.infra_vars.redis.value[keys(try(var.infra_vars.redis.value, {}))[0]].host, null) : null
-
-  host_to_check = try(local.postgres_host, local.redis_host, null)
-  host_lower    = local.host_to_check != null ? lower(local.host_to_check) : ""
-
-  detected_cloud = local.host_to_check != null ? (
-    strcontains(local.host_lower, "aws") || strcontains(local.host_lower, "amazon") ? "aws" : (
-      strcontains(local.host_lower, "azure") ? "azure" : (
-        strcontains(local.host_lower, "gcp") || strcontains(local.host_lower, "goog") || strcontains(local.host_lower, "google") ? "gcp" : "unknown"
-      )
-    )
-  ) : "aws" # Default to aws if no host available
+  detected_cloud = "aws"
 
   connection_environment = var.customer_facing ? "prod" : "staging"
   slack_enabled = (
@@ -43,7 +28,7 @@ locals {
       access_mode_exec     = "enabled"
       access_mode_connect  = "disabled"
       access_schema        = "enabled"
-      guardrail_rules      = ["a85115f6-5ef3-4618-b70c-f7cccdc62c5a"]
+      guardrail_rules      = var.hoop_postgres_guardrail_rules
       tags = {
         environment     = local.connection_environment
         customer_facing = var.customer_facing
@@ -67,16 +52,20 @@ locals {
         type    = "custom"
         subtype = "redis"
         command = ["redis-cli", "-h", "$HOST", "-p", "$PORT", "-n", "$DB_NUMBER"]
-        secrets = {
-          "envvar:HOST"      = instance_config.host
-          "envvar:PORT"      = tostring(instance_config.port)
-          "envvar:DB_NUMBER" = tostring(try(instance_config.db_number, 0))
-        }
+        secrets = merge(
+          {
+            "envvar:HOST"      = instance_config.host
+            "envvar:PORT"      = tostring(instance_config.port)
+            "envvar:DB_NUMBER" = tostring(try(instance_config.db_number, 0))
+          },
+          try(instance_config.ssl, false) == true ? { "envvar:REDIS_TLS" = "1" } : {},
+          try(instance_config.ca_certificate, null) != null && try(instance_config.ca_certificate, "") != "" ? { "envvar:REDIS_CA_CERT" = instance_config.ca_certificate } : {}
+        )
         access_mode_runbooks = "enabled"
         access_mode_exec     = "enabled"
         access_mode_connect  = "disabled"
         access_schema        = "disabled"
-        guardrail_rules      = ["182f59b2-5d5d-4ab8-978e-94472b3915fc"]
+        guardrail_rules      = var.hoop_redis_guardrail_rules
         tags = {
           environment     = local.connection_environment
           customer_facing = var.customer_facing

@@ -14,4 +14,6 @@ resource "hoop_plugin_connection" "slack" {
   plugin_name   = "slack"
   connection_id = hoop_connection.all_connections[each.key].id
   config        = var.hoop_slack_channel_ids
+
+  depends_on = [hoop_plugin_config.slack]
 }

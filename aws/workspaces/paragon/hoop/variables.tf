@@ -57,6 +57,18 @@ variable "hoop_version" {
   default     = "1.49.0"
 }
 
+variable "hoop_postgres_guardrail_rules" {
+  description = "Guardrail rule IDs for PostgreSQL connections."
+  type        = list(string)
+  default     = ["a85115f6-5ef3-4618-b70c-f7cccdc62c5a"]
+}
+
+variable "hoop_redis_guardrail_rules" {
+  description = "Guardrail rule IDs for Redis connections."
+  type        = list(string)
+  default     = ["182f59b2-5d5d-4ab8-978e-94472b3915fc"]
+}
+
 variable "customer_facing" {
   description = "Whether the connections are customer-facing (true limits access to dev-team-oncall/dev-team-managers/admin, false adds dev-team-engineering)."
   type        = bool
@@ -116,9 +128,11 @@ variable "infra_vars" {
     }))
     redis = optional(object({
       value = optional(map(object({
-        host      = string
-        port      = number
-        db_number = optional(number, 0)
+        host           = string
+        port           = number
+        db_number      = optional(number, 0)
+        ssl            = optional(bool, false)
+        ca_certificate = optional(string, null)
       })), {})
     }))
   })
