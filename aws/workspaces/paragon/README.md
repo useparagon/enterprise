@@ -93,3 +93,11 @@
 | <a name="output_pgadmin_admin_password"></a> [pgadmin\_admin\_password](#output\_pgadmin\_admin\_password) | PGAdmin admin login password. |
 | <a name="output_uptime_webhook"></a> [uptime\_webhook](#output\_uptime\_webhook) | Uptime webhook URL |
 <!-- END_TF_DOCS -->
+
+## Updates
+
+This Terraform documentation can be automatically regenerated with:
+
+```
+terraform-docs markdown table --output-file README.md --output-mode inject .
+```
