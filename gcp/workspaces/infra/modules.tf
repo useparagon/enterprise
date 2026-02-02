@@ -50,6 +50,7 @@ module "cluster" {
   source = "./cluster"
 
   disable_deletion_protection     = var.disable_deletion_protection
+  disable_public_endpoint         = var.k8s_disable_public_endpoint
   gcp_project_id                  = local.gcp_project_id
   k8s_max_node_count              = var.k8s_max_node_count
   k8s_min_node_count              = var.k8s_min_node_count
@@ -75,13 +76,14 @@ module "bastion" {
   cloudflare_tunnel_subdomain    = var.cloudflare_tunnel_subdomain
   cloudflare_tunnel_zone_id      = var.cloudflare_tunnel_zone_id
 
-  cluster_name   = module.cluster.kubernetes.name
-  gcp_project_id = local.gcp_project_id
-  network        = module.network.network
-  k8s_version    = var.k8s_version
-  private_subnet = module.network.private_subnet
-  region         = var.region
-  region_zone    = var.region_zone
-  ssh_whitelist  = local.ssh_whitelist
-  workspace      = local.workspace
+  cluster_name    = module.cluster.kubernetes.name
+  gcp_project_id  = local.gcp_project_id
+  network         = module.network.network
+  k8s_version     = var.k8s_version
+  private_subnet  = module.network.private_subnet
+  region          = var.region
+  region_zone     = var.region_zone
+  ssh_whitelist   = local.ssh_whitelist
+  tfc_agent_token = var.tfc_agent_token
+  workspace       = local.workspace
 }

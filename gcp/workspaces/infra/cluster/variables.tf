@@ -65,3 +65,8 @@ variable "disable_deletion_protection" {
   description = "Used to disable deletion protection on GKE resources."
   type        = bool
 }
+
+variable "disable_public_endpoint" {
+  description = "Used to disable public endpoint on GKE cluster."
+  type        = bool
+}

@@ -81,6 +81,13 @@ variable "cloudflare_tunnel_email_domain" {
   default     = "useparagon.com"
 }
 
+variable "tfc_agent_token" {
+  description = "Terraform Cloud Agent token"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 locals {
   bastion_name           = "${var.workspace}-bastion"
   only_cloudflare_tunnel = var.cloudflare_tunnel_enabled
