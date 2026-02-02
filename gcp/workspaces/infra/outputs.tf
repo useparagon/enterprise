@@ -24,6 +24,12 @@ output "logs_container" {
   sensitive   = true
 }
 
+output "auditlogs_bucket" {
+  description = "The bucket used to store audit logs."
+  value       = module.storage.storage.auditlogs_bucket
+  sensitive   = true
+}
+
 output "minio" {
   description = "MinIO server connection info."
   value = {
@@ -33,6 +39,7 @@ output "minio" {
     microservice_pass = module.storage.storage.minio_microservice_pass
     root_user         = module.storage.storage.project_id
     root_password     = module.storage.storage.private_key
+    service_account   = module.storage.storage.service_account
   }
   sensitive = true
 }

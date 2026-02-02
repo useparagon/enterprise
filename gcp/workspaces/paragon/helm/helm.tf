@@ -1,5 +1,6 @@
 locals {
   namespace = "paragon"
+  version   = var.helm_values.global.env["VERSION"]
 
   subchart_values = yamlencode({
     subchart = {
@@ -57,9 +58,18 @@ locals {
         # loadBalancerName = google_compute_global_address.loadbalancer.name
         # scheme           = var.ingress_scheme
       }
-      service = {
-        type = "NodePort"
-      }
+      service = merge(
+        {
+          type = "NodePort"
+        },
+        monitor_name == "grafana" ? {
+          annotations = {
+            "cloud.google.com/backend-config" = jsonencode({
+              default = "grafana-backendconfig"
+            })
+          }
+        } : {}
+      )
     }
   })
 
@@ -79,7 +89,7 @@ locals {
           {
             name = "feature-flags-content"
             configMap = {
-              name = kubernetes_config_map.feature_flag_content[0].metadata[0].name
+              name = kubernetes_config_map_v1.feature_flag_content[0].metadata[0].name
             }
           }
         ] : []
@@ -95,8 +105,40 @@ locals {
     }
   })
 
+  cloud_storage_services = [
+    "api-triggerkit",
+    "cache-replay",
+    "hades",
+    "health-checker",
+    "hermes",
+    "openobserve",
+    "release",
+    "worker-actionkit",
+    "worker-actions",
+    "worker-credentials",
+    "worker-crons",
+    "worker-deployments",
+    "worker-proxy",
+    "worker-triggers",
+    "worker-triggerkit",
+    "worker-workflows",
+    "zeus"
+  ]
+
+  service_account_values = var.storage_service_account != null ? {
+    for service_name in local.cloud_storage_services : service_name => {
+      serviceAccount = {
+        create = true
+        annotations = {
+          "iam.gke.io/gcp-service-account" = var.storage_service_account
+        }
+      }
+    }
+  } : {}
+
   global_values = yamlencode(merge(
     nonsensitive(var.helm_values),
+    local.service_account_values,
     {
       global = merge(
         nonsensitive(var.helm_values.global),
@@ -108,7 +150,7 @@ locals {
               secretName  = "paragon-secrets"
             }
           ),
-          paragon_version = var.helm_values.global.env["VERSION"]
+          paragon_version = local.version
         }
       )
     }
@@ -121,7 +163,7 @@ locals {
 }
 
 # creates the `paragon` namespace
-resource "kubernetes_namespace" "paragon" {
+resource "kubernetes_namespace_v1" "paragon" {
   metadata {
     name = "paragon"
 
@@ -131,12 +173,12 @@ resource "kubernetes_namespace" "paragon" {
   }
 }
 
-resource "kubernetes_config_map" "feature_flag_content" {
+resource "kubernetes_config_map_v1" "feature_flag_content" {
   count = var.feature_flags_content != null ? 1 : 0
 
   metadata {
     name      = "feature-flags-content"
-    namespace = kubernetes_namespace.paragon.id
+    namespace = kubernetes_namespace_v1.paragon.id
   }
 
   data = {
@@ -145,10 +187,10 @@ resource "kubernetes_config_map" "feature_flag_content" {
 }
 
 # kubernetes secret to pull docker image from docker hub
-resource "kubernetes_secret" "docker_login" {
+resource "kubernetes_secret_v1" "docker_login" {
   metadata {
     name      = "docker-cfg"
-    namespace = kubernetes_namespace.paragon.id
+    namespace = kubernetes_namespace_v1.paragon.id
   }
 
   type = "kubernetes.io/dockerconfigjson"
@@ -168,10 +210,10 @@ resource "kubernetes_secret" "docker_login" {
 }
 
 # shared secrets
-resource "kubernetes_secret" "paragon_secrets" {
+resource "kubernetes_secret_v1" "paragon_secrets" {
   metadata {
     name      = "paragon-secrets"
-    namespace = kubernetes_namespace.paragon.id
+    namespace = kubernetes_namespace_v1.paragon.id
   }
 
   type = "Opaque"
@@ -183,18 +225,62 @@ resource "kubernetes_secret" "paragon_secrets" {
   }
 }
 
+# Redis CA certificate secret (for TLS connections)
+# Use infra_vars passed from parent module (already parsed from infra-output.json)
+locals {
+  # Extract all Redis CA certificates
+  redis_ca_certificates = {
+    cache  = try(var.infra_vars.redis.value.cache.ca_certificate, null)
+    queue  = try(var.infra_vars.redis.value.queue.ca_certificate, null)
+    system = try(var.infra_vars.redis.value.system.ca_certificate, null)
+  }
+  # Check if any certificates are available
+  has_redis_ca_certs = local.redis_ca_certificates.cache != null || local.redis_ca_certificates.queue != null || local.redis_ca_certificates.system != null
+  # Combine all certificates into a single bundle (Node.js can use this)
+  # Each certificate already contains newlines (\n escape sequences from JSON)
+  # Filter out null/empty values before joining with double newline separator
+  redis_ca_cert_bundle = length(compact([
+    for cert in [local.redis_ca_certificates.cache, local.redis_ca_certificates.queue, local.redis_ca_certificates.system] :
+    cert if cert != null && cert != ""
+    ])) > 0 ? "${join("\n\n", compact([
+      for cert in [local.redis_ca_certificates.cache, local.redis_ca_certificates.queue, local.redis_ca_certificates.system] :
+      cert if cert != null && cert != ""
+  ]))}\n" : ""
+}
+
+# Redis CA certificate secret (for TLS connections)
+# Contains all Redis instance CA certificates
+resource "kubernetes_secret_v1" "redis_ca_cert" {
+  # Only create if at least one certificate is available
+  count = local.has_redis_ca_certs ? 1 : 0
+
+  metadata {
+    name      = "redis-ca-cert"
+    namespace = kubernetes_namespace_v1.paragon.id
+  }
+
+  type = "Opaque"
+
+  data = {
+    # Combined bundle for NODE_EXTRA_CA_CERTS (all certificates in one file)
+    # Note: Kubernetes secrets automatically base64 encode the data field, so we don't encode here
+    "server-ca.pem" = local.redis_ca_cert_bundle
+  }
+}
+
 # microservices deployment
 resource "helm_release" "paragon_on_prem" {
-  name             = "paragon-on-prem"
-  description      = "Paragon microservices"
-  chart            = "./charts/paragon-onprem"
-  version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
-  namespace        = kubernetes_namespace.paragon.id
-  create_namespace = false
-  cleanup_on_fail  = true
-  atomic           = true
-  verify           = false
-  timeout          = 900 # 15 minutes
+  name              = "paragon-on-prem"
+  description       = "Paragon microservices"
+  chart             = "./charts/paragon-onprem"
+  version           = "${local.version}-${local.chart_hashes["paragon-onprem"]}"
+  namespace         = kubernetes_namespace_v1.paragon.id
+  create_namespace  = false
+  cleanup_on_fail   = true
+  atomic            = true
+  verify            = false
+  timeout           = 900 # 15 minutes
+  dependency_update = true
 
   values = [
     local.subchart_values,
@@ -206,29 +292,31 @@ resource "helm_release" "paragon_on_prem" {
   ]
 
   depends_on = [
-    kubernetes_secret.docker_login,
-    kubernetes_secret.paragon_secrets,
-    kubernetes_config_map.feature_flag_content
+    kubernetes_secret_v1.docker_login,
+    kubernetes_secret_v1.paragon_secrets,
+    kubernetes_config_map_v1.feature_flag_content,
+    kubernetes_secret_v1.redis_ca_cert
   ]
 }
 
 # paragon logging stack fluent bit and openobserve
 resource "helm_release" "paragon_logging" {
-  name             = "paragon-logging"
-  description      = "Paragon logging services"
-  chart            = "./charts/paragon-logging"
-  version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
-  namespace        = kubernetes_namespace.paragon.id
-  create_namespace = false
-  cleanup_on_fail  = true
-  atomic           = true
-  verify           = false
-  timeout          = 900 # 15 minutes
+  name              = "paragon-logging"
+  description       = "Paragon logging services"
+  chart             = "./charts/paragon-logging"
+  version           = "${local.version}-${local.chart_hashes["paragon-logging"]}"
+  namespace         = kubernetes_namespace_v1.paragon.id
+  create_namespace  = false
+  cleanup_on_fail   = true
+  atomic            = true
+  verify            = false
+  timeout           = 900 # 15 minutes
+  dependency_update = true
 
   values = fileexists("${path.root}/../.secure/values.yaml") ? [
     local.global_values,
     file("${path.root}/../.secure/values.yaml")
-  ] : [
+    ] : [
     local.global_values
   ]
 
@@ -252,9 +340,12 @@ resource "helm_release" "paragon_logging" {
     value = local.openobserve_password
   }
 
-  set_sensitive {
-    name  = "openobserve.credsJson"
-    value = base64encode(var.gcp_creds)
+  dynamic "set_sensitive" {
+    for_each = var.gcp_creds != null ? [1] : []
+    content {
+      name  = "openobserve.credsJson"
+      value = base64encode(var.gcp_creds)
+    }
   }
 
   set {
@@ -267,9 +358,12 @@ resource "helm_release" "paragon_logging" {
     value = var.region
   }
 
-  set {
-    name  = "openobserve.secrets.ZO_S3_ACCESS_KEY"
-    value = "/creds/creds.json"
+  dynamic "set_sensitive" {
+    for_each = var.gcp_creds != null ? [1] : []
+    content {
+      name  = "openobserve.secrets.ZO_S3_ACCESS_KEY"
+      value = "/creds/creds.json"
+    }
   }
 
   set {
@@ -282,10 +376,9 @@ resource "helm_release" "paragon_logging" {
     value = "https://storage.googleapis.com"
   }
 
-
   depends_on = [
-    kubernetes_secret.docker_login,
-    kubernetes_secret.paragon_secrets
+    kubernetes_secret_v1.docker_login,
+    kubernetes_secret_v1.paragon_secrets
   ]
 }
 
@@ -293,16 +386,17 @@ resource "helm_release" "paragon_logging" {
 resource "helm_release" "paragon_monitoring" {
   count = var.monitors_enabled ? 1 : 0
 
-  name             = "paragon-monitoring"
-  description      = "Paragon monitors"
-  chart            = "./charts/paragon-monitoring"
-  version          = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
-  namespace        = "paragon"
-  cleanup_on_fail  = true
-  create_namespace = false
-  atomic           = true
-  verify           = false
-  timeout          = 900 # 15 minutes
+  name              = "paragon-monitoring"
+  description       = "Paragon monitors"
+  chart             = "./charts/paragon-monitoring"
+  version           = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
+  namespace         = "paragon"
+  cleanup_on_fail   = true
+  create_namespace  = false
+  atomic            = true
+  verify            = false
+  timeout           = 900 # 15 minutes
+  dependency_update = true
 
   values = [
     local.global_values,
@@ -313,7 +407,8 @@ resource "helm_release" "paragon_monitoring" {
 
   depends_on = [
     helm_release.paragon_on_prem,
-    kubernetes_secret.docker_login,
-    kubernetes_secret.paragon_secrets
+    kubernetes_secret_v1.docker_login,
+    kubernetes_secret_v1.paragon_secrets,
+    kubectl_manifest.grafana_backendconfig
   ]
 }

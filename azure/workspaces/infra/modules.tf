@@ -70,6 +70,8 @@ module "storage" {
   source = "./storage"
 
   managed_sync_enabled       = var.managed_sync_enabled
+  auditlogs_lock_enabled     = var.auditlogs_lock_enabled
+  auditlogs_retention_days   = var.auditlogs_retention_days
   resource_group             = module.network.resource_group
   tags                       = local.default_tags
   virtual_network_subnet_ids = [module.network.public_subnet.id, module.network.private_subnet.id]

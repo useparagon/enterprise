@@ -77,6 +77,12 @@ locals {
       ha   = var.postgres_redundant
       sku  = var.postgres_sku_name
     }
+    triggerkit = {
+      name = "${var.workspace}-triggerkit"
+      db   = "triggerkit"
+      ha   = false
+      sku  = var.postgres_base_sku_name
+    }
     zeus = {
       name = "${var.workspace}-zeus"
       db   = "zeus"

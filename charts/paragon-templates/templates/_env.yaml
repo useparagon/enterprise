@@ -1,0 +1,35 @@
+{{/*
+Environment variables helper
+*/}}
+{{- define "env.standard" -}}
+{{- $serviceData := include "service.inputs" . | fromJson }}
+{{- $envKeys := $serviceData.envKeys | default (list) }}
+{{- if and $.Values.envKeys (kindIs "slice" $.Values.envKeys) }}
+  {{- $envKeys = uniq (concat $envKeys $.Values.envKeys) }}
+{{- end }}
+{{- range $key := $envKeys }}
+{{- if and $.Values.env (kindIs "map" $.Values.env) (hasKey $.Values.env $key) }}
+- name: {{ $key }}
+  value: {{ index $.Values.env $key | quote }}
+{{- else if and $.Values.global.env (kindIs "map" $.Values.global.env) (hasKey $.Values.global.env $key) }}
+- name: {{ $key }}
+  value: {{ index $.Values.global.env $key | quote }}
+{{- end }}
+{{- end }}
+{{- $secretKeys := $serviceData.secretKeys | default (list) }}
+{{- if and $.Values.secretKeys (kindIs "slice" $.Values.secretKeys) }}
+  {{- $secretKeys = uniq (concat $secretKeys $.Values.secretKeys) }}
+{{- end }}
+{{- range $key := $secretKeys }}
+- name: {{ $key }}
+  valueFrom:
+    secretKeyRef:
+      name: {{- if and $.Values.secrets (kindIs "map" $.Values.secrets) (hasKey $.Values.secrets $key) }}
+               {{ $.Values.secretName }}-{{ $.Chart.Name }}
+             {{- else }}
+               {{ $.Values.secretName }}
+             {{- end }}
+      key: {{ $key }}
+      optional: true
+{{- end }}
+{{- end -}}

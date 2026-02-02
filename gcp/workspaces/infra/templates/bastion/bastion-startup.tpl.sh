@@ -138,26 +138,36 @@ sudo apt-get install -y nodejs
 sudo npm install -g npx
 node --version
 
-# install terraform
-writeLog "installing terraform"
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/hashicorp.gpg
-echo "deb [signed-by=/etc/apt/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-sudo apt-get update -y
-sudo apt-get install -y terraform
-terraform version
+# install docker and terraform agent when tfc_agent_token is set
+if [[ ! -z "${tfc_agent_token}" ]]; then
+    # install docker
+    writeLog "installing docker"
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+    sudo apt-get update -y
+    sudo apt-get install -y \
+        containerd.io \
+        docker-ce \
+        docker-ce-cli \
+        docker-compose-plugin
+    sudo usermod -a -G docker ubuntu
+    sudo systemctl enable docker
+    sudo systemctl start docker
+    # Wait for Docker daemon to be ready
+    sleep 2
 
-# install docker
-writeLog "installing docker"
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
-sudo apt-get update -y
-sudo apt-get install -y \
-    containerd.io \
-    docker-ce \
-    docker-ce-cli \
-    docker-compose-plugin
-sudo usermod -a -G docker ubuntu
-systemctl disable containerd.service
+    # install terraform agent
+    writeLog "installing terraform agent"
+    sudo docker run -d \
+        --platform=linux/amd64 \
+        --restart=unless-stopped \
+        --name tfc-agent \
+        -e TFC_AGENT_TOKEN="${tfc_agent_token}" \
+        -e TFC_AGENT_NAME="${tunnel_name}" \
+        hashicorp/tfc-agent:latest
+else
+    writeLog "skipped docker and terraform agent installation"
+fi
 
 # Create and configure aliases file
 writeLog "configuring aliases for ubuntu"
@@ -171,7 +181,7 @@ alias kg="kubectl get"
 alias kl="kubectl logs"
 alias krr="kubectl get deployments --no-headers -o custom-columns=\":metadata.name\" | xargs -I {} kubectl rollout restart deployment/{}"
 alias kw="watch kubectl get pods"
-alias kwf="watch -- 'kubectl get pods | grep -v fluent'"
+alias kwf="watch -- 'kubectl get pods | grep -v fluent | grep -v node-exporter'"
 
 kls() {
   local name=$1

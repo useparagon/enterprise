@@ -1,6 +1,8 @@
 subchart:
   account:
     enabled: true
+  api-triggerkit:
+    enabled: true
   cache-replay:
     enabled: false
   cerberus:
@@ -31,6 +33,8 @@ subchart:
     enabled: true
   worker-actions:
     enabled: true
+  worker-auditlogs:
+    enabled: true
   worker-credentials:
     enabled: true
   worker-crons:
@@ -40,6 +44,8 @@ subchart:
   worker-eventlogs:
     enabled: true
   worker-proxy:
+    enabled: true
+  worker-triggerkit:
     enabled: true
   worker-triggers:
     enabled: true

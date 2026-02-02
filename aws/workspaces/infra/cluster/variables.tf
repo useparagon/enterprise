@@ -90,7 +90,7 @@ locals {
 
   cluster_addons = {
     aws-ebs-csi-driver = {
-      version = "v1.45.0-eksbuild.2"
+      version = "v1.54.0-eksbuild.1"
     }
     coredns = {
       version = "v1.11.4-eksbuild.14"

@@ -32,6 +32,7 @@ module "postgres" {
   rds_final_snapshot_enabled  = var.rds_final_snapshot_enabled
   disable_deletion_protection = var.disable_deletion_protection
   managed_sync_enabled        = var.managed_sync_enabled
+  migrated_passwords          = var.migrated_passwords
 
   vpc                = module.network.vpc
   public_subnet      = module.network.public_subnet
@@ -57,10 +58,14 @@ module "redis" {
 module "storage" {
   source = "./storage"
 
-  workspace             = local.workspace
-  force_destroy         = var.disable_deletion_protection
-  app_bucket_expiration = var.app_bucket_expiration
-  managed_sync_enabled  = var.managed_sync_enabled
+  workspace                = local.workspace
+  force_destroy            = var.disable_deletion_protection
+  app_bucket_expiration    = var.app_bucket_expiration
+  auditlogs_retention_days = var.auditlogs_retention_days
+  auditlogs_lock_enabled   = var.auditlogs_lock_enabled
+  managed_sync_enabled     = var.managed_sync_enabled
+
+  migrated = var.migrated_workspace != null
 }
 
 module "kafka" {

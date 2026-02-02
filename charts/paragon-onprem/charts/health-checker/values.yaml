@@ -8,7 +8,7 @@ image:
   repository: useparagon/health-checker
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 'latest'
+  tag: '2025.1215.1845-d85aba8f'
 
 service:
   type: ClusterIP
@@ -20,6 +20,12 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+
+terminationGracePeriodSeconds: 120
+
+pdb:
+  enabled: true
+  maxUnavailable: 0
 
 autoscaling:
   enabled: true
@@ -132,6 +138,6 @@ affinity:
             - key: useparagon.com/capacityType
               operator: In
               values:
-                - spot
+                - ondemand
 
 tls_secret: ''

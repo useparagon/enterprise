@@ -52,6 +52,18 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
+variable "auditlogs_retention_days" {
+  description = "The number of days to retain audit logs before deletion."
+  type        = number
+  default     = 365
+}
+
+variable "auditlogs_lock_enabled" {
+  description = "Whether to lock the audit logs container immutability policy."
+  type        = bool
+  default     = true
+}
+
 # cloudflare
 variable "cloudflare_api_token" {
   description = "Cloudflare API token created at https://dash.cloudflare.com/profile/api-tokens. Requires Edit permissions on Account `Cloudflare Tunnel`, `Access: Organizations, Identity Providers, and Groups`, `Access: Apps and Policies` and Zone `DNS`"

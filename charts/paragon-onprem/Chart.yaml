@@ -10,6 +10,10 @@ dependencies:
     repository: file://charts/account
     version: __PARAGON_VERSION__
     condition: subchart.account.enabled
+  - name: api-triggerkit
+    repository: file://charts/api-triggerkit
+    version: __PARAGON_VERSION__
+    condition: subchart.api-triggerkit.enabled
   - name: cache-replay
     repository: file://charts/cache-replay
     version: __PARAGON_VERSION__
@@ -66,6 +70,10 @@ dependencies:
     repository: file://charts/worker-actions
     version: __PARAGON_VERSION__
     condition: subchart.worker-actions.enabled
+  - name: worker-auditlogs
+    repository: file://charts/worker-auditlogs
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-auditlogs.enabled
   - name: worker-credentials
     repository: file://charts/worker-credentials
     version: __PARAGON_VERSION__
@@ -86,6 +94,10 @@ dependencies:
     repository: file://charts/worker-proxy
     version: __PARAGON_VERSION__
     condition: subchart.worker-proxy.enabled
+  - name: worker-triggerkit
+    repository: file://charts/worker-triggerkit
+    version: __PARAGON_VERSION__
+    condition: subchart.worker-triggerkit.enabled
   - name: worker-triggers
     repository: file://charts/worker-triggers
     version: __PARAGON_VERSION__
@@ -94,3 +106,6 @@ dependencies:
     repository: file://charts/worker-workflows
     version: __PARAGON_VERSION__
     condition: subchart.worker-workflows.enabled
+  - name: paragon-templates
+    version: 1
+    repository: file://../paragon-templates

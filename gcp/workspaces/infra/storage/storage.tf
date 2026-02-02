@@ -57,3 +57,27 @@ resource "google_storage_bucket_iam_member" "logs" {
   role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.minio.email}"
 }
+
+# audit logs bucket
+resource "google_storage_bucket" "auditlogs" {
+  name          = "${var.workspace}-auditlogs"
+  location      = var.region
+  project       = var.gcp_project_id
+  storage_class = "STANDARD"
+  force_destroy = var.disable_deletion_protection
+
+  versioning {
+    enabled = true
+  }
+
+  retention_policy {
+    retention_period = var.auditlogs_retention_days * 86400
+    is_locked        = var.auditlogs_lock_enabled
+  }
+}
+
+resource "google_storage_bucket_iam_member" "auditlogs" {
+  bucket = google_storage_bucket.auditlogs.name
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${google_service_account.minio.email}"
+}

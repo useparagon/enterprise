@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "app" {
-  bucket        = "${var.workspace}-app"
+  bucket        = var.migrated ? var.workspace : "${var.workspace}-app"
   force_destroy = var.force_destroy
 }
 
@@ -109,9 +109,19 @@ resource "aws_iam_access_key" "app" {
   user = aws_iam_user.app.name
 }
 
-resource "aws_iam_user_policy" "app" {
-  name = "${var.workspace}-s3-policy"
-  user = aws_iam_user.app.name
+resource "aws_iam_group" "app_group" {
+  name = "${var.workspace}-s3-user-group"
+}
+
+resource "aws_iam_group_membership" "app_group_membership" {
+  name  = "${var.workspace}-s3-user-group-membership"
+  group = aws_iam_group.app_group.name
+  users = [aws_iam_user.app.name]
+}
+
+resource "aws_iam_group_policy" "app" {
+  name = "${var.workspace}-s3-user-group-policy"
+  group = aws_iam_group.app_group.name
 
   policy = jsonencode(
     {
@@ -132,7 +142,8 @@ resource "aws_iam_user_policy" "app" {
           "Effect" : "Allow",
           "Resource" : concat([
             "${aws_s3_bucket.app.arn}",
-            "${aws_s3_bucket.cdn.arn}"
+            "${aws_s3_bucket.cdn.arn}",
+            "${aws_s3_bucket.auditlogs.arn}"
             ], var.managed_sync_enabled ? [
             "${aws_s3_bucket.managed_sync[0].arn}"
           ] : [])
@@ -148,7 +159,8 @@ resource "aws_iam_user_policy" "app" {
           "Effect" : "Allow",
           "Resource" : concat([
             "${aws_s3_bucket.app.arn}/*",
-            "${aws_s3_bucket.cdn.arn}/*"
+            "${aws_s3_bucket.cdn.arn}/*",
+            "${aws_s3_bucket.auditlogs.arn}/*"
             ], var.managed_sync_enabled ? [
             "${aws_s3_bucket.managed_sync[0].arn}/*"
           ] : [])
@@ -165,7 +177,8 @@ resource "aws_iam_user_policy" "app" {
           "Effect" : "Allow",
           "Resource" : concat([
             "${aws_s3_bucket.app.arn}/*",
-            "${aws_s3_bucket.cdn.arn}/*"
+            "${aws_s3_bucket.cdn.arn}/*",
+            "${aws_s3_bucket.auditlogs.arn}/*"
             ], var.managed_sync_enabled ? [
             "${aws_s3_bucket.managed_sync[0].arn}/*"
           ] : [])

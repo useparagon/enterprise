@@ -44,28 +44,9 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   node_resource_group = "${local.cluster_name}-nodes"
   sku_tier            = var.k8s_sku_tier
 
-  # minimize disruption from automatic node image upgrades by limiting to monthly stable upgrades
-  automatic_upgrade_channel = "stable"
-  node_os_upgrade_channel   = "NodeImage"
-
-  maintenance_window_auto_upgrade {
-    day_of_week = "Monday"
-    duration    = "4"
-    frequency   = "RelativeMonthly"
-    interval    = "1"
-    start_time  = "14:00"
-    utc_offset  = "+00:00"
-    week_index  = "Second"
-  }
-  maintenance_window_node_os {
-    day_of_week = "Monday"
-    duration    = "4"
-    frequency   = "RelativeMonthly"
-    interval    = "1"
-    start_time  = "14:00"
-    utc_offset  = "+00:00"
-    week_index  = "Second"
-  }
+  # disable automatic upgrades - manual upgrades only
+  automatic_upgrade_channel = "none"
+  node_os_upgrade_channel   = "Unmanaged"
 
   # NOTE: The configuration for the cluster can't change at all
   # We're intentionally setting very low settings.
@@ -98,7 +79,9 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   }
 
   lifecycle {
-    ignore_changes = [default_node_pool[0].upgrade_settings]
+    ignore_changes = [
+      default_node_pool[0].upgrade_settings
+    ]
   }
 }
 
