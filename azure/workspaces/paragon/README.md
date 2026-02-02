@@ -1,5 +1,20 @@
 # Paragon Azure Deployment
 
+## Azure credentials
+
+Terraform uses the Azure client ID, secret, subscription, and tenant from variables (e.g. `vars.auto.tfvars`) or from environment variables: `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`.
+
+To update credentials when the app registration secret expires:
+
+1. In **Azure Portal** go to **Microsoft Entra ID** → **App registrations** → select the app (use the client ID to find it).
+2. Open **Certificates & secrets** → **New client secret** → add a description and expiry → **Add**.
+3. Copy the new secret **Value** (it is shown only once).
+4. Update your tfvars or environment:
+   - In `vars.auto.tfvars`: set `azure_client_secret` to the new value.
+   - Or set `ARM_CLIENT_SECRET` in your environment (e.g. in CI or a `.env` that is not committed).
+
+Do not commit real secrets to git. Prefer environment variables or a secret manager for `azure_client_secret` / `ARM_CLIENT_SECRET`.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

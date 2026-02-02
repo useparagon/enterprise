@@ -1,5 +1,20 @@
 # Paragon Azure Infrastructure
 
+## Azure credentials
+
+Terraform uses the Azure client ID, secret, subscription, and tenant from variables (e.g. `vars.auto.tfvars`) or from environment variables: `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`.
+
+To update credentials when the app registration secret expires:
+
+1. In **Azure Portal** go to **Microsoft Entra ID** → **App registrations** → select the app (use the client ID to find it).
+2. Open **Certificates & secrets** → **New client secret** → add a description and expiry → **Add**.
+3. Copy the new secret **Value** (it is shown only once).
+4. Update your tfvars or environment:
+   - In `vars.auto.tfvars`: set `azure_client_secret` to the new value.
+   - Or set `ARM_CLIENT_SECRET` in your environment (e.g. in CI or a `.env` that is not committed).
+
+Do not commit real secrets to git. Prefer environment variables or a secret manager for `azure_client_secret` / `ARM_CLIENT_SECRET`.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -33,6 +48,8 @@ No resources.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_auditlogs_lock_enabled"></a> [auditlogs\_lock\_enabled](#input\_auditlogs\_lock\_enabled) | Whether to lock the audit logs container immutability policy. | `bool` | `true` | no |
+| <a name="input_auditlogs_retention_days"></a> [auditlogs\_retention\_days](#input\_auditlogs\_retention\_days) | The number of days to retain audit logs before deletion. | `number` | `365` | no |
 | <a name="input_azure_client_id"></a> [azure\_client\_id](#input\_azure\_client\_id) | Azure client ID | `string` | n/a | yes |
 | <a name="input_azure_client_secret"></a> [azure\_client\_secret](#input\_azure\_client\_secret) | Azure client secret | `string` | n/a | yes |
 | <a name="input_azure_subscription_id"></a> [azure\_subscription\_id](#input\_azure\_subscription\_id) | Azure subscription ID | `string` | n/a | yes |
@@ -76,6 +93,7 @@ No resources.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_auditlogs_bucket"></a> [auditlogs\_bucket](#output\_auditlogs\_bucket) | The bucket used to store audit logs. |
 | <a name="output_bastion"></a> [bastion](#output\_bastion) | Bastion server connection info. |
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | The name of the AKS cluster. |
 | <a name="output_kafka"></a> [kafka](#output\_kafka) | Connection info for Kafka (Event Hubs for Kafka). |
