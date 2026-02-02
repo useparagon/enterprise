@@ -5,6 +5,12 @@ variable "gcp_credential_json_file" {
   default     = null
 }
 
+variable "gcp_credential_json" {
+  description = "Contents of the GCP credential JSON file. All other `gcp_` variables are ignored if this is provided."
+  type        = map(any)
+  default     = {}
+}
+
 variable "gcp_project_id" {
   description = "The id of the Google Cloud Project. Required if not using `gcp_credential_json_file`."
   type        = string
@@ -326,7 +332,7 @@ variable "helm_yaml" {
 }
 
 locals {
-  creds_json     = try(jsondecode(file(var.gcp_credential_json_file)), {})
+  creds_json     = try(jsondecode(file(var.gcp_credential_json_file)), var.gcp_credential_json)
   gcp_project_id = try(local.creds_json.project_id, var.gcp_project_id)
 
   # hash of project ID to help ensure uniqueness of resources like bucket names
@@ -346,8 +352,9 @@ locals {
   infra_vars      = jsondecode(fileexists(local.infra_json_path) && var.infra_json == null ? file(local.infra_json_path) : var.infra_json)
 
   # use default where standard value can be determined
-  cluster_name = try(local.infra_vars.cluster_name.value, local.workspace)
-  logs_bucket  = try(local.infra_vars.logs_bucket.value, "${local.workspace}-logs")
+  cluster_name     = try(local.infra_vars.cluster_name.value, local.workspace)
+  logs_bucket      = try(local.infra_vars.logs_bucket.value, "${local.workspace}-logs")
+  auditlogs_bucket = try(local.infra_vars.auditlogs_bucket.value, "${local.workspace}-auditlogs")
 
   helm_yaml_path = abspath(var.helm_yaml_path)
   helm_vars      = yamldecode(fileexists(local.helm_yaml_path) && var.helm_yaml == null ? file(local.helm_yaml_path) : var.helm_yaml)
@@ -452,6 +459,11 @@ locals {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["WORKER_ACTIONS_PORT"], 1712)
       "public_url"       = try(local.helm_vars.global.env["WORKER_ACTIONS_PUBLIC_URL"], "https://worker-actions.${var.domain}")
+    }
+    "worker-auditlogs" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["WORKER_AUDIT_LOGS_PORT"], 1727)
+      "public_url"       = try(local.helm_vars.global.env["WORKER_AUDIT_LOGS_PUBLIC_URL"], "https://worker-auditlogs.${var.domain}")
     }
     "worker-credentials" = {
       "healthcheck_path" = "/healthz"
@@ -585,11 +597,23 @@ locals {
   default_redis_url = try(
     local.helm_vars.global.env["REDIS_URL"],
     "${local.helm_vars.global.env["REDIS_HOST"]}:${local.helm_vars.global.env["REDIS_PORT"]}",
+    local.infra_vars.redis.value.cache.connection_string,
     "${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}"
   )
 
   helm_values = merge(local.helm_vars, {
     global = merge(local.helm_vars.global, {
+      # Redis CA certificate configuration
+      # Enable if any Redis instance has a CA certificate
+      redisCaCert = {
+        enabled = try(
+          local.infra_vars.redis.value.cache.ca_certificate != null ||
+          local.infra_vars.redis.value.queue.ca_certificate != null ||
+          local.infra_vars.redis.value.system.ca_certificate != null,
+          false
+        )
+        secretName = "redis-ca-cert"
+      },
       env = merge({
         BRANCH                 = "main"
         EMAIL_DELIVERY_SERVICE = "none"
@@ -616,6 +640,7 @@ locals {
         RELEASE_PORT            = try(local.microservices.release.port, null)
         WORKER_ACTIONKIT_PORT   = try(local.microservices["worker-actionkit"].port, null)
         WORKER_ACTIONS_PORT     = try(local.microservices["worker-actions"].port, null)
+        WORKER_AUDIT_LOGS_PORT  = try(local.microservices["worker-auditlogs"].port, null)
         WORKER_CREDENTIALS_PORT = try(local.microservices["worker-credentials"].port, null)
         WORKER_CRONS_PORT       = try(local.microservices["worker-crons"].port, null)
         WORKER_DEPLOYMENTS_PORT = try(local.microservices["worker-deployments"].port, null)
@@ -643,6 +668,7 @@ locals {
         RELEASE_PRIVATE_URL            = try("http://release:${local.microservices.release.port}", null)
         WORKER_ACTIONKIT_PRIVATE_URL   = try("http://worker-actionkit:${local.microservices["worker-actionkit"].port}", null)
         WORKER_ACTIONS_PRIVATE_URL     = try("http://worker-actions:${local.microservices["worker-actions"].port}", null)
+        WORKER_AUDIT_LOGS_PRIVATE_URL  = try("http://worker-auditlogs:${local.microservices["worker-auditlogs"].port}", null)
         WORKER_CREDENTIALS_PRIVATE_URL = try("http://worker-credentials:${local.microservices["worker-credentials"].port}", null)
         WORKER_CRONS_PRIVATE_URL       = try("http://worker-crons:${local.microservices["worker-crons"].port}", null)
         WORKER_DEPLOYMENTS_PRIVATE_URL = try("http://worker-deployments:${local.microservices["worker-deployments"].port}", null)
@@ -668,6 +694,7 @@ locals {
         RELEASE_PUBLIC_URL            = try(local.microservices.release.public_url, null)
         WORKER_ACTIONKIT_PUBLIC_URL   = try(local.microservices["worker-actionkit"].public_url, null)
         WORKER_ACTIONS_PUBLIC_URL     = try(local.microservices["worker-actions"].public_url, null)
+        WORKER_AUDIT_LOGS_PUBLIC_URL  = try(local.microservices["worker-auditlogs"].public_url, null)
         WORKER_CREDENTIALS_PUBLIC_URL = try(local.microservices["worker-credentials"].public_url, null)
         WORKER_CRONS_PUBLIC_URL       = try(local.microservices["worker-crons"].public_url, null)
         WORKER_DEPLOYMENTS_PUBLIC_URL = try(local.microservices["worker-deployments"].public_url, null)
@@ -690,53 +717,63 @@ locals {
         FEATURE_FLAG_PLATFORM_ENABLED  = "true"
         FEATURE_FLAG_PLATFORM_ENDPOINT = "http://flipt:${local.microservices.flipt.port}"
 
+        # Audit logs
+        AUDIT_LOGS_EVENT_BATCH_SIZE     = try(local.helm_vars.global.env["AUDIT_LOGS_EVENT_BATCH_SIZE"], 1000)
+        CLOUD_STORAGE_COMPLIANCE_BUCKET = try(local.helm_vars.global.env["CLOUD_STORAGE_COMPLIANCE_BUCKET"], local.auditlogs_bucket)
+
         # Database configurations
-        CERBERUS_POSTGRES_HOST       = try(local.infra_vars.postgres.value.cerberus.host, local.infra_vars.postgres.value.paragon.host)
-        CERBERUS_POSTGRES_PORT       = try(local.infra_vars.postgres.value.cerberus.port, local.infra_vars.postgres.value.paragon.port)
-        CERBERUS_POSTGRES_USERNAME   = try(local.infra_vars.postgres.value.cerberus.user, local.infra_vars.postgres.value.paragon.user)
-        CERBERUS_POSTGRES_PASSWORD   = try(local.infra_vars.postgres.value.cerberus.password, local.infra_vars.postgres.value.paragon.password)
-        CERBERUS_POSTGRES_DATABASE   = try(local.infra_vars.postgres.value.cerberus.database, local.infra_vars.postgres.value.paragon.database)
-        EVENT_LOGS_POSTGRES_HOST     = try(local.infra_vars.postgres.value.eventlogs.host, local.infra_vars.postgres.value.paragon.host)
-        EVENT_LOGS_POSTGRES_PORT     = try(local.infra_vars.postgres.value.eventlogs.port, local.infra_vars.postgres.value.paragon.port)
-        EVENT_LOGS_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.eventlogs.user, local.infra_vars.postgres.value.paragon.user)
-        EVENT_LOGS_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.eventlogs.password, local.infra_vars.postgres.value.paragon.password)
-        EVENT_LOGS_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.eventlogs.database, local.infra_vars.postgres.value.paragon.database)
-        HERMES_POSTGRES_HOST         = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
-        HERMES_POSTGRES_PORT         = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
-        HERMES_POSTGRES_USERNAME     = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
-        HERMES_POSTGRES_PASSWORD     = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
-        HERMES_POSTGRES_DATABASE     = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
-        PHEME_POSTGRES_HOST          = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
-        PHEME_POSTGRES_PORT          = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
-        PHEME_POSTGRES_USERNAME      = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
-        PHEME_POSTGRES_PASSWORD      = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
-        PHEME_POSTGRES_DATABASE      = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
-        TRIGGERKIT_POSTGRES_HOST     = try(local.infra_vars.postgres.value.triggerkit.host, local.infra_vars.postgres.value.paragon.host)
-        TRIGGERKIT_POSTGRES_PORT     = try(local.infra_vars.postgres.value.triggerkit.port, local.infra_vars.postgres.value.paragon.port)
-        TRIGGERKIT_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.triggerkit.user, local.infra_vars.postgres.value.paragon.user)
-        TRIGGERKIT_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.triggerkit.password, local.infra_vars.postgres.value.paragon.password)
-        TRIGGERKIT_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.triggerkit.database, local.infra_vars.postgres.value.paragon.database)
-        ZEUS_POSTGRES_HOST           = try(local.infra_vars.postgres.value.zeus.host, local.infra_vars.postgres.value.paragon.host)
-        ZEUS_POSTGRES_PORT           = try(local.infra_vars.postgres.value.zeus.port, local.infra_vars.postgres.value.paragon.port)
-        ZEUS_POSTGRES_USERNAME       = try(local.infra_vars.postgres.value.zeus.user, local.infra_vars.postgres.value.paragon.user)
-        ZEUS_POSTGRES_PASSWORD       = try(local.infra_vars.postgres.value.zeus.password, local.infra_vars.postgres.value.paragon.password)
-        ZEUS_POSTGRES_DATABASE       = try(local.infra_vars.postgres.value.zeus.database, local.infra_vars.postgres.value.paragon.database)
+        CERBERUS_POSTGRES_DATABASE      = try(local.infra_vars.postgres.value.cerberus.database, local.infra_vars.postgres.value.paragon.database)
+        CERBERUS_POSTGRES_HOST          = try(local.infra_vars.postgres.value.cerberus.host, local.infra_vars.postgres.value.paragon.host)
+        CERBERUS_POSTGRES_PASSWORD      = try(local.infra_vars.postgres.value.cerberus.password, local.infra_vars.postgres.value.paragon.password)
+        CERBERUS_POSTGRES_PORT          = try(local.infra_vars.postgres.value.cerberus.port, local.infra_vars.postgres.value.paragon.port)
+        CERBERUS_POSTGRES_SSL_ENABLED   = try(local.infra_vars.postgres.value.cerberus.ssl, "true")
+        CERBERUS_POSTGRES_USERNAME      = try(local.infra_vars.postgres.value.cerberus.user, local.infra_vars.postgres.value.paragon.user)
+        EVENT_LOGS_POSTGRES_DATABASE    = try(local.infra_vars.postgres.value.eventlogs.database, local.infra_vars.postgres.value.paragon.database)
+        EVENT_LOGS_POSTGRES_HOST        = try(local.infra_vars.postgres.value.eventlogs.host, local.infra_vars.postgres.value.paragon.host)
+        EVENT_LOGS_POSTGRES_PASSWORD    = try(local.infra_vars.postgres.value.eventlogs.password, local.infra_vars.postgres.value.paragon.password)
+        EVENT_LOGS_POSTGRES_PORT        = try(local.infra_vars.postgres.value.eventlogs.port, local.infra_vars.postgres.value.paragon.port)
+        EVENT_LOGS_POSTGRES_SSL_ENABLED = try(local.infra_vars.postgres.value.eventlogs.ssl, "true")
+        EVENT_LOGS_POSTGRES_USERNAME    = try(local.infra_vars.postgres.value.eventlogs.user, local.infra_vars.postgres.value.paragon.user)
+        HERMES_POSTGRES_DATABASE        = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
+        HERMES_POSTGRES_HOST            = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
+        HERMES_POSTGRES_PASSWORD        = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
+        HERMES_POSTGRES_PORT            = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
+        HERMES_POSTGRES_SSL_ENABLED     = try(local.infra_vars.postgres.value.hermes.ssl, "true")
+        HERMES_POSTGRES_USERNAME        = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
+        PHEME_POSTGRES_DATABASE         = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
+        PHEME_POSTGRES_HOST             = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
+        PHEME_POSTGRES_PASSWORD         = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
+        PHEME_POSTGRES_PORT             = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
+        PHEME_POSTGRES_SSL_ENABLED      = try(local.infra_vars.postgres.value.hermes.ssl, "true")
+        PHEME_POSTGRES_USERNAME         = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
+        TRIGGERKIT_POSTGRES_DATABASE    = try(local.infra_vars.postgres.value.triggerkit.database, local.infra_vars.postgres.value.paragon.database)
+        TRIGGERKIT_POSTGRES_HOST        = try(local.infra_vars.postgres.value.triggerkit.host, local.infra_vars.postgres.value.paragon.host)
+        TRIGGERKIT_POSTGRES_PASSWORD    = try(local.infra_vars.postgres.value.triggerkit.password, local.infra_vars.postgres.value.paragon.password)
+        TRIGGERKIT_POSTGRES_PORT        = try(local.infra_vars.postgres.value.triggerkit.port, local.infra_vars.postgres.value.paragon.port)
+        TRIGGERKIT_POSTGRES_SSL_ENABLED = try(local.infra_vars.postgres.value.triggerkit.ssl, "true")
+        TRIGGERKIT_POSTGRES_USERNAME    = try(local.infra_vars.postgres.value.triggerkit.user, local.infra_vars.postgres.value.paragon.user)
+        ZEUS_POSTGRES_DATABASE          = try(local.infra_vars.postgres.value.zeus.database, local.infra_vars.postgres.value.paragon.database)
+        ZEUS_POSTGRES_HOST              = try(local.infra_vars.postgres.value.zeus.host, local.infra_vars.postgres.value.paragon.host)
+        ZEUS_POSTGRES_PASSWORD          = try(local.infra_vars.postgres.value.zeus.password, local.infra_vars.postgres.value.paragon.password)
+        ZEUS_POSTGRES_PORT              = try(local.infra_vars.postgres.value.zeus.port, local.infra_vars.postgres.value.paragon.port)
+        ZEUS_POSTGRES_SSL_ENABLED       = try(local.infra_vars.postgres.value.zeus.ssl, "true")
+        ZEUS_POSTGRES_USERNAME          = try(local.infra_vars.postgres.value.zeus.user, local.infra_vars.postgres.value.paragon.user)
 
         # Redis configurations
         REDIS_URL = local.default_redis_url
 
         CACHE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.cache.cluster, local.default_redis_cluster)
         CACHE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.cache.ssl, local.default_redis_ssl)
-        CACHE_REDIS_URL                = try("${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}", local.default_redis_url)
+        CACHE_REDIS_URL                = try(local.infra_vars.redis.value.cache.connection_string, local.default_redis_url)
         QUEUE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.queue.cluster, local.default_redis_cluster)
         QUEUE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.queue.ssl, local.default_redis_ssl)
-        QUEUE_REDIS_URL                = try("${local.infra_vars.redis.value.queue.host}:${local.infra_vars.redis.value.queue.port}", local.default_redis_url)
+        QUEUE_REDIS_URL                = try(local.infra_vars.redis.value.queue.connection_string, local.default_redis_url)
         SYSTEM_REDIS_CLUSTER_ENABLED   = try(local.infra_vars.redis.value.system.cluster, local.default_redis_cluster)
         SYSTEM_REDIS_TLS_ENABLED       = try(local.infra_vars.redis.value.system.ssl, local.default_redis_ssl)
-        SYSTEM_REDIS_URL               = try("${local.infra_vars.redis.value.system.host}:${local.infra_vars.redis.value.system.port}", local.default_redis_url)
+        SYSTEM_REDIS_URL               = try(local.infra_vars.redis.value.system.connection_string, local.default_redis_url)
         WORKFLOW_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.workflow.cluster, local.default_redis_cluster)
         WORKFLOW_REDIS_TLS_ENABLED     = try(local.infra_vars.redis.value.workflow.ssl, local.default_redis_ssl)
-        WORKFLOW_REDIS_URL             = try("${local.infra_vars.redis.value.workflow.host}:${local.infra_vars.redis.value.workflow.port}", local.default_redis_url)
+        WORKFLOW_REDIS_URL             = try(local.infra_vars.redis.value.workflow.connection_string, local.default_redis_url)
 
         # Cloud Storage configurations
         CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "GCP" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass

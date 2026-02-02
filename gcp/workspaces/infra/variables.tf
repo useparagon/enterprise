@@ -144,6 +144,18 @@ variable "disable_deletion_protection" {
   default     = false
 }
 
+variable "auditlogs_retention_days" {
+  description = "The number of days to retain audit logs before deletion."
+  type        = number
+  default     = 365
+}
+
+variable "auditlogs_lock_enabled" {
+  description = "Whether to lock the GCS audit logs bucket retention policy."
+  type        = bool
+  default     = true
+}
+
 # postgres
 variable "postgres_tier" {
   description = "The instance type to use for Postgres."
@@ -212,10 +224,23 @@ variable "k8s_spot_node_instance_type" {
   default     = "e2-standard-4"
 }
 
+variable "k8s_disable_public_endpoint" {
+  description = "Used to disable public endpoint on GKE cluster."
+  type        = bool
+  default     = true
+}
+
 variable "use_storage_account_key" {
   description = "Whether to use the storage service account privatekey for the storage service account."
   type        = bool
   default     = false
+}
+
+variable "tfc_agent_token" {
+  description = "Terraform Cloud Agent token to support Terraform runs from the bastion"
+  type        = string
+  sensitive   = true
+  default     = ""
 }
 
 locals {

@@ -11,6 +11,7 @@ Parameters:
 {{- $command := .command -}}
 {{- $namespaceTemplate := .namespaceTemplate -}}
 {{- $name := $root.Chart.Name -}}
+{{- $redisCaCertEnabled := and $root.Values.global (kindIs "map" $root.Values.global) (hasKey $root.Values.global "redisCaCert") (kindIs "map" $root.Values.global.redisCaCert) (hasKey $root.Values.global.redisCaCert "enabled") $root.Values.global.redisCaCert.enabled -}}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -48,7 +49,7 @@ spec:
         - name: {{ $name }}
           securityContext:
             {{- toYaml $root.Values.securityContext | nindent 12 }}
-          image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag | default $root.Values.global.env.VERSION }}"
+          image: "{{ $root.Values.image.repository }}:{{ $root.Values.global.paragon_version | default $root.Values.global.env.VERSION }}"
           {{- if $command }}
           command: [{{ $command | quote }}]
           {{- end }}
@@ -95,6 +96,23 @@ spec:
             {{- toYaml $root.Values.resources | nindent 12 }}
           env:
             {{- include "env.standard" $root | nindent 12 }}
+            {{- if $redisCaCertEnabled }}
+            # Point Node.js to the Redis CA certificate bundle
+            - name: NODE_EXTRA_CA_CERTS
+              value: /etc/ssl/redis-ca/server-ca.pem
+            {{- end }}
+          {{- if $redisCaCertEnabled }}
+          volumeMounts:
+            - name: redis-ca-cert
+              mountPath: /etc/ssl/redis-ca
+              readOnly: true
+          {{- end }}
+      {{- if $redisCaCertEnabled }}
+      volumes:
+        - name: redis-ca-cert
+          secret:
+            secretName: {{ $root.Values.global.redisCaCert.secretName | default "redis-ca-cert" }}
+      {{- end }}
       {{- with $root.Values.nodeSelector }}
       nodeSelector: {{ toYaml . | nindent 8 }}
       {{- end }}

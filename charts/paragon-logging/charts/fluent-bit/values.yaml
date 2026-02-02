@@ -303,13 +303,13 @@ minReadySeconds:
 ##
 terminationGracePeriodSeconds:
 
-priorityClassName: "logging-critical"
+priorityClassName: "paragon-node-high"
 
 priorityClass:
   create: true
-  name: "logging-critical"
+  name: "paragon-node-high"
   value: 1000000
-  description: "Priority class for critical logging components like fluent-bit"
+  description: "High priority for node-level Paragon services like logging and metrics"
 
 secrets: {}
 

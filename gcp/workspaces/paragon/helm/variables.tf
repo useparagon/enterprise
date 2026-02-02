@@ -146,6 +146,13 @@ variable "storage_service_account" {
   default     = null
 }
 
+variable "infra_vars" {
+  description = "Infrastructure output variables (from infra workspace)."
+  type        = any
+  default     = {}
+  sensitive   = true
+}
+
 locals {
   chart_names     = var.monitors_enabled ? ["paragon-logging", "paragon-monitoring", "paragon-onprem"] : ["paragon-logging", "paragon-onprem"]
   chart_directory = "../charts"

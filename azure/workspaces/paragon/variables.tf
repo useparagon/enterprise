@@ -286,8 +286,9 @@ locals {
   infra_vars      = jsondecode(fileexists(local.infra_json_path) && var.infra_json == null ? file(local.infra_json_path) : var.infra_json)
 
   # use default where standard value can be determined
-  cluster_name = try(local.infra_vars.cluster_name.value, local.workspace)
-  logs_bucket  = try(local.infra_vars.logs_bucket.value, "${local.workspace}-logs")
+  cluster_name     = try(local.infra_vars.cluster_name.value, local.workspace)
+  logs_bucket      = try(local.infra_vars.logs_bucket.value, "${local.workspace}-logs")
+  auditlogs_bucket = try(local.infra_vars.auditlogs_bucket.value, "${local.workspace}-auditlogs")
 
   helm_yaml_path = abspath(var.helm_yaml_path)
   helm_vars      = yamldecode(fileexists(local.helm_yaml_path) && var.helm_yaml == null ? file(local.helm_yaml_path) : var.helm_yaml)
@@ -379,6 +380,11 @@ locals {
       "healthcheck_path" = "/healthz"
       "port"             = try(local.helm_vars.global.env["WORKER_ACTIONS_PORT"], 1712)
       "public_url"       = try(local.helm_vars.global.env["WORKER_ACTIONS_PUBLIC_URL"], "https://worker-actions.${var.domain}")
+    }
+    "worker-auditlogs" = {
+      "healthcheck_path" = "/healthz"
+      "port"             = try(local.helm_vars.global.env["WORKER_AUDIT_LOGS_PORT"], 1727)
+      "public_url"       = try(local.helm_vars.global.env["WORKER_AUDIT_LOGS_PUBLIC_URL"], "https://worker-auditlogs.${var.domain}")
     }
     "worker-credentials" = {
       "healthcheck_path" = "/healthz"
@@ -544,6 +550,7 @@ locals {
         RELEASE_PORT            = try(local.microservices.release.port, null)
         WORKER_ACTIONKIT_PORT   = try(local.microservices["worker-actionkit"].port, null)
         WORKER_ACTIONS_PORT     = try(local.microservices["worker-actions"].port, null)
+        WORKER_AUDIT_LOGS_PORT  = try(local.microservices["worker-auditlogs"].port, null)
         WORKER_CREDENTIALS_PORT = try(local.microservices["worker-credentials"].port, null)
         WORKER_CRONS_PORT       = try(local.microservices["worker-crons"].port, null)
         WORKER_DEPLOYMENTS_PORT = try(local.microservices["worker-deployments"].port, null)
@@ -570,6 +577,7 @@ locals {
         RELEASE_PRIVATE_URL            = try("http://release:${local.microservices.release.port}", null)
         WORKER_ACTIONKIT_PRIVATE_URL   = try("http://worker-actionkit:${local.microservices["worker-actionkit"].port}", null)
         WORKER_ACTIONS_PRIVATE_URL     = try("http://worker-actions:${local.microservices["worker-actions"].port}", null)
+        WORKER_AUDIT_LOGS_PRIVATE_URL  = try("http://worker-auditlogs:${local.microservices["worker-auditlogs"].port}", null)
         WORKER_CREDENTIALS_PRIVATE_URL = try("http://worker-credentials:${local.microservices["worker-credentials"].port}", null)
         WORKER_CRONS_PRIVATE_URL       = try("http://worker-crons:${local.microservices["worker-crons"].port}", null)
         WORKER_DEPLOYMENTS_PRIVATE_URL = try("http://worker-deployments:${local.microservices["worker-deployments"].port}", null)
@@ -595,6 +603,7 @@ locals {
         RELEASE_PUBLIC_URL            = try(local.microservices.release.public_url, null)
         WORKER_ACTIONKIT_PUBLIC_URL   = try(local.microservices["worker-actionkit"].public_url, null)
         WORKER_ACTIONS_PUBLIC_URL     = try(local.microservices["worker-actions"].public_url, null)
+        WORKER_AUDIT_LOGS_PUBLIC_URL  = try(local.microservices["worker-auditlogs"].public_url, null)
         WORKER_CREDENTIALS_PUBLIC_URL = try(local.microservices["worker-credentials"].public_url, null)
         WORKER_CRONS_PUBLIC_URL       = try(local.microservices["worker-crons"].public_url, null)
         WORKER_DEPLOYMENTS_PUBLIC_URL = try(local.microservices["worker-deployments"].public_url, null)
@@ -628,6 +637,8 @@ locals {
         EVENT_LOGS_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.eventlogs.user, local.infra_vars.postgres.value.paragon.user)
         EVENT_LOGS_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.eventlogs.password, local.infra_vars.postgres.value.paragon.password)
         EVENT_LOGS_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.eventlogs.database, local.infra_vars.postgres.value.paragon.database)
+        CLOUD_STORAGE_COMPLIANCE_BUCKET = try(local.helm_vars.global.env["CLOUD_STORAGE_COMPLIANCE_BUCKET"], local.auditlogs_bucket)
+        AUDIT_LOGS_EVENT_BATCH_SIZE  = try(local.helm_vars.global.env["AUDIT_LOGS_EVENT_BATCH_SIZE"], 1000)
         HERMES_POSTGRES_HOST         = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
         HERMES_POSTGRES_PORT         = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
         HERMES_POSTGRES_USERNAME     = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)

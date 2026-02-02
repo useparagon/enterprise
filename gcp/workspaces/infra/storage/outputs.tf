@@ -3,6 +3,7 @@ output "storage" {
     private_bucket          = google_storage_bucket.app.name
     public_bucket           = google_storage_bucket.cdn.name
     logs_bucket             = google_storage_bucket.logs.name
+    auditlogs_bucket        = google_storage_bucket.auditlogs.name
     minio_microservice_user = var.use_storage_account_key ? random_string.minio_microservice_user.result : null
     minio_microservice_pass = var.use_storage_account_key ? random_password.minio_microservice_pass.result : null
     service_account         = google_service_account.minio.email

@@ -25,6 +25,7 @@ module "helm" {
   public_services         = local.public_services
   region                  = var.region
   storage_service_account = try(local.infra_vars.minio.value.service_account, null)
+  infra_vars              = local.infra_vars
   workspace               = local.workspace
 }
 
