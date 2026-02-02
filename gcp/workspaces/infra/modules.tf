@@ -10,9 +10,9 @@ module "network" {
 module "postgres" {
   source = "./postgres"
 
-  disable_deletion_protection = var.disable_deletion_protection
-  auditlogs_retention_days    = var.auditlogs_retention_days
   auditlogs_lock_enabled      = var.auditlogs_lock_enabled
+  auditlogs_retention_days    = var.auditlogs_retention_days
+  disable_deletion_protection = var.disable_deletion_protection
   gcp_project_id              = local.gcp_project_id
   network                     = module.network.network
   postgres_multiple_instances = var.postgres_multiple_instances
@@ -39,6 +39,8 @@ module "redis" {
 module "storage" {
   source = "./storage"
 
+  auditlogs_lock_enabled      = var.auditlogs_lock_enabled
+  auditlogs_retention_days    = var.auditlogs_retention_days
   disable_deletion_protection = var.disable_deletion_protection
   gcp_project_id              = local.gcp_project_id
   region                      = var.region

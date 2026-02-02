@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # version of charts, must be semver and doesn't have to match Paragon appVersion
-version="2026.01.23"
+version="2026.01.29"
 
 # defaults
 provider="aws"
@@ -26,6 +26,17 @@ while getopts "t:p:h" opt; do
     \?) usage 1 ;;
   esac
 done
+
+# if provider is not provided, use aws
+if [[ -z "$provider" ]]; then
+  provider="aws"
+else
+  # verify provider is one of the allowed values
+  if [[ ! "$provider" =~ ^(aws|azure|gcp|k8s)$ ]]; then
+    echo "Error: Invalid provider '$provider'. Must be one of: aws, azure, gcp, k8s"
+    exit 1
+  fi
+fi
 
 # Fetch the tags from the remote repository
 git fetch --tags --quiet
