@@ -24,7 +24,7 @@ provider "helm" {
 
 provider "hoop" {
   api_url = var.hoop_api_url
-  api_key = var.hoop_enabled ? var.hoop_api_key : "dummy-token"
+  api_key = coalesce(var.hoop_api_key, "dummy-token")
 }
 
 # provider "cloudflare" {
