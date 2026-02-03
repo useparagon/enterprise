@@ -140,6 +140,135 @@ variable "openobserve_password" {
   default     = null
 }
 
+variable "hoop_agent_id" {
+  description = "Hoop agent ID for connections. Only used if hoop_enabled is true."
+  type        = string
+  default     = null
+}
+
+variable "hoop_api_key" {
+  description = "Hoop API key. Only used if hoop_enabled is true."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "hoop_slack_bot_token" {
+  description = "Slack bot token for the Hoop Slack plugin."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "hoop_slack_app_token" {
+  description = "Slack app token for the Hoop Slack plugin."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "hoop_slack_channel_ids" {
+  description = "Slack channel IDs to notify for connections that require reviews."
+  type        = list(string)
+  default     = []
+}
+
+variable "hoop_all_access_groups" {
+  description = "Additional access-control groups allowed when customer_facing is false."
+  type        = list(string)
+  default     = ["dev-team-engineering"]
+}
+
+variable "hoop_postgres_guardrail_rules" {
+  description = "Guardrail rule IDs for PostgreSQL connections."
+  type        = list(string)
+  default     = ["a85115f6-5ef3-4618-b70c-f7cccdc62c5a"]
+}
+
+variable "hoop_redis_guardrail_rules" {
+  description = "Guardrail rule IDs for Redis connections."
+  type        = list(string)
+  default     = ["182f59b2-5d5d-4ab8-978e-94472b3915fc"]
+}
+
+variable "hoop_custom_connections" {
+  description = "Custom Hoop connections defined via tfvars. Map of connection names to their configuration."
+  type = map(object({
+    type                  = string
+    subtype               = optional(string)
+    access_mode_runbooks  = optional(string, "enabled")
+    access_mode_exec      = optional(string, "enabled")
+    access_mode_connect   = optional(string, "disabled")
+    access_schema         = optional(string, "disabled")
+    command               = optional(list(string))
+    secrets               = map(string)
+    tags                  = optional(map(string), {})
+    guardrail_rules       = optional(list(string), [])
+    reviewers             = optional(list(string), [])
+    access_control_groups = optional(list(string), [])
+  }))
+  default = {}
+}
+
+variable "hoop_api_url" {
+  description = "Hoop API URL."
+  type        = string
+  default     = "https://hoop.ops.paragoninternal.com/api"
+}
+
+variable "hoop_enabled" {
+  description = "Whether to enable Hoop agent. hoop_key, hoop_api_key, and hoop_agent_id must be set if this is true."
+  type        = bool
+  default     = true
+}
+
+variable "hoop_k8s_connections" {
+  description = "Kubernetes Hoop connections defined via tfvars. Map of connection names to their configuration. If empty, a default k8s-admin connection will be created."
+  type = map(object({
+    type                  = optional(string, "custom")
+    subtype               = optional(string)
+    access_mode_runbooks  = optional(string, "enabled")
+    access_mode_exec      = optional(string, "enabled")
+    access_mode_connect   = optional(string, "enabled")
+    access_schema         = optional(string, "disabled")
+    command               = optional(list(string), ["bash"])
+    remote_url            = optional(string, "https://kubernetes.default.svc.cluster.local")
+    insecure              = optional(string, "true")
+    namespace             = optional(string, "paragon")
+    secrets               = optional(map(string), {})
+    tags                  = optional(map(string), {})
+    guardrail_rules       = optional(list(string), [])
+    reviewers             = optional(list(string), [])
+    access_control_groups = optional(list(string), [])
+  }))
+  default = {}
+}
+
+variable "hoop_key" {
+  description = "Hoop agent key (token). Only used if hoop_enabled is true."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "hoop_restricted_access_groups" {
+  description = "Base access-control groups allowed for all connections."
+  type        = list(string)
+  default     = ["dev-team-oncall", "dev-team-managers", "admin"]
+}
+
+variable "hoop_reviewers_access_groups" {
+  description = "Reviewer groups required for customer-facing app connections."
+  type        = list(string)
+  default     = ["dev-team-managers", "admin"]
+}
+
+variable "customer_facing" {
+  description = "Whether the connections are customer-facing (true limits access to dev-team-oncall/dev-team-managers/admin, false adds dev-team-engineering)."
+  type        = bool
+  default     = true
+}
+
 variable "infra_json_path" {
   description = "Path to `infra` workspace output JSON file."
   type        = string
@@ -516,38 +645,38 @@ locals {
         FEATURE_FLAG_PLATFORM_ENDPOINT = "http://flipt:${local.microservices.flipt.port}"
 
         # Database configurations
-        CERBERUS_POSTGRES_HOST       = try(local.infra_vars.postgres.value.cerberus.host, local.infra_vars.postgres.value.paragon.host)
-        CERBERUS_POSTGRES_PORT       = try(local.infra_vars.postgres.value.cerberus.port, local.infra_vars.postgres.value.paragon.port)
-        CERBERUS_POSTGRES_USERNAME   = try(local.infra_vars.postgres.value.cerberus.user, local.infra_vars.postgres.value.paragon.user)
-        CERBERUS_POSTGRES_PASSWORD   = try(local.infra_vars.postgres.value.cerberus.password, local.infra_vars.postgres.value.paragon.password)
-        CERBERUS_POSTGRES_DATABASE   = try(local.infra_vars.postgres.value.cerberus.database, local.infra_vars.postgres.value.paragon.database)
-        EVENT_LOGS_POSTGRES_HOST     = try(local.infra_vars.postgres.value.eventlogs.host, local.infra_vars.postgres.value.paragon.host)
-        EVENT_LOGS_POSTGRES_PORT     = try(local.infra_vars.postgres.value.eventlogs.port, local.infra_vars.postgres.value.paragon.port)
-        EVENT_LOGS_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.eventlogs.user, local.infra_vars.postgres.value.paragon.user)
-        EVENT_LOGS_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.eventlogs.password, local.infra_vars.postgres.value.paragon.password)
-        EVENT_LOGS_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.eventlogs.database, local.infra_vars.postgres.value.paragon.database)
+        CERBERUS_POSTGRES_HOST          = try(local.infra_vars.postgres.value.cerberus.host, local.infra_vars.postgres.value.paragon.host)
+        CERBERUS_POSTGRES_PORT          = try(local.infra_vars.postgres.value.cerberus.port, local.infra_vars.postgres.value.paragon.port)
+        CERBERUS_POSTGRES_USERNAME      = try(local.infra_vars.postgres.value.cerberus.user, local.infra_vars.postgres.value.paragon.user)
+        CERBERUS_POSTGRES_PASSWORD      = try(local.infra_vars.postgres.value.cerberus.password, local.infra_vars.postgres.value.paragon.password)
+        CERBERUS_POSTGRES_DATABASE      = try(local.infra_vars.postgres.value.cerberus.database, local.infra_vars.postgres.value.paragon.database)
+        EVENT_LOGS_POSTGRES_HOST        = try(local.infra_vars.postgres.value.eventlogs.host, local.infra_vars.postgres.value.paragon.host)
+        EVENT_LOGS_POSTGRES_PORT        = try(local.infra_vars.postgres.value.eventlogs.port, local.infra_vars.postgres.value.paragon.port)
+        EVENT_LOGS_POSTGRES_USERNAME    = try(local.infra_vars.postgres.value.eventlogs.user, local.infra_vars.postgres.value.paragon.user)
+        EVENT_LOGS_POSTGRES_PASSWORD    = try(local.infra_vars.postgres.value.eventlogs.password, local.infra_vars.postgres.value.paragon.password)
+        EVENT_LOGS_POSTGRES_DATABASE    = try(local.infra_vars.postgres.value.eventlogs.database, local.infra_vars.postgres.value.paragon.database)
         CLOUD_STORAGE_COMPLIANCE_BUCKET = try(local.helm_vars.global.env["CLOUD_STORAGE_COMPLIANCE_BUCKET"], local.auditlogs_bucket)
-        AUDIT_LOGS_EVENT_BATCH_SIZE  = try(local.helm_vars.global.env["AUDIT_LOGS_EVENT_BATCH_SIZE"], 1000)
-        HERMES_POSTGRES_HOST         = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
-        HERMES_POSTGRES_PORT         = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
-        HERMES_POSTGRES_USERNAME     = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
-        HERMES_POSTGRES_PASSWORD     = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
-        HERMES_POSTGRES_DATABASE     = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
-        PHEME_POSTGRES_HOST          = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
-        PHEME_POSTGRES_PORT          = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
-        PHEME_POSTGRES_USERNAME      = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
-        PHEME_POSTGRES_PASSWORD      = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
-        PHEME_POSTGRES_DATABASE      = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
-        TRIGGERKIT_POSTGRES_HOST     = try(local.infra_vars.postgres.value.triggerkit.host, local.infra_vars.postgres.value.paragon.host)
-        TRIGGERKIT_POSTGRES_PORT     = try(local.infra_vars.postgres.value.triggerkit.port, local.infra_vars.postgres.value.paragon.port)
-        TRIGGERKIT_POSTGRES_USERNAME = try(local.infra_vars.postgres.value.triggerkit.user, local.infra_vars.postgres.value.paragon.user)
-        TRIGGERKIT_POSTGRES_PASSWORD = try(local.infra_vars.postgres.value.triggerkit.password, local.infra_vars.postgres.value.paragon.password)
-        TRIGGERKIT_POSTGRES_DATABASE = try(local.infra_vars.postgres.value.triggerkit.database, local.infra_vars.postgres.value.paragon.database)
-        ZEUS_POSTGRES_HOST           = try(local.infra_vars.postgres.value.zeus.host, local.infra_vars.postgres.value.paragon.host)
-        ZEUS_POSTGRES_PORT           = try(local.infra_vars.postgres.value.zeus.port, local.infra_vars.postgres.value.paragon.port)
-        ZEUS_POSTGRES_USERNAME       = try(local.infra_vars.postgres.value.zeus.user, local.infra_vars.postgres.value.paragon.user)
-        ZEUS_POSTGRES_PASSWORD       = try(local.infra_vars.postgres.value.zeus.password, local.infra_vars.postgres.value.paragon.password)
-        ZEUS_POSTGRES_DATABASE       = try(local.infra_vars.postgres.value.zeus.database, local.infra_vars.postgres.value.paragon.database)
+        AUDIT_LOGS_EVENT_BATCH_SIZE     = try(local.helm_vars.global.env["AUDIT_LOGS_EVENT_BATCH_SIZE"], 1000)
+        HERMES_POSTGRES_HOST            = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
+        HERMES_POSTGRES_PORT            = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
+        HERMES_POSTGRES_USERNAME        = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
+        HERMES_POSTGRES_PASSWORD        = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
+        HERMES_POSTGRES_DATABASE        = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
+        PHEME_POSTGRES_HOST             = try(local.infra_vars.postgres.value.hermes.host, local.infra_vars.postgres.value.paragon.host)
+        PHEME_POSTGRES_PORT             = try(local.infra_vars.postgres.value.hermes.port, local.infra_vars.postgres.value.paragon.port)
+        PHEME_POSTGRES_USERNAME         = try(local.infra_vars.postgres.value.hermes.user, local.infra_vars.postgres.value.paragon.user)
+        PHEME_POSTGRES_PASSWORD         = try(local.infra_vars.postgres.value.hermes.password, local.infra_vars.postgres.value.paragon.password)
+        PHEME_POSTGRES_DATABASE         = try(local.infra_vars.postgres.value.hermes.database, local.infra_vars.postgres.value.paragon.database)
+        TRIGGERKIT_POSTGRES_HOST        = try(local.infra_vars.postgres.value.triggerkit.host, local.infra_vars.postgres.value.paragon.host)
+        TRIGGERKIT_POSTGRES_PORT        = try(local.infra_vars.postgres.value.triggerkit.port, local.infra_vars.postgres.value.paragon.port)
+        TRIGGERKIT_POSTGRES_USERNAME    = try(local.infra_vars.postgres.value.triggerkit.user, local.infra_vars.postgres.value.paragon.user)
+        TRIGGERKIT_POSTGRES_PASSWORD    = try(local.infra_vars.postgres.value.triggerkit.password, local.infra_vars.postgres.value.paragon.password)
+        TRIGGERKIT_POSTGRES_DATABASE    = try(local.infra_vars.postgres.value.triggerkit.database, local.infra_vars.postgres.value.paragon.database)
+        ZEUS_POSTGRES_HOST              = try(local.infra_vars.postgres.value.zeus.host, local.infra_vars.postgres.value.paragon.host)
+        ZEUS_POSTGRES_PORT              = try(local.infra_vars.postgres.value.zeus.port, local.infra_vars.postgres.value.paragon.port)
+        ZEUS_POSTGRES_USERNAME          = try(local.infra_vars.postgres.value.zeus.user, local.infra_vars.postgres.value.paragon.user)
+        ZEUS_POSTGRES_PASSWORD          = try(local.infra_vars.postgres.value.zeus.password, local.infra_vars.postgres.value.paragon.password)
+        ZEUS_POSTGRES_DATABASE          = try(local.infra_vars.postgres.value.zeus.database, local.infra_vars.postgres.value.paragon.database)
 
         # Redis configurations
         REDIS_URL = local.default_redis_url

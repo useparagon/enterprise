@@ -6,6 +6,10 @@ output "release_paragon_on_prem" {
   value = helm_release.paragon_on_prem
 }
 
+output "namespace_paragon" {
+  value = kubernetes_namespace.paragon
+}
+
 output "openobserve_email" {
   value = local.openobserve_email
 }

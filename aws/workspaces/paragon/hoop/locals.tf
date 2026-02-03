@@ -1,0 +1,287 @@
+locals {
+  detected_cloud = "aws"
+
+  connection_environment = var.customer_facing ? "prod" : "staging"
+  slack_enabled = (
+    var.hoop_enabled &&
+    try(var.hoop_slack_bot_token, null) != null && var.hoop_slack_bot_token != "" &&
+    try(var.hoop_slack_app_token, null) != null && var.hoop_slack_app_token != "" &&
+    length(var.hoop_slack_channel_ids) > 0
+  )
+
+  postgres_connections = try(var.infra_vars.postgres.value, null) != null ? {
+    for db_schema, db_config in var.infra_vars.postgres.value :
+    "postgres-${db_schema}" => {
+      name    = length(keys(var.infra_vars.postgres.value)) == 1 ? "${var.organization}-postgres-db" : "${var.organization}-${db_schema}-db"
+      type    = "database"
+      subtype = "postgres"
+      command = null
+      secrets = {
+        "envvar:HOST"    = db_config.host
+        "envvar:PORT"    = tostring(db_config.port)
+        "envvar:USER"    = db_config.user
+        "envvar:PASS"    = db_config.password
+        "envvar:DB"      = db_config.database
+        "envvar:SSLMODE" = try(db_config.sslmode, "disable")
+      }
+      access_mode_runbooks = "enabled"
+      access_mode_exec     = "enabled"
+      access_mode_connect  = "disabled"
+      access_schema        = "enabled"
+      guardrail_rules      = var.hoop_postgres_guardrail_rules
+      tags = {
+        environment     = local.connection_environment
+        customer_facing = var.customer_facing
+        criticality     = "critical"
+        access-level    = "private"
+        impact          = "high"
+        service-type    = "database"
+        database-type   = "postgres"
+        cloud           = local.detected_cloud
+      }
+    }
+  } : {}
+
+  # Unified connections map - combines all non-PostgreSQL connection types
+  connections_merge = merge(
+    # Redis connections
+    try(var.infra_vars.redis.value, null) != null ? {
+      for instance_name, instance_config in var.infra_vars.redis.value :
+      "redis-${instance_name}" => {
+        name    = "${var.organization}-redis-${instance_name}"
+        type    = "custom"
+        subtype = "redis"
+        command = ["redis-cli", "-h", "$HOST", "-p", "$PORT", "-n", "$DB_NUMBER"]
+        secrets = merge(
+          {
+            "envvar:HOST"      = instance_config.host
+            "envvar:PORT"      = tostring(instance_config.port)
+            "envvar:DB_NUMBER" = tostring(try(instance_config.db_number, 0))
+          },
+          try(instance_config.ssl, false) == true ? { "envvar:REDIS_TLS" = "1" } : {},
+          try(instance_config.ca_certificate, null) != null && try(instance_config.ca_certificate, "") != "" ? { "envvar:REDIS_CA_CERT" = instance_config.ca_certificate } : {}
+        )
+        access_mode_runbooks = "enabled"
+        access_mode_exec     = "enabled"
+        access_mode_connect  = "disabled"
+        access_schema        = "disabled"
+        guardrail_rules      = var.hoop_redis_guardrail_rules
+        tags = {
+          environment     = local.connection_environment
+          customer_facing = var.customer_facing
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "cache"
+          database-type   = "redis"
+          cloud           = local.detected_cloud
+        }
+      }
+    } : {},
+    # Standard application connections
+    # pgadmin
+    try(var.infra_vars.postgres.value, null) != null ? {
+      "pgadmin" = {
+        name    = "${var.organization}-pgadmin"
+        type    = "application"
+        subtype = "tcp"
+        command = ["bash"]
+        secrets = {
+          "envvar:HOST" = "pgadmin.paragon"
+          "envvar:PORT" = "5050"
+        }
+        access_mode_runbooks = "enabled"
+        access_mode_exec     = "enabled"
+        access_mode_connect  = "enabled"
+        access_schema        = "disabled"
+        reviewers            = var.customer_facing ? var.reviewers_access_groups : null
+        tags = {
+          environment     = local.connection_environment
+          customer_facing = var.customer_facing
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "database"
+          cloud           = local.detected_cloud
+        }
+      }
+    } : {},
+    # openobserve
+    {
+      "openobserve" = {
+        name    = "${var.organization}-openobserve"
+        type    = "application"
+        subtype = "tcp"
+        command = ["bash"]
+        secrets = {
+          "envvar:HOST" = "openobserve.paragon"
+          "envvar:PORT" = "5080"
+        }
+        access_mode_runbooks = "enabled"
+        access_mode_exec     = "enabled"
+        access_mode_connect  = "enabled"
+        access_schema        = "disabled"
+        tags = {
+          environment     = local.connection_environment
+          customer_facing = var.customer_facing
+          criticality     = "normal"
+          access-level    = "private"
+          impact          = "low"
+          service-type    = "storage"
+          cloud           = local.detected_cloud
+        }
+      }
+    },
+    # redis-insight
+    try(var.infra_vars.redis.value, null) != null ? {
+      "redis-insight" = {
+        name    = "${var.organization}-redis-insight"
+        type    = "application"
+        subtype = "tcp"
+        command = ["bash"]
+        secrets = {
+          "envvar:HOST" = "redis-insight.paragon"
+          "envvar:PORT" = "8500"
+        }
+        access_mode_runbooks = "enabled"
+        access_mode_exec     = "enabled"
+        access_mode_connect  = "enabled"
+        access_schema        = "disabled"
+        reviewers            = var.customer_facing ? var.reviewers_access_groups : null
+        tags = {
+          environment     = local.connection_environment
+          customer_facing = var.customer_facing
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "database"
+          cloud           = local.detected_cloud
+        }
+      }
+    } : {},
+    # K8s connections from tfvars (or default k8s-admin if none defined)
+    length(var.k8s_connections) > 0 ? {
+      for conn_name, conn_config in var.k8s_connections :
+      "k8s-${conn_name}" => {
+        name    = "${var.organization}-k8s-${conn_name}"
+        type    = try(conn_config.type, "custom")
+        subtype = try(conn_config.subtype, null) != null && try(conn_config.subtype, null) != "" ? conn_config.subtype : null
+        command = try(conn_config.command, ["bash"])
+        secrets = merge(
+          {
+            "envvar:REMOTE_URL"           = try(conn_config.remote_url, "https://kubernetes.default.svc.cluster.local")
+            "envvar:INSECURE"             = try(conn_config.insecure, "true")
+            "envvar:KUBECTL_NAMESPACE"    = try(conn_config.namespace, "paragon")
+            "envvar:HEADER_AUTHORIZATION" = "Bearer ${try(data.kubernetes_secret.hoop_cluster_admin_token[0].data["token"], "")}"
+          },
+          try(conn_config.secrets, {})
+        )
+        access_mode_runbooks = try(conn_config.access_mode_runbooks, "enabled")
+        access_mode_exec     = try(conn_config.access_mode_exec, "enabled")
+        access_mode_connect  = try(conn_config.access_mode_connect, "enabled")
+        access_schema        = try(conn_config.access_schema, "disabled")
+        guardrail_rules      = try(conn_config.guardrail_rules, null) != null && length(try(conn_config.guardrail_rules, [])) > 0 ? conn_config.guardrail_rules : null
+        reviewers            = try(conn_config.reviewers, null) != null && length(try(conn_config.reviewers, [])) > 0 ? conn_config.reviewers : null
+        tags = merge({
+          environment     = local.connection_environment
+          customer_facing = var.customer_facing
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "compute"
+          cloud           = local.detected_cloud
+          team            = "platform-eng"
+        }, try(conn_config.tags, {}))
+      }
+      } : {
+      # Default k8s-admin connection if no k8s_connections defined
+      "k8s-admin" = {
+        name    = "${var.organization}-k8s-admin"
+        type    = "custom"
+        subtype = null
+        command = ["bash"]
+        secrets = {
+          "envvar:REMOTE_URL"           = "https://kubernetes.default.svc.cluster.local"
+          "envvar:INSECURE"             = "true"
+          "envvar:KUBECTL_NAMESPACE"    = "paragon"
+          "envvar:HEADER_AUTHORIZATION" = "Bearer ${try(data.kubernetes_secret.hoop_cluster_admin_token[0].data["token"], "")}"
+        }
+        access_mode_runbooks = "enabled"
+        access_mode_exec     = "enabled"
+        access_mode_connect  = "enabled"
+        access_schema        = "disabled"
+        guardrail_rules      = null
+        reviewers            = null
+        tags = {
+          environment     = local.connection_environment
+          customer_facing = var.customer_facing
+          criticality     = "critical"
+          access-level    = "private"
+          impact          = "high"
+          service-type    = "compute"
+          cloud           = local.detected_cloud
+          team            = "platform-eng"
+        }
+      }
+    },
+    # Custom connections from tfvars
+    try(var.custom_connections, {}) != {} ? {
+      for conn_name, conn_config in var.custom_connections :
+      "custom-${conn_name}" => {
+        name                 = "${var.organization}-${conn_name}"
+        type                 = conn_config.type
+        subtype              = try(conn_config.subtype, null) != null && try(conn_config.subtype, null) != "" ? conn_config.subtype : null
+        command              = try(conn_config.command, null)
+        secrets              = conn_config.secrets
+        access_mode_runbooks = try(conn_config.access_mode_runbooks, "enabled")
+        access_mode_exec     = try(conn_config.access_mode_exec, "enabled")
+        access_mode_connect  = try(conn_config.access_mode_connect, "disabled")
+        access_schema        = try(conn_config.access_schema, "disabled")
+        guardrail_rules      = try(conn_config.guardrail_rules, null) != null && length(try(conn_config.guardrail_rules, [])) > 0 ? conn_config.guardrail_rules : null
+        reviewers            = try(conn_config.reviewers, null) != null && length(try(conn_config.reviewers, [])) > 0 ? conn_config.reviewers : null
+        tags = merge({
+          environment     = local.connection_environment
+          customer_facing = var.customer_facing
+          cloud           = try(conn_config.tags["cloud"], local.detected_cloud)
+        }, try(conn_config.tags, {}))
+      }
+    } : {}
+  )
+
+  # Per-connection access control: k8s_connections can set access_control_groups; else use global customer_facing logic
+  access_control_groups = {
+    for conn_name, conn_config in local.all_connections :
+    conn_name => (
+      startswith(conn_name, "k8s-") && try(length(try(var.k8s_connections[replace(conn_name, "k8s-", "")].access_control_groups, [])), 0) > 0
+      ? var.k8s_connections[replace(conn_name, "k8s-", "")].access_control_groups
+      : (var.customer_facing ? var.restricted_access_groups : concat(var.restricted_access_groups, var.all_access_groups))
+    )
+  }
+
+  postgres_access_control_groups = {
+    for conn_name, conn_config in local.postgres_connections :
+    conn_name => (
+      var.customer_facing
+      ? var.restricted_access_groups
+      : concat(var.restricted_access_groups, var.all_access_groups)
+    )
+  }
+
+  # Custom connections: use explicit access_control_groups, or default (restricted = oncall/admin; + all = dev-team-engineering when not customer_facing)
+  custom_connections_access_control_groups = try(var.custom_connections, {}) != {} ? {
+    for conn_name, conn_config in var.custom_connections :
+    "custom-${conn_name}" => (
+      try(length(conn_config.access_control_groups), 0) > 0
+      ? conn_config.access_control_groups
+      : (var.customer_facing ? var.restricted_access_groups : concat(var.restricted_access_groups, var.all_access_groups))
+    )
+  } : {}
+
+  review_required_connections = {
+    for conn_name, conn_config in local.all_connections :
+    conn_name => conn_config
+    if try(length(try(conn_config.reviewers, [])), 0) > 0
+  }
+
+  all_connections = local.connections_merge
+}

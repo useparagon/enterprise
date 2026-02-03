@@ -45,7 +45,7 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   sku_tier            = var.k8s_sku_tier
 
   # disable automatic upgrades - manual upgrades only
-  node_os_upgrade_channel   = "Unmanaged"
+  node_os_upgrade_channel = "Unmanaged"
 
   # NOTE: The configuration for the cluster can't change at all
   # We're intentionally setting very low settings.
