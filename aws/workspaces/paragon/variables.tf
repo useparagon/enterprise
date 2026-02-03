@@ -191,7 +191,6 @@ locals {
   # hash of account ID to help ensure uniqueness of resources like S3 bucket names
   hash        = substr(sha256(data.aws_caller_identity.current.account_id), 0, 8)
   environment = "enterprise"
-  workspace   = "paragon-${var.organization}-${local.hash}"
 
   # NOTE hash and workspace can't be included in tags since it creates a circular reference
   default_tags = {
@@ -203,6 +202,8 @@ locals {
 
   infra_json_path = abspath(var.infra_json_path)
   infra_vars      = jsondecode(fileexists(local.infra_json_path) && var.infra_json == null ? file(local.infra_json_path) : var.infra_json)
+
+  workspace = try(local.infra_vars.workspace.value, "paragon-${var.organization}-${local.hash}")
 
   # use default where standard value can be determined
   cluster_name     = try(local.infra_vars.cluster_name.value, local.workspace)

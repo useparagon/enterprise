@@ -170,11 +170,9 @@ resource "aws_eks_addon" "addons" {
   resolve_conflicts_on_update = "PRESERVE"
   service_account_role_arn    = each.key == "aws-ebs-csi-driver" ? module.aws_ebs_csi_driver_iam_role.iam_role_arn : null
 
-  # certain addons such as coredns and EBS CNI require nodes
-  # Ensure service account exists before addon is created/updated
+  # certain addons such as coredns and EBS CSI require nodes; EKS creates ebs-csi-controller-sa when role_arn is set
   depends_on = [
     module.eks_managed_node_group,
-    module.aws_ebs_csi_driver_iam_role,
-    kubernetes_service_account.ebs_csi_controller
+    module.aws_ebs_csi_driver_iam_role
   ]
 }
