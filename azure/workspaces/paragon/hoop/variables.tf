@@ -24,21 +24,8 @@ variable "hoop_agent_id" {
   default     = null
 }
 
-variable "hoop_api_key" {
-  description = "Hoop API key. Only used if hoop_enabled is true."
-  type        = string
-  sensitive   = true
-  default     = null
-}
-
-variable "hoop_api_url" {
-  description = "Hoop API URL."
-  type        = string
-  default     = "https://hoop.ops.paragoninternal.com/api"
-}
-
 variable "hoop_enabled" {
-  description = "Whether to enable Hoop agent. hoop_key, hoop_api_key, and hoop_agent_id must be set if this is true."
+  description = "Whether to enable Hoop agent. hoop_key and hoop_agent_id must be set if this is true."
   type        = bool
   default     = true
 }

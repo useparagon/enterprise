@@ -83,7 +83,6 @@ module "hoop" {
   hoop_enabled                  = var.hoop_enabled
   hoop_key                      = var.hoop_key
   hoop_agent_id                 = var.hoop_agent_id
-  hoop_api_key                  = var.hoop_api_key
   hoop_slack_bot_token          = var.hoop_slack_bot_token
   hoop_slack_app_token          = var.hoop_slack_app_token
   hoop_slack_channel_ids        = var.hoop_slack_channel_ids

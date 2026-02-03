@@ -248,12 +248,13 @@ locals {
     } : {}
   )
 
+  # Per-connection access control: k8s_connections can set access_control_groups; else use global customer_facing logic
   access_control_groups = {
     for conn_name, conn_config in local.all_connections :
     conn_name => (
-      var.customer_facing
-      ? var.restricted_access_groups
-      : concat(var.restricted_access_groups, var.all_access_groups)
+      startswith(conn_name, "k8s-") && try(length(try(var.k8s_connections[replace(conn_name, "k8s-", "")].access_control_groups, [])), 0) > 0
+      ? var.k8s_connections[replace(conn_name, "k8s-", "")].access_control_groups
+      : (var.customer_facing ? var.restricted_access_groups : concat(var.restricted_access_groups, var.all_access_groups))
     )
   }
 
