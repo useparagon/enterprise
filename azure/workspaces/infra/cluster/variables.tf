@@ -36,6 +36,11 @@ variable "k8s_spot_instance_percent" {
   type        = number
 }
 
+variable "k8s_default_node_pool_vm_size" {
+  description = "VM size for the AKS default (system) node pool. Must be available in the target region (e.g. Standard_B2s_v2 in japaneast)."
+  type        = string
+}
+
 variable "k8s_ondemand_node_instance_type" {
   description = "The compute instance type to use for Kubernetes on demand nodes."
   type        = string

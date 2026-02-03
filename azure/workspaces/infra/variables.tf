@@ -46,6 +46,12 @@ variable "ssh_whitelist" {
   default     = ""
 }
 
+variable "bastion_vm_size" {
+  description = "VM size for the bastion scale set (e.g. Standard_B1s). Must be available in the target region."
+  type        = string
+  default     = "Standard_B1s"
+}
+
 variable "vpc_cidr" {
   description = "CIDR for the virtual network. A `/16` (65,536 IPs) or larger is recommended."
   type        = string
@@ -216,6 +222,12 @@ variable "k8s_spot_instance_percent" {
     condition     = var.k8s_spot_instance_percent >= 0 && var.k8s_spot_instance_percent <= 100
     error_message = "Value must be between 0 - 100."
   }
+}
+
+variable "k8s_default_node_pool_vm_size" {
+  description = "VM size for the AKS default (system) node pool. Must be available in the target region (e.g. Standard_B2s_v2 in japaneast)."
+  type        = string
+  default     = "Standard_B2s"
 }
 
 variable "k8s_ondemand_node_instance_type" {

@@ -12,7 +12,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "bastion" {
   name                = local.bastion_name
   location            = var.resource_group.location
   resource_group_name = var.resource_group.name
-  sku                 = "Standard_B1s"
+  sku                 = var.bastion_vm_size
   instances           = 1
 
   admin_username = "ubuntu"
