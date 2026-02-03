@@ -79,7 +79,6 @@ module "hoop" {
 
   workspace                     = local.workspace
   organization                  = var.organization
-  cluster_name                  = local.cluster_name
   hoop_enabled                  = var.hoop_enabled
   hoop_key                      = var.hoop_key
   hoop_agent_id                 = var.hoop_agent_id

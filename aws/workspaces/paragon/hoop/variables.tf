@@ -8,11 +8,6 @@ variable "organization" {
   type        = string
 }
 
-variable "cluster_name" {
-  description = "The EKS cluster name."
-  type        = string
-}
-
 variable "hoop_agent_id" {
   description = "Hoop agent ID for connections. Only used if hoop_enabled is true."
   type        = string
