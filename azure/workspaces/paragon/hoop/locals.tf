@@ -266,6 +266,16 @@ locals {
     )
   }
 
+  # Custom connections: use explicit access_control_groups, or default (restricted = oncall/admin; + all = dev-team-engineering when not customer_facing)
+  custom_connections_access_control_groups = try(var.custom_connections, {}) != {} ? {
+    for conn_name, conn_config in var.custom_connections :
+    "custom-${conn_name}" => (
+      try(length(conn_config.access_control_groups), 0) > 0
+      ? conn_config.access_control_groups
+      : (var.customer_facing ? var.restricted_access_groups : concat(var.restricted_access_groups, var.all_access_groups))
+    )
+  } : {}
+
   review_required_connections = {
     for conn_name, conn_config in local.all_connections :
     conn_name => conn_config

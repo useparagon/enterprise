@@ -54,17 +54,13 @@ resource "hoop_connection" "postgres_connections" {
   ]
 }
 
-# Access control plugin connections for custom connections
+# Access control plugin for custom connections (uses explicit access_control_groups or default: restricted oncall/admin; + all when not customer_facing)
 resource "hoop_plugin_connection" "custom_connections_access_control" {
-  for_each = var.hoop_enabled && try(var.custom_connections, {}) != {} ? {
-    for conn_name, conn_config in var.custom_connections :
-    "custom-${conn_name}" => conn_config
-    if try(length(conn_config.access_control_groups), 0) > 0
-  } : {}
+  for_each = var.hoop_enabled ? local.custom_connections_access_control_groups : {}
 
   plugin_name   = "access_control"
   connection_id = hoop_connection.all_connections[each.key].id
-  config        = each.value.access_control_groups
+  config        = each.value
 }
 
 resource "hoop_plugin_connection" "default_connections_access_control" {
