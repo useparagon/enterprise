@@ -1,6 +1,1 @@
-data "google_client_config" "paragon" {}
-
-data "google_container_cluster" "cluster" {
-  name     = var.cluster_name
-  location = var.region
-}
+# Cluster data is provided by the parent (paragon) workspace; no data sources here.

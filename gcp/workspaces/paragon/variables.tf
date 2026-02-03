@@ -202,6 +202,12 @@ variable "hoop_agent_id" {
   default     = null
 }
 
+variable "hoop_api_url" {
+  description = "Hoop API URL."
+  type        = string
+  default     = "https://hoop.ops.paragoninternal.com/api"
+}
+
 variable "hoop_api_key" {
   description = "Hoop API key. Only used if hoop_enabled is true."
   type        = string

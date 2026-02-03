@@ -22,22 +22,3 @@ terraform {
     }
   }
 }
-
-provider "kubernetes" {
-  host                   = "https://${data.google_container_cluster.cluster.endpoint}"
-  token                  = data.google_client_config.paragon.access_token
-  cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth[0].cluster_ca_certificate)
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = "https://${data.google_container_cluster.cluster.endpoint}"
-    token                  = data.google_client_config.paragon.access_token
-    cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth[0].cluster_ca_certificate)
-  }
-}
-
-provider "hoop" {
-  api_url = var.hoop_api_url
-  api_key = var.hoop_enabled ? var.hoop_api_key : "dummy-token"
-}
