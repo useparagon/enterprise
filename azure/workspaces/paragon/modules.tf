@@ -36,6 +36,32 @@ module "managed_sync_config" {
   microservices    = local.microservices
 }
 
+module "hoop" {
+  source = "./hoop"
+
+  workspace                     = local.workspace
+  organization                  = var.organization
+  hoop_enabled                  = var.hoop_enabled
+  hoop_key                      = var.hoop_key
+  hoop_agent_id                 = var.hoop_agent_id
+  hoop_slack_bot_token          = var.hoop_slack_bot_token
+  hoop_slack_app_token          = var.hoop_slack_app_token
+  hoop_slack_channel_ids        = var.hoop_slack_channel_ids
+  all_access_groups             = var.hoop_all_access_groups
+  restricted_access_groups      = var.hoop_restricted_access_groups
+  reviewers_access_groups       = var.hoop_reviewers_access_groups
+  hoop_postgres_guardrail_rules = var.hoop_postgres_guardrail_rules
+  hoop_redis_guardrail_rules    = var.hoop_redis_guardrail_rules
+  customer_facing               = var.customer_facing
+  namespace_paragon             = module.helm.namespace_paragon
+  custom_connections            = var.hoop_custom_connections
+  k8s_connections               = var.hoop_k8s_connections
+  infra_vars = {
+    postgres = try(local.infra_vars.postgres, null)
+    redis    = try(local.infra_vars.redis, null)
+  }
+}
+
 module "monitors" {
   source = "./monitors"
   count  = var.monitors_enabled ? 1 : 0

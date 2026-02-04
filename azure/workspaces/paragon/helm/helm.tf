@@ -193,16 +193,16 @@ resource "kubernetes_secret" "paragon_secrets" {
 
 # microservices deployment
 resource "helm_release" "paragon_on_prem" {
-  name             = "paragon-on-prem"
-  description      = "Paragon microservices"
-  chart            = "./charts/paragon-onprem"
-  version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
-  namespace        = kubernetes_namespace.paragon.id
-  create_namespace = false
-  cleanup_on_fail  = true
-  atomic           = true
-  verify           = false
-  timeout          = 900 # 15 minutes
+  name              = "paragon-on-prem"
+  description       = "Paragon microservices"
+  chart             = "./charts/paragon-onprem"
+  version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
+  namespace         = kubernetes_namespace.paragon.id
+  create_namespace  = false
+  cleanup_on_fail   = true
+  atomic            = true
+  verify            = false
+  timeout           = 900 # 15 minutes
   dependency_update = true
 
   values = [
@@ -224,16 +224,16 @@ resource "helm_release" "paragon_on_prem" {
 
 # paragon logging stack fluent bit and openobserve
 resource "helm_release" "paragon_logging" {
-  name             = "paragon-logging"
-  description      = "Paragon logging services"
-  chart            = "./charts/paragon-logging"
-  version          = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
-  namespace        = kubernetes_namespace.paragon.id
-  create_namespace = false
-  cleanup_on_fail  = true
-  atomic           = true
-  verify           = false
-  timeout          = 900 # 15 minutes
+  name              = "paragon-logging"
+  description       = "Paragon logging services"
+  chart             = "./charts/paragon-logging"
+  version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
+  namespace         = kubernetes_namespace.paragon.id
+  create_namespace  = false
+  cleanup_on_fail   = true
+  atomic            = true
+  verify            = false
+  timeout           = 900 # 15 minutes
   dependency_update = true
 
   values = fileexists("${path.root}/../.secure/values.yaml") ? [

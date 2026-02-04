@@ -95,3 +95,9 @@ variable "tags" {
   description = "Default tags to apply to resources"
   type        = map(string)
 }
+
+variable "bastion_vm_size" {
+  description = "VM size for the bastion scale set (e.g. Standard_B1s). Must be available in the target region."
+  type        = string
+  default     = "Standard_B1s"
+}
