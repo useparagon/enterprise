@@ -56,8 +56,8 @@ resource "helm_release" "managed_sync" {
 
   depends_on = [
     helm_release.ingress,
-    kubernetes_secret.docker_login,
-    kubernetes_secret.paragon_secrets,
+    kubernetes_secret_v1.docker_login,
+    kubernetes_secret_v1.paragon_secrets,
     kubernetes_storage_class_v1.gp3_encrypted
   ]
 }

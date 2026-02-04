@@ -20,7 +20,7 @@ resource "hoop_connection" "all_connections" {
   tags    = local.all_connections[each.value].tags
 
   depends_on = [
-    data.kubernetes_secret.hoop_cluster_admin_token
+    data.kubernetes_secret_v1.hoop_cluster_admin_token
   ]
 }
 
@@ -50,7 +50,7 @@ resource "hoop_connection" "postgres_connections" {
   }
 
   depends_on = [
-    data.kubernetes_secret.hoop_cluster_admin_token
+    data.kubernetes_secret_v1.hoop_cluster_admin_token
   ]
 }
 

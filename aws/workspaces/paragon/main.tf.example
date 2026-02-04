@@ -6,9 +6,5 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.70"
     }
-    hoop = {
-      source  = "hoophq/hoop"
-      version = ">= 0.0.19"
-    }
   }
 }
