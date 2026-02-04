@@ -7,7 +7,7 @@ output "release_paragon_on_prem" {
 }
 
 output "namespace_paragon" {
-  value = kubernetes_namespace.paragon
+  value = kubernetes_namespace_v1.paragon
 }
 
 output "openobserve_email" {

@@ -6,7 +6,7 @@ resource "helm_release" "managed_sync" {
   repository       = "https://paragon-helm-production.s3.amazonaws.com"
   chart            = "managed-sync"
   version          = var.managed_sync_version
-  namespace        = kubernetes_namespace.paragon.id
+  namespace        = kubernetes_namespace_v1.paragon.id
   create_namespace = false
   cleanup_on_fail  = true
   atomic           = true

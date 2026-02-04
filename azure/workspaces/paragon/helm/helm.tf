@@ -111,7 +111,7 @@ locals {
 }
 
 # creates the `paragon` namespace
-resource "kubernetes_namespace" "paragon" {
+resource "kubernetes_namespace_v1" "paragon" {
   metadata {
     name = "paragon"
 
@@ -126,7 +126,7 @@ resource "kubernetes_config_map" "feature_flag_content" {
 
   metadata {
     name      = "feature-flags-content"
-    namespace = kubernetes_namespace.paragon.id
+    namespace = kubernetes_namespace_v1.paragon.id
   }
 
   data = {
@@ -138,7 +138,7 @@ resource "kubernetes_config_map" "feature_flag_content" {
 resource "kubernetes_secret" "docker_login" {
   metadata {
     name      = "docker-cfg"
-    namespace = kubernetes_namespace.paragon.id
+    namespace = kubernetes_namespace_v1.paragon.id
   }
 
   type = "kubernetes.io/dockerconfigjson"
@@ -161,7 +161,7 @@ resource "kubernetes_secret" "docker_login" {
 resource "kubernetes_secret" "paragon_secrets" {
   metadata {
     name      = "paragon-secrets"
-    namespace = kubernetes_namespace.paragon.id
+    namespace = kubernetes_namespace_v1.paragon.id
   }
 
   type = "Opaque"
@@ -179,7 +179,7 @@ resource "helm_release" "paragon_on_prem" {
   description       = "Paragon microservices"
   chart             = "./charts/paragon-onprem"
   version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
-  namespace         = kubernetes_namespace.paragon.id
+  namespace         = kubernetes_namespace_v1.paragon.id
   create_namespace  = false
   cleanup_on_fail   = true
   atomic            = true
@@ -210,7 +210,7 @@ resource "helm_release" "paragon_logging" {
   description       = "Paragon logging services"
   chart             = "./charts/paragon-logging"
   version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
-  namespace         = kubernetes_namespace.paragon.id
+  namespace         = kubernetes_namespace_v1.paragon.id
   create_namespace  = false
   cleanup_on_fail   = true
   atomic            = true
