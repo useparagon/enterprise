@@ -15,6 +15,7 @@ module "bastion" {
   azure_subscription_id = var.azure_subscription_id
   azure_tenant_id       = var.azure_tenant_id
 
+  bastion_vm_size                = var.bastion_vm_size
   cloudflare_api_token           = var.cloudflare_api_token
   cloudflare_tunnel_account_id   = var.cloudflare_tunnel_account_id
   cloudflare_tunnel_email_domain = var.cloudflare_tunnel_email_domain
@@ -78,6 +79,7 @@ module "storage" {
 module "cluster" {
   source = "./cluster"
 
+  k8s_default_node_pool_vm_size   = var.k8s_default_node_pool_vm_size
   k8s_max_node_count              = var.k8s_max_node_count
   k8s_min_node_count              = var.k8s_min_node_count
   k8s_ondemand_node_instance_type = var.k8s_ondemand_node_instance_type

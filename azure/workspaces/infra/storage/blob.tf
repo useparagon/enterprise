@@ -50,7 +50,7 @@ resource "azurerm_storage_container" "auditlogs" {
 resource "azurerm_storage_container_immutability_policy" "auditlogs" {
   count = var.auditlogs_lock_enabled ? 1 : 0
 
-  storage_container_resource_manager_id = azurerm_storage_container.auditlogs.resource_manager_id
+  storage_container_resource_manager_id = azurerm_storage_container.auditlogs.id
   immutability_period_in_days           = var.auditlogs_retention_days
 }
 

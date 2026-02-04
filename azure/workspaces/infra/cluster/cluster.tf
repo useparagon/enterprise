@@ -56,7 +56,7 @@ resource "azurerm_kubernetes_cluster" "cluster" {
     # intentionally setting cheapest usable node pool which costs ~ $30 / mo
     # while there are cheaper options, the minimum requirements for this are 2 cpu and 4gb memory
     # https://azureprice.net/
-    vm_size              = "Standard_B2s"
+    vm_size              = var.k8s_default_node_pool_vm_size
     type                 = "VirtualMachineScaleSets"
     auto_scaling_enabled = false
     vnet_subnet_id       = var.private_subnet.id
