@@ -10,5 +10,9 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 7.0.0"
     }
+    hoop = {
+      source  = "hoophq/hoop"
+      version = ">= 0.0.19"
+    }
   }
 }
