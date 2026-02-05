@@ -1,5 +1,5 @@
 # Secrets for ServiceAccount tokens (Kubernetes will auto-populate the token)
-resource "kubernetes_secret" "hoop_cluster_admin_token" {
+resource "kubernetes_secret_v1" "hoop_cluster_admin_token" {
   count = var.hoop_enabled ? 1 : 0
 
   metadata {
@@ -13,7 +13,7 @@ resource "kubernetes_secret" "hoop_cluster_admin_token" {
   type = "kubernetes.io/service-account-token"
 
   depends_on = [
-    kubernetes_service_account.hoop_cluster_admin
+    kubernetes_service_account_v1.hoop_cluster_admin
   ]
 }
 
@@ -24,12 +24,12 @@ resource "time_sleep" "wait_for_hoop_tokens" {
   create_duration = "30s"
 
   depends_on = [
-    kubernetes_secret.hoop_cluster_admin_token
+    kubernetes_secret_v1.hoop_cluster_admin_token
   ]
 }
 
 # Read the tokens from the secrets
-data "kubernetes_secret" "hoop_cluster_admin_token" {
+data "kubernetes_secret_v1" "hoop_cluster_admin_token" {
   count = var.hoop_enabled ? 1 : 0
 
   metadata {

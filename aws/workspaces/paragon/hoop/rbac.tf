@@ -1,5 +1,5 @@
 # RBAC for the ServiceAccounts
-resource "kubernetes_cluster_role_binding" "hoop_cluster_admin" {
+resource "kubernetes_cluster_role_binding_v1" "hoop_cluster_admin" {
   count = var.hoop_enabled ? 1 : 0
 
   metadata {
@@ -14,8 +14,8 @@ resource "kubernetes_cluster_role_binding" "hoop_cluster_admin" {
 
   subject {
     kind      = "ServiceAccount"
-    name      = kubernetes_service_account.hoop_cluster_admin[0].metadata[0].name
+    name      = kubernetes_service_account_v1.hoop_cluster_admin[0].metadata[0].name
     namespace = var.namespace_paragon.id
   }
-  depends_on = [kubernetes_service_account.hoop_cluster_admin]
+  depends_on = [kubernetes_service_account_v1.hoop_cluster_admin]
 }

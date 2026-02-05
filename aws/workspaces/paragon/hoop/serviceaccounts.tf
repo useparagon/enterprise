@@ -1,5 +1,5 @@
 # ServiceAccounts for Hoop access
-resource "kubernetes_service_account" "hoop_cluster_admin" {
+resource "kubernetes_service_account_v1" "hoop_cluster_admin" {
   count = var.hoop_enabled ? 1 : 0
 
   metadata {

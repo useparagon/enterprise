@@ -22,7 +22,7 @@ resource "azurerm_key_vault_access_policy" "aks_access_to_kv" {
 
 resource "helm_release" "cert_manager" {
   name       = "cert-manager"
-  namespace  = kubernetes_namespace.paragon.id
+  namespace  = kubernetes_namespace_v1.paragon.id
   chart      = "cert-manager"
   repository = "https://charts.jetstack.io"
 
@@ -49,7 +49,7 @@ resource "azurerm_public_ip" "ingress" {
 
 resource "helm_release" "ingress" {
   name       = "ingress-nginx"
-  namespace  = kubernetes_namespace.paragon.id
+  namespace  = kubernetes_namespace_v1.paragon.id
   repository = "https://kubernetes.github.io/ingress-nginx"
   chart      = "ingress-nginx"
   version    = "4.12.0"
@@ -129,7 +129,7 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   name: letsencrypt-prod
-  namespace: ${kubernetes_namespace.paragon.id}
+  namespace: ${kubernetes_namespace_v1.paragon.id}
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
