@@ -6,5 +6,9 @@ terraform {
       source = "hashicorp/azurerm"
       version = "~> 4.14.0"
     }
+    hoop = {
+      source  = "hoophq/hoop"
+      version = ">= 0.0.19"
+    }
   }
 }
