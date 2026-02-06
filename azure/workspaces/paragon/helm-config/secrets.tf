@@ -109,6 +109,9 @@ locals {
     MANAGED_SYNC_KAFKA_SASL_PASSWORD  = local.kafka_config.sasl_password
     MANAGED_SYNC_KAFKA_SASL_MECHANISM = local.kafka_config.sasl_mechanism
     MANAGED_SYNC_KAFKA_SSL_ENABLED    = local.kafka_config.ssl_enabled
+    # Event Hubs (Kafka) requires replication factor = 1 and limits partitions.
+    MANAGED_SYNC_KAFKA_TOPICS_DEFAULT_PARTITION_COUNT    = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_TOPICS_DEFAULT_PARTITION_COUNT"], 4)
+    MANAGED_SYNC_KAFKA_TOPICS_DEFAULT_REPLICATION_FACTOR = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_TOPICS_DEFAULT_REPLICATION_FACTOR"], 1)
 
     MANAGED_SYNC_REDIS_URL             = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_URL"], "${local.redis_config.host}:${local.redis_config.port}")
     MANAGED_SYNC_REDIS_CLUSTER_ENABLED = local.redis_config.cluster_enabled

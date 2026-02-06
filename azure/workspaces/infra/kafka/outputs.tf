@@ -38,8 +38,8 @@ output "primary_key" {
 output "kafka_credentials" {
   description = "Kafka credentials (Event Hubs uses SASL PLAIN authentication with connection string)"
   value = {
-    username  = random_string.kafka_username.result
-    password  = random_password.kafka_password.result
+    username  = "$ConnectionString"
+    password  = azurerm_eventhub_namespace_authorization_rule.kafka.primary_connection_string
     mechanism = "PLAIN" # Event Hubs uses SASL PLAIN authentication
   }
   sensitive = true

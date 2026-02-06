@@ -1,14 +1,3 @@
-resource "random_string" "kafka_username" {
-  length  = 16
-  special = false
-}
-
-resource "random_password" "kafka_password" {
-  length           = 32
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
-}
-
 # Event Hubs Namespace with Kafka support
 resource "azurerm_eventhub_namespace" "kafka" {
   name                = "${replace(var.workspace, "-", "")}kafka${substr(sha256(var.workspace), 0, 8)}"
@@ -50,6 +39,6 @@ resource "azurerm_eventhub_namespace_authorization_rule" "kafka" {
 
   listen = true
   send   = true
-  manage = false
+  manage = true
 }
 
