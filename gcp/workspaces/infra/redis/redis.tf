@@ -13,8 +13,6 @@ resource "google_redis_instance" "redis" {
   location_id             = var.region_zone
   alternative_location_id = var.region_zone_backup
 
-  auth_enabled = true
-
-  # TODO waiting on code changes for PARA-17566
-  # transit_encryption_mode = "SERVER_AUTHENTICATION"
+  auth_enabled            = true
+  transit_encryption_mode = "SERVER_AUTHENTICATION"
 }
