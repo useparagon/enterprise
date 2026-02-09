@@ -252,6 +252,44 @@ variable "k8s_sku_tier" {
   }
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+  default     = false
+}
+
+variable "eventhub_namespace_sku" {
+  description = "The SKU name for the Event Hubs namespace (Basic, Standard, Premium)."
+  type        = string
+  default     = "Standard"
+  validation {
+    condition     = contains(["Basic", "Standard", "Premium"], var.eventhub_namespace_sku)
+    error_message = "The sku_name must be `Basic`, `Standard`, or `Premium`."
+  }
+}
+
+variable "eventhub_capacity" {
+  description = "The capacity units for the Event Hubs namespace (1-20 for Standard, 1-8 for Premium)."
+  type        = number
+  default     = 1
+  validation {
+    condition     = var.eventhub_capacity >= 1 && var.eventhub_capacity <= 20
+    error_message = "The capacity must be between 1 and 20."
+  }
+}
+
+variable "eventhub_auto_inflate_enabled" {
+  description = "Whether to enable auto-inflate for the Event Hubs namespace."
+  type        = bool
+  default     = true
+}
+
+variable "eventhub_maximum_throughput_units" {
+  description = "The maximum throughput units for auto-inflate (only applicable when auto_inflate_enabled is true)."
+  type        = number
+  default     = 20
+}
+
 locals {
   # hash of subscription ID to help ensure uniqueness of resources like bucket names
   hash      = substr(sha256(var.azure_subscription_id), 0, 8)

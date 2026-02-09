@@ -58,8 +58,13 @@ variable "redis_multiple_instances" {
   type        = bool
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+}
+
 locals {
-  redis_instances = var.redis_multiple_instances ? {
+  redis_instances = var.redis_multiple_instances ? merge({
     cache = {
       cluster  = var.redis_sku_name == "Premium"
       capacity = var.redis_capacity
@@ -75,7 +80,13 @@ locals {
       capacity = var.redis_base_capacity
       sku      = var.redis_base_sku_name
     }
-    } : {
+    }, var.managed_sync_enabled ? {
+    "managed-sync" = {
+      cluster  = var.redis_sku_name == "Premium"
+      capacity = var.redis_capacity
+      sku      = var.redis_sku_name
+    }
+    } : {}) : {
     cache = {
       cluster  = false
       capacity = var.redis_capacity

@@ -52,8 +52,13 @@ variable "postgres_multiple_instances" {
   type        = bool
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+}
+
 locals {
-  postgres_instances = var.postgres_multiple_instances ? {
+  postgres_instances = var.postgres_multiple_instances ? merge({
     cerberus = {
       name = "${var.workspace}-cerberus"
       db   = "cerberus"
@@ -84,7 +89,14 @@ locals {
       ha   = false
       sku  = var.postgres_base_sku_name
     }
-    } : {
+    }, var.managed_sync_enabled ? {
+    managed_sync = {
+      name = "${var.workspace}-managed-sync"
+      db   = "managed_sync"
+      ha   = false
+      sku  = var.postgres_base_sku_name
+    }
+    } : {}) : {
     paragon = {
       name = "${var.workspace}"
       db   = "postgres"

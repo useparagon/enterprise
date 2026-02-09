@@ -35,6 +35,7 @@ module "bastion" {
 module "postgres" {
   source = "./postgres"
 
+  managed_sync_enabled        = var.managed_sync_enabled
   postgres_multiple_instances = var.postgres_multiple_instances
   postgres_base_sku_name      = var.postgres_base_sku_name
   postgres_redundant          = var.postgres_redundant
@@ -50,6 +51,7 @@ module "postgres" {
 module "redis" {
   source = "./redis"
 
+  managed_sync_enabled     = var.managed_sync_enabled
   private_subnet           = module.network.private_subnet
   public_subnet            = module.network.public_subnet
   redis_base_capacity      = var.redis_base_capacity
@@ -68,6 +70,7 @@ module "redis" {
 module "storage" {
   source = "./storage"
 
+  managed_sync_enabled       = var.managed_sync_enabled
   auditlogs_lock_enabled     = var.auditlogs_lock_enabled
   auditlogs_retention_days   = var.auditlogs_retention_days
   resource_group             = module.network.resource_group
@@ -91,4 +94,19 @@ module "cluster" {
   resource_group                  = module.network.resource_group
   tags                            = local.default_tags
   workspace                       = local.workspace
+}
+
+module "kafka" {
+  count  = var.managed_sync_enabled ? 1 : 0
+  source = "./kafka"
+
+  eventhub_auto_inflate_enabled     = var.eventhub_auto_inflate_enabled
+  eventhub_capacity                 = var.eventhub_capacity
+  eventhub_maximum_throughput_units = var.eventhub_maximum_throughput_units
+  eventhub_namespace_sku            = var.eventhub_namespace_sku
+  private_subnet                    = module.network.private_subnet
+  resource_group                    = module.network.resource_group
+  tags                              = local.default_tags
+  virtual_network                   = module.network.virtual_network
+  workspace                         = local.workspace
 }

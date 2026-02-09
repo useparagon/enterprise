@@ -12,5 +12,5 @@ output "openobserve_password" {
 }
 
 output "namespace_paragon" {
-  value = kubernetes_namespace.paragon
+  value = kubernetes_namespace_v1.paragon
 }

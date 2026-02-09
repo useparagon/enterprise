@@ -17,6 +17,11 @@ variable "tags" {
   type        = map(string)
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync."
+  type        = bool
+}
+
 variable "auditlogs_retention_days" {
   description = "The number of days to retain audit logs before deletion."
   type        = number

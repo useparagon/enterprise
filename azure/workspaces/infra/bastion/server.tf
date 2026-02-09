@@ -1,6 +1,8 @@
 locals {
   bastion_name           = "${var.workspace}-bastion"
   only_cloudflare_tunnel = var.cloudflare_tunnel_enabled
+  # Normalize k8s_version to major.minor (e.g. 1.33.5 -> 1.33, 1.33 -> 1.33)
+  k8s_version_major_minor = join(".", slice(split(".", var.k8s_version), 0, 2))
 }
 
 resource "tls_private_key" "bastion" {
@@ -33,7 +35,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "bastion" {
     client_id       = var.azure_client_id,
     client_secret   = var.azure_client_secret,
     cluster_name    = var.cluster_name,
-    cluster_version = var.k8s_version,
+    cluster_version = local.k8s_version_major_minor,
     resource_group  = var.resource_group.name
     subscription_id = var.azure_subscription_id,
     tenant_id       = var.azure_tenant_id,

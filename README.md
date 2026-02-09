@@ -58,7 +58,7 @@ The local machine that is being used to perform the setup will also require the 
 Because the Helm charts are cloud provider agnostic they are stored centrally in the [charts](./charts/) folder. Because Terraform supports so many different ways of storing state (local files, remote buckets, Terraform Cloud, etc.) this repo does not declare a `backend` block in the `main.tf` files. We instead provide `main.tf.example` files that will be copied to `main.tf` if not already present. This allows you to customize the `main.tf` files to meet your specific requirements without it being overridden with changes in the repo. To make the management of all of these files easier we provide a bash script that will make all of the necessary file copies. It will also update the Helm chart versions with a hash of the files to ensure that any changes to the chart files will trigger an update. It should be rerun whenever changes have been made to the charts. The [prepare.sh](./prepare.sh) is run by passing in the cloud provider name like:
 
 ```bash
-./prepare.sh -p <aws|gcp|azure>
+./prepare.sh -p <aws|gcp|azure> -t <VERSION>
 ```
 
 ### Configuration After Prepare
