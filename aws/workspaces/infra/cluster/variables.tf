@@ -96,7 +96,7 @@ locals {
       version = "v1.11.4-eksbuild.14"
     }
     kube-proxy = {
-      version = "v1.31.10-eksbuild.2"
+      version = "v1.32.6-eksbuild.12"
     }
     vpc-cni = {
       version = "v1.19.6-eksbuild.7"

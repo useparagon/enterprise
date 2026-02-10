@@ -109,7 +109,22 @@ fi
 
 echo ""
 echo "Extracting caller ARN and cluster name for EKS access entry import..."
-CALLER_ARN=$(aws sts get-caller-identity --query Arn --output text --region "${REGION}" 2>/dev/null || echo "")
+# Prefer Terraform's data source (matches the account/assumed role Terraform used)
+CALLER_ARN_RAW=$(terraform state show 'data.aws_caller_identity.current' 2>/dev/null | grep -E '^\s+arn\s+=' | awk '{print $3}' | tr -d '"')
+
+# Match Terraform's local.caller_arn logic (convert assumed-role ARN to role ARN)
+CALLER_ARN="${CALLER_ARN_RAW}"
+if echo "${CALLER_ARN_RAW}" | grep -q "assumed-role"; then
+  ARN_PARTITION=$(echo "${CALLER_ARN_RAW}" | sed -E 's#^arn:([^:]+):.*#\1#')
+  ARN_ACCOUNT=$(echo "${CALLER_ARN_RAW}" | sed -E 's#^arn:[^:]+:sts::([0-9]+):.*#\1#')
+  ROLE_NAME=$(echo "${CALLER_ARN_RAW}" | sed -E 's#^.*/assumed-role/([^/]+)/.*#\1#')
+
+  if echo "${CALLER_ARN_RAW}" | grep -q ":assumed-role/AWSReservedSSO"; then
+    CALLER_ARN="arn:${ARN_PARTITION}:iam::${ARN_ACCOUNT}:role/aws-reserved/sso.amazonaws.com/${ROLE_NAME}"
+  else
+    CALLER_ARN="arn:${ARN_PARTITION}:iam::${ARN_ACCOUNT}:role/${ROLE_NAME}"
+  fi
+fi
 
 if [ -z "$CALLER_ARN" ]; then
   echo "✗ ERROR: Could not determine caller ARN from AWS STS."
