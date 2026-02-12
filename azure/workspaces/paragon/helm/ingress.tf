@@ -1,22 +1,23 @@
 resource "azurerm_key_vault" "paragon" {
-  name                       = substr(var.workspace, 0, 24)
-  location                   = var.resource_group.location
-  resource_group_name        = var.resource_group.name
-  tenant_id                  = data.azurerm_client_config.current.tenant_id
-  sku_name                   = "premium"
-  rbac_authorization_enabled = true
+  name                = substr(var.workspace, 0, 24)
+  location            = var.resource_group.location
+  resource_group_name = var.resource_group.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "premium"
 }
 
-resource "azurerm_role_assignment" "aks_kv_secrets_user" {
-  scope                = azurerm_key_vault.paragon.id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = data.azurerm_kubernetes_cluster.cluster.kubelet_identity.0.object_id
-}
+resource "azurerm_key_vault_access_policy" "aks_access_to_kv" {
+  key_vault_id = azurerm_key_vault.paragon.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_kubernetes_cluster.cluster.kubelet_identity.0.object_id
 
-resource "azurerm_role_assignment" "aks_kv_certs_user" {
-  scope                = azurerm_key_vault.paragon.id
-  role_definition_name = "Key Vault Certificates User"
-  principal_id         = data.azurerm_kubernetes_cluster.cluster.kubelet_identity.0.object_id
+  certificate_permissions = [
+    "Get",
+  ]
+
+  secret_permissions = [
+    "Get",
+  ]
 }
 
 resource "helm_release" "cert_manager" {
@@ -111,8 +112,7 @@ resource "helm_release" "ingress" {
 
   depends_on = [
     helm_release.cert_manager,
-    azurerm_role_assignment.aks_kv_secrets_user,
-    azurerm_role_assignment.aks_kv_certs_user,
+    azurerm_key_vault_access_policy.aks_access_to_kv,
     azurerm_public_ip.ingress
   ]
 }
