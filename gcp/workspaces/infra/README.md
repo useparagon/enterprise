@@ -12,10 +12,7 @@ NOTE: The following APIs must be enabled for the project in the [GCP Console](ht
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7.0 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | ~> 7.0 |
+No requirements.
 
 ## Providers
 
@@ -27,6 +24,7 @@ No providers.
 |------|--------|---------|
 | <a name="module_bastion"></a> [bastion](#module\_bastion) | ./bastion | n/a |
 | <a name="module_cluster"></a> [cluster](#module\_cluster) | ./cluster | n/a |
+| <a name="module_kafka"></a> [kafka](#module\_kafka) | ./kafka | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ./network | n/a |
 | <a name="module_postgres"></a> [postgres](#module\_postgres) | ./postgres | n/a |
 | <a name="module_redis"></a> [redis](#module\_redis) | ./redis | n/a |
@@ -58,6 +56,13 @@ No resources.
 | <a name="input_gcp_private_key"></a> [gcp\_private\_key](#input\_gcp\_private\_key) | The private key for the service account. Required if not using `gcp_credential_json_file`. | `string` | `null` | no |
 | <a name="input_gcp_private_key_id"></a> [gcp\_private\_key\_id](#input\_gcp\_private\_key\_id) | The id of the private key for the service account. Required if not using `gcp_credential_json_file`. | `string` | `null` | no |
 | <a name="input_gcp_project_id"></a> [gcp\_project\_id](#input\_gcp\_project\_id) | The id of the Google Cloud Project. Required if not using `gcp_credential_json_file`. | `string` | `null` | no |
+| <a name="input_gmk_auto_rebalance"></a> [gmk\_auto\_rebalance](#input\_gmk\_auto\_rebalance) | Whether to enable automatic partition rebalancing across brokers (can add load). | `bool` | `false` | no |
+| <a name="input_gmk_disk_size_gib"></a> [gmk\_disk\_size\_gib](#input\_gmk\_disk\_size\_gib) | Disk size in GiB per broker for the GMK cluster. | `number` | `100` | no |
+| <a name="input_gmk_kafka_version"></a> [gmk\_kafka\_version](#input\_gmk\_kafka\_version) | Kafka version for the Google Managed Kafka cluster (version offered by the service). | `string` | `"3.7.1"` | no |
+| <a name="input_gmk_memory_gib"></a> [gmk\_memory\_gib](#input\_gmk\_memory\_gib) | Memory in GiB for the GMK cluster (1-8 GiB per vCPU). | `number` | `6` | no |
+| <a name="input_gmk_sasl_mechanism"></a> [gmk\_sasl\_mechanism](#input\_gmk\_sasl\_mechanism) | SASL mechanism: plain (module creates SA key and outputs in kafka.cluster\_password) or oauthbearer (Workload Identity). | `string` | `"plain"` | no |
+| <a name="input_gmk_sasl_plain_key_file_path"></a> [gmk\_sasl\_plain\_key\_file\_path](#input\_gmk\_sasl\_plain\_key\_file\_path) | Optional path to your own Kafka SA key JSON for SASL/PLAIN. When empty, the module creates the key and outputs it in kafka.cluster\_password. | `string` | `""` | no |
+| <a name="input_gmk_vcpu_count"></a> [gmk\_vcpu\_count](#input\_gmk\_vcpu\_count) | Number of vCPUs for the GMK cluster (minimum 3 in GCP). | `number` | `3` | no |
 | <a name="input_k8s_disable_public_endpoint"></a> [k8s\_disable\_public\_endpoint](#input\_k8s\_disable\_public\_endpoint) | Used to disable public endpoint on GKE cluster. | `bool` | `true` | no |
 | <a name="input_k8s_max_node_count"></a> [k8s\_max\_node\_count](#input\_k8s\_max\_node\_count) | Maximum number of node Kubernetes can scale up to. | `number` | `20` | no |
 | <a name="input_k8s_min_node_count"></a> [k8s\_min\_node\_count](#input\_k8s\_min\_node\_count) | Minimum number of node Kubernetes can scale down to. | `number` | `2` | no |
@@ -65,6 +70,7 @@ No resources.
 | <a name="input_k8s_spot_instance_percent"></a> [k8s\_spot\_instance\_percent](#input\_k8s\_spot\_instance\_percent) | The percentage of spot instances to use for Kubernetes nodes. | `number` | `80` | no |
 | <a name="input_k8s_spot_node_instance_type"></a> [k8s\_spot\_node\_instance\_type](#input\_k8s\_spot\_node\_instance\_type) | The compute instance type to use for Kubernetes spot nodes. | `string` | `"e2-standard-4"` | no |
 | <a name="input_k8s_version"></a> [k8s\_version](#input\_k8s\_version) | The version of Kubernetes to run in the cluster. | `string` | `"1.32"` | no |
+| <a name="input_managed_sync_enabled"></a> [managed\_sync\_enabled](#input\_managed\_sync\_enabled) | Whether to enable managed sync (GMK cluster, managed\_sync bucket, postgres and redis instances). | `bool` | `false` | no |
 | <a name="input_organization"></a> [organization](#input\_organization) | Name of organization to include in resource names. | `string` | n/a | yes |
 | <a name="input_postgres_multiple_instances"></a> [postgres\_multiple\_instances](#input\_postgres\_multiple\_instances) | Whether or not to create multiple Postgres instances. Used for higher volume installations. | `bool` | `true` | no |
 | <a name="input_postgres_tier"></a> [postgres\_tier](#input\_postgres\_tier) | The instance type to use for Postgres. | `string` | `"db-custom-2-7680"` | no |
@@ -85,6 +91,7 @@ No resources.
 | <a name="output_auditlogs_bucket"></a> [auditlogs\_bucket](#output\_auditlogs\_bucket) | The bucket used to store audit logs. |
 | <a name="output_bastion"></a> [bastion](#output\_bastion) | Bastion server connection info. |
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | The name of the GKE cluster. |
+| <a name="output_kafka"></a> [kafka](#output\_kafka) | Connection info for Kafka (Managed Sync). OAUTHBEARER or PLAIN; when PLAIN, use cluster\_password\_file\_path for key JSON. |
 | <a name="output_logs_container"></a> [logs\_container](#output\_logs\_container) | The bucket used to store system logs. |
 | <a name="output_minio"></a> [minio](#output\_minio) | MinIO server connection info. |
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | Connection info for Postgres. |

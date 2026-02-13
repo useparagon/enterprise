@@ -46,8 +46,14 @@ variable "auditlogs_lock_enabled" {
   type        = bool
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to create a dedicated Postgres instance for Managed Sync."
+  type        = bool
+  default     = false
+}
+
 locals {
-  postgres_instances = var.postgres_multiple_instances ? {
+  postgres_instances = var.postgres_multiple_instances ? merge({
     cerberus = {
       tier = "db-custom-1-3840"
     },
@@ -63,7 +69,11 @@ locals {
     zeus = {
       tier = "db-custom-2-7680"
     }
-    } : {
+    }, var.managed_sync_enabled ? {
+    managed_sync = {
+      tier = "db-custom-2-7680"
+    }
+    } : {}) : {
     paragon = {
       tier = var.postgres_tier
     }

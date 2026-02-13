@@ -183,6 +183,60 @@ variable "redis_memory_size" {
   default     = 2
 }
 
+# managed sync (GMK = Google Managed Kafka)
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync (GMK cluster, managed_sync bucket, postgres and redis instances)."
+  type        = bool
+  default     = false
+}
+
+variable "gmk_kafka_version" {
+  description = "Kafka version for the Google Managed Kafka cluster (version offered by the service)."
+  type        = string
+  default     = "3.7.1"
+}
+
+variable "gmk_vcpu_count" {
+  description = "Number of vCPUs for the GMK cluster (minimum 3 in GCP)."
+  type        = number
+  default     = 3
+}
+
+variable "gmk_memory_gib" {
+  description = "Memory in GiB for the GMK cluster (1-8 GiB per vCPU)."
+  type        = number
+  default     = 6
+}
+
+variable "gmk_disk_size_gib" {
+  description = "Disk size in GiB per broker for the GMK cluster."
+  type        = number
+  default     = 100
+}
+
+variable "gmk_auto_rebalance" {
+  description = "Whether to enable automatic partition rebalancing across brokers (can add load)."
+  type        = bool
+  default     = false
+}
+
+variable "gmk_sasl_mechanism" {
+  description = "SASL mechanism: plain (module creates SA key and outputs in kafka.cluster_password) or oauthbearer (Workload Identity)."
+  type        = string
+  default     = "plain"
+
+  validation {
+    condition     = contains(["oauthbearer", "plain"], var.gmk_sasl_mechanism)
+    error_message = "gmk_sasl_mechanism must be \"oauthbearer\" or \"plain\"."
+  }
+}
+
+variable "gmk_sasl_plain_key_file_path" {
+  description = "Optional path to your own Kafka SA key JSON for SASL/PLAIN. When empty, the module creates the key and outputs it in kafka.cluster_password."
+  type        = string
+  default     = ""
+}
+
 # kubernetes
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
@@ -261,7 +315,8 @@ locals {
   })
 
   # hash of project ID to help ensure uniqueness of resources like bucket names
-  hash      = substr(sha256(local.gcp_project_id), 0, 8)
+  # coalesce so tflint/validate can run when gcp_project_id is not set (e.g. no tfvars)
+  hash      = substr(sha256(coalesce(local.gcp_project_id, "tflint")), 0, 8)
   workspace = nonsensitive("paragon-${var.organization}-${local.hash}")
 
   default_labels = {

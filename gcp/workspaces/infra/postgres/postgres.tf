@@ -12,10 +12,11 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   reserved_peering_ranges = [google_compute_global_address.paragon.name]
 }
 
+# Instance name must use only lowercase letters, numbers, hyphens (no underscores).
 resource "google_sql_database_instance" "paragon" {
   for_each = local.postgres_instances
 
-  name                = "${var.workspace}-${each.key}"
+  name                = "${var.workspace}-${replace(each.key, "_", "-")}"
   project             = var.gcp_project_id
   region              = var.region
   database_version    = "POSTGRES_14"
