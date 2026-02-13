@@ -805,7 +805,7 @@ locals {
           MONITOR_PGADMIN_SSL_MODE                = "disable"
           MONITOR_POSTGRES_EXPORTER_HOST          = "http://postgres-exporter"
           MONITOR_POSTGRES_EXPORTER_PORT          = try(local.monitors["postgres-exporter"].port, null)
-          MONITOR_POSTGRES_EXPORTER_SSL_MODE      = "disable"
+          MONITOR_POSTGRES_EXPORTER_SSL_MODE      = "require"
           MONITOR_PROMETHEUS_HOST                 = "http://prometheus"
           MONITOR_PROMETHEUS_PORT                 = try(local.monitors["prometheus"].port, null)
           MONITOR_QUEUE_REDIS_TARGET              = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
