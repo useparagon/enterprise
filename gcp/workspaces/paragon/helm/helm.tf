@@ -164,16 +164,6 @@ locals {
     }
   ))
 
-  # Managed Sync: same pattern as paragon_on_prem — base = full var.helm_values (.secure/values.yaml),
-  # only override global.env.HOST_ENV and secret_hash so minio/etcd/kafka/postgresql/redis enabled: false apply.
-  managed_sync_values = yamlencode(merge(
-    nonsensitive(var.helm_values),
-    {
-      global      = merge(nonsensitive(var.helm_values).global, { env = { HOST_ENV = "GCP_K8" } })
-      secret_hash = { secret_hash = sha256(jsonencode(nonsensitive(var.helm_values))) }
-    }
-  ))
-
   # changes to secrets should trigger redeploy
   secret_hash = yamlencode({
     secret_hash = sha256(jsonencode(nonsensitive(var.helm_values)))

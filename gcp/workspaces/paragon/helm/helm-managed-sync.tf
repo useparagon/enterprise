@@ -1,4 +1,6 @@
-# Managed Sync (when enabled) — GCP. Same pattern as AWS: values = global_values_minus_env + secret_hash.
+# Managed Sync (when enabled) — GCP. Same strategy as AWS: values = [ global_values_minus_env, secret_hash ].
+# global_values_minus_env comes from var.helm_values (paragon workspace merges .secure/values.yaml via helm_yaml_path into helm_values).
+# Env vars: helm-config managed_sync_secrets → Secret paragon-managed-sync-secrets.
 # TEMPORARY: sandbox bucket; production uses paragon-helm-production.
 
 resource "helm_release" "managed_sync" {
@@ -20,6 +22,11 @@ resource "helm_release" "managed_sync" {
     local.global_values_minus_env,
     local.secret_hash
   ]
+
+  set {
+    name  = "secretName"
+    value = "paragon-managed-sync-secrets"
+  }
 
   set {
     name  = "ingress.certificate"
