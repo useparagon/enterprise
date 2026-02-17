@@ -1,3 +1,24 @@
+module "managed_sync_config" {
+  source = "./helm-config"
+  count  = var.managed_sync_enabled ? 1 : 0
+
+  base_helm_values = local.helm_vars
+  domain           = var.domain
+  infra_values     = local.infra_vars
+  microservices = merge(local.microservices, {
+    "api-sync" = {
+      healthcheck_path = "/healthz"
+      port             = 1800
+      public_url       = "https://sync.${var.domain}"
+    }
+    "queue-exporter" = {
+      healthcheck_path = "/healthz"
+      port             = 1806
+      public_url       = null
+    }
+  })
+}
+
 module "helm" {
   source = "./helm"
 
@@ -14,6 +35,8 @@ module "helm" {
   ingress_scheme          = var.ingress_scheme
   k8s_version             = var.k8s_version
   logs_bucket             = local.logs_bucket
+  managed_sync_enabled    = var.managed_sync_enabled
+  managed_sync_version    = var.managed_sync_version
   microservices           = local.microservices
   monitor_version         = local.monitor_version
   monitors                = local.monitors

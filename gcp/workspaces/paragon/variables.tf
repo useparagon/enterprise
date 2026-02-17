@@ -123,6 +123,18 @@ variable "monitor_version" {
   default     = null
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync (deploy managed-sync Helm chart and config)."
+  type        = bool
+  default     = false
+}
+
+variable "managed_sync_version" {
+  description = "The version of the Managed Sync Helm chart to install."
+  type        = string
+  default     = "0.0.131"
+}
+
 variable "excluded_microservices" {
   description = "The microservices that should be excluded from the deployment."
   type        = list(string)
@@ -855,7 +867,7 @@ locals {
         }, {
         for key, value in local.helm_vars.global.env :
         key => value if value != null && !contains(local.helm_keys_to_remove, key) && !startswith(key, "FLIPT_")
-      })
+      }, var.managed_sync_enabled ? module.managed_sync_config[0].config : {})
     })
   })
 

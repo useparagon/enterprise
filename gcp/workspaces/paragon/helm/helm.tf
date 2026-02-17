@@ -156,6 +156,24 @@ locals {
     }
   ))
 
+  # Same as AWS: helm_values with only global.env.HOST_ENV for managed_sync (repo chart).
+  global_values_minus_env = yamlencode(merge(
+    nonsensitive(var.helm_values),
+    {
+      global = merge(nonsensitive(var.helm_values).global, { env = { HOST_ENV = "GCP_K8" } })
+    }
+  ))
+
+  # Managed Sync: same pattern as paragon_on_prem — base = full var.helm_values (.secure/values.yaml),
+  # only override global.env.HOST_ENV and secret_hash so minio/etcd/kafka/postgresql/redis enabled: false apply.
+  managed_sync_values = yamlencode(merge(
+    nonsensitive(var.helm_values),
+    {
+      global      = merge(nonsensitive(var.helm_values).global, { env = { HOST_ENV = "GCP_K8" } })
+      secret_hash = { secret_hash = sha256(jsonencode(nonsensitive(var.helm_values))) }
+    }
+  ))
+
   # changes to secrets should trigger redeploy
   secret_hash = yamlencode({
     secret_hash = sha256(jsonencode(nonsensitive(var.helm_values)))
@@ -209,17 +227,19 @@ resource "kubernetes_secret_v1" "docker_login" {
   }
 }
 
-# shared secrets
+# shared secrets (paragon-secrets always; paragon-managed-sync-secrets when managed_sync enabled)
 resource "kubernetes_secret_v1" "paragon_secrets" {
+  for_each = toset(var.managed_sync_enabled ? ["paragon-secrets", "paragon-managed-sync-secrets"] : ["paragon-secrets"])
+
   metadata {
-    name      = "paragon-secrets"
+    name      = each.value
     namespace = kubernetes_namespace_v1.paragon.id
   }
 
   type = "Opaque"
 
   data = {
-    # Map global.env from helm_values into secret data
+    # Map global.env from helm_values into secret data (includes managed_sync_secrets when enabled)
     for key, value in nonsensitive(var.helm_values.global.env) :
     key => value
   }

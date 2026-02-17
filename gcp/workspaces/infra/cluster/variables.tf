@@ -70,3 +70,12 @@ variable "disable_public_endpoint" {
   description = "Used to disable public endpoint on GKE cluster."
   type        = bool
 }
+
+variable "k8s_master_authorized_networks" {
+  description = "List of CIDRs allowed to reach the GKE control plane. Empty = restricted (only node IPs). Use [{ cidr_block = \"0.0.0.0/0\", display_name = \"all\" }] to allow all."
+  type = list(object({
+    cidr_block   = string
+    display_name = optional(string, "")
+  }))
+  default = []
+}

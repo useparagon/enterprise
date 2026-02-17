@@ -74,6 +74,7 @@ module "cluster" {
   disable_deletion_protection     = var.disable_deletion_protection
   disable_public_endpoint         = var.k8s_disable_public_endpoint
   gcp_project_id                  = local.gcp_project_id
+  k8s_master_authorized_networks  = var.k8s_master_authorized_networks
   k8s_max_node_count              = var.k8s_max_node_count
   k8s_min_node_count              = var.k8s_min_node_count
   k8s_ondemand_node_instance_type = var.k8s_ondemand_node_instance_type
@@ -99,6 +100,7 @@ module "bastion" {
   cloudflare_tunnel_zone_id      = var.cloudflare_tunnel_zone_id
 
   cluster_name    = module.cluster.kubernetes.name
+  enable_iap      = var.enable_iap_bastion
   gcp_project_id  = local.gcp_project_id
   network         = module.network.network
   k8s_version     = var.k8s_version

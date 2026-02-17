@@ -12,6 +12,11 @@ output "bastion" {
   sensitive = true
 }
 
+output "iap_bastion_help" {
+  description = "How to connect to bastion via IAP (like AWS Session Manager). Requires roles/iap.tunnelResourceAccessor."
+  value       = module.bastion.iap_connection_note
+}
+
 output "postgres" {
   description = "Connection info for Postgres."
   value       = module.postgres.postgres
@@ -20,6 +25,12 @@ output "postgres" {
 
 output "logs_container" {
   description = "The bucket used to store system logs."
+  value       = module.storage.storage.logs_bucket
+  sensitive   = true
+}
+
+output "logs_bucket" {
+  description = "Alias for logs_container; used by paragon for managed-sync ingress.logsBucket and compatibility with AWS shape."
   value       = module.storage.storage.logs_bucket
   sensitive   = true
 }

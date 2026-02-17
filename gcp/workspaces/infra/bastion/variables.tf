@@ -88,6 +88,12 @@ variable "tfc_agent_token" {
   default     = ""
 }
 
+variable "enable_iap" {
+  description = "Allow bastion SSH via Identity-Aware Proxy (IAP) TCP forwarding. Like AWS Session Manager: connect from anywhere via gcloud, no open port 22 to the internet. Requires IAM role roles/iap.tunnelResourceAccessor."
+  type        = bool
+  default     = true
+}
+
 locals {
   bastion_name           = "${var.workspace}-bastion"
   only_cloudflare_tunnel = var.cloudflare_tunnel_enabled

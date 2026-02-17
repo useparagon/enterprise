@@ -138,6 +138,12 @@ variable "ssh_whitelist" {
   default     = ""
 }
 
+variable "enable_iap_bastion" {
+  description = "Allow bastion SSH via IAP TCP forwarding (like AWS Session Manager). Connect with: gcloud compute start-iap-tunnel INSTANCE 22 --local-host-port=localhost:2222 --zone=ZONE --project=PROJECT"
+  type        = bool
+  default     = true
+}
+
 variable "disable_deletion_protection" {
   description = "Used to disable deletion protection on database and storage resources."
   type        = bool
@@ -282,6 +288,15 @@ variable "k8s_disable_public_endpoint" {
   description = "Used to disable public endpoint on GKE cluster."
   type        = bool
   default     = true
+}
+
+variable "k8s_master_authorized_networks" {
+  description = "List of CIDRs allowed to reach the GKE control plane (Master Authorized Networks). Use [{ cidr_block = \"0.0.0.0/0\", display_name = \"all\" }] to allow all IPs (e.g. from any country). Empty list = only cluster nodes (restricted)."
+  type = list(object({
+    cidr_block   = string
+    display_name = optional(string, "")
+  }))
+  default = []
 }
 
 variable "use_storage_account_key" {

@@ -3,6 +3,18 @@ variable "workspace" {
   type        = string
 }
 
+variable "managed_sync_enabled" {
+  description = "Whether to enable managed sync (deploy managed-sync Helm chart)."
+  type        = bool
+  default     = false
+}
+
+variable "managed_sync_version" {
+  description = "The version of the Managed Sync Helm chart to install."
+  type        = string
+  default     = "0.0.131"
+}
+
 variable "region" {
   description = "The region where to host Google Cloud Organization resources."
   type        = string
