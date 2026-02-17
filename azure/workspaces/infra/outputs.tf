@@ -69,7 +69,6 @@ output "kafka" {
     cluster_bootstrap_brokers = module.kafka[0].bootstrap_servers
     bootstrap_servers_private = module.kafka[0].bootstrap_servers_private
     namespace_name            = module.kafka[0].namespace_name
-    eventhub_name             = module.kafka[0].eventhub_name
     cluster_username          = module.kafka[0].kafka_credentials.username
     cluster_password          = module.kafka[0].kafka_credentials.password
     cluster_mechanism         = module.kafka[0].kafka_credentials.mechanism
