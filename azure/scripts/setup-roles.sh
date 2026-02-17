@@ -15,6 +15,8 @@ ROLES=(
   # Contributor role - provides full access to manage all resources except grant access to others
   # This is the minimum role needed for Terraform to create and manage Azure resources
   "Contributor"
+  # Needed to switch Key Vaults to RBAC and create role assignments
+  "User Access Administrator"
 )
 
 # Alternative: If you want to use more granular permissions instead of Contributor,
@@ -28,8 +30,9 @@ ROLES=(
 #   "Storage Account Contributor"      # For Storage Accounts
 #   "Kubernetes Cluster Contributor"   # For AKS Clusters
 #   "Virtual Machine Contributor"      # For VM Scale Sets (bastion)
-#   "Key Vault Contributor"            # For Key Vaults
-#   "User Access Administrator"        # For Key Vault Access Policies (role assignments)
+#   "Key Vault Contributor"            # For Key Vaults (management plane)
+#   "Key Vault Administrator"          # For Key Vault data-plane access (RBAC)
+#   "User Access Administrator"        # For role assignments (RBAC)
 # )
 
 # Assign Contributor role at subscription level
@@ -53,7 +56,12 @@ echo "  - Create and manage Redis Caches"
 echo "  - Create and manage Storage Accounts and Containers"
 echo "  - Create and manage AKS Clusters and Node Pools"
 echo "  - Create and manage Virtual Machine Scale Sets"
-echo "  - Create and manage Key Vaults and Access Policies"
+echo "  - Create and manage Key Vaults"
+echo "  - Create and manage Key Vault role assignments (via User Access Administrator)"
 echo "  - Create and manage Public IPs"
 echo ""
-echo "The Contributor role is sufficient for running both infra and paragon workspaces."
+echo "For Key Vault RBAC (permission model change + role assignments),"
+echo "Terraform also needs User Access Administrator at subscription or resource group scope."
+echo ""
+echo "If you want the Terraform principal to manage Key Vault secrets/certs/keys,"
+echo "assign Key Vault Administrator at the vault scope."
