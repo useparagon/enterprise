@@ -48,15 +48,6 @@ resource "aws_s3_bucket_versioning" "cdn" {
   }
 }
 
-resource "aws_s3_bucket_acl" "cdn" {
-  bucket = aws_s3_bucket.cdn.id
-  acl    = "public-read"
-
-  depends_on = [
-    aws_s3_bucket_ownership_controls.cdn
-  ]
-}
-
 resource "aws_s3_bucket_public_access_block" "cdn" {
   bucket = aws_s3_bucket.cdn.id
 

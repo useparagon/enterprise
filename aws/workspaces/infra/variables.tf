@@ -151,6 +151,12 @@ variable "eks_admin_arns" {
   default     = []
 }
 
+variable "create_autoscaling_linked_role" {
+  description = "Whether or not to create an IAM role for autoscaling."
+  type        = bool
+  default     = true
+}
+
 # security
 variable "master_guardduty_account_id" {
   description = "Optional AWS account id to delegate GuardDuty control to."

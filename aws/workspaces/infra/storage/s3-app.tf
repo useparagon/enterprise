@@ -36,15 +36,6 @@ resource "aws_s3_bucket_versioning" "app" {
   }
 }
 
-resource "aws_s3_bucket_acl" "app" {
-  bucket = aws_s3_bucket.app.id
-  acl    = "private"
-
-  depends_on = [
-    aws_s3_bucket_ownership_controls.app
-  ]
-}
-
 resource "aws_s3_bucket_public_access_block" "app" {
   bucket = aws_s3_bucket.app.bucket
 

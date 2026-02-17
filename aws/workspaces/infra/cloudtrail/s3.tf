@@ -69,15 +69,6 @@ resource "aws_s3_bucket_versioning" "cloudtrail" {
   }
 }
 
-resource "aws_s3_bucket_acl" "cloudtrail" {
-  bucket = aws_s3_bucket.cloudtrail.id
-  acl    = "private"
-
-  depends_on = [
-    aws_s3_bucket_ownership_controls.cloudtrail
-  ]
-}
-
 resource "aws_s3_bucket_policy" "cloudtrail" {
   bucket = aws_s3_bucket.cloudtrail.id
   policy = <<POLICY
@@ -160,7 +151,6 @@ POLICY
 
   depends_on = [
     aws_s3_bucket_ownership_controls.cloudtrail,
-    aws_s3_bucket_acl.cloudtrail,
   ]
 }
 

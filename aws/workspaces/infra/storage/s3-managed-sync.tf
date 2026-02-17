@@ -41,16 +41,6 @@ resource "aws_s3_bucket_versioning" "managed_sync" {
   }
 }
 
-resource "aws_s3_bucket_acl" "managed_sync" {
-  count  = var.managed_sync_enabled ? 1 : 0
-  bucket = aws_s3_bucket.managed_sync[0].id
-  acl    = "private"
-
-  depends_on = [
-    aws_s3_bucket_ownership_controls.managed_sync[0]
-  ]
-}
-
 resource "aws_s3_bucket_public_access_block" "managed_sync" {
   count  = var.managed_sync_enabled ? 1 : 0
   bucket = aws_s3_bucket.managed_sync[0].bucket

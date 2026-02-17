@@ -195,10 +195,11 @@ resource "helm_release" "ingress" {
   chart      = "aws-load-balancer-controller"
   version    = "1.9.1"
 
+  namespace        = kubernetes_namespace.paragon.id
   atomic           = true
   cleanup_on_fail  = true
   create_namespace = false
-  namespace        = kubernetes_namespace.paragon.id
+  force_update     = true
   verify           = false
 
   set {
@@ -217,12 +218,14 @@ resource "helm_release" "metricsserver" {
   name        = "metricsserver"
   description = "AWS Metrics Server"
 
-  repository       = "https://kubernetes-sigs.github.io/metrics-server/"
-  chart            = "metrics-server"
+  repository = "https://kubernetes-sigs.github.io/metrics-server/"
+  chart      = "metrics-server"
+
   namespace        = kubernetes_namespace.paragon.id
-  create_namespace = false
-  cleanup_on_fail  = true
   atomic           = true
+  cleanup_on_fail  = true
+  create_namespace = false
+  force_update     = true
   verify           = false
 
   depends_on = [
@@ -240,17 +243,19 @@ module "aws_node_termination_handler" {
 
 # microservices deployment
 resource "helm_release" "paragon_on_prem" {
-  name              = "paragon-on-prem"
-  description       = "Paragon microservices"
-  chart             = "./charts/paragon-onprem"
-  version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
+  name        = "paragon-on-prem"
+  description = "Paragon microservices"
+  chart       = "./charts/paragon-onprem"
+  version     = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
+
   namespace         = kubernetes_namespace.paragon.id
-  create_namespace  = false
-  cleanup_on_fail   = true
   atomic            = true
-  verify            = false
-  timeout           = 900 # 15 minutes
+  cleanup_on_fail   = true
+  create_namespace  = false
   dependency_update = true
+  force_update      = true
+  timeout           = 900 # 15 minutes
+  verify            = false
 
   values = [
     local.supported_microservices_values,
@@ -339,17 +344,18 @@ resource "helm_release" "paragon_on_prem" {
 
 # paragon logging stack fluent bit and openobserve
 resource "helm_release" "paragon_logging" {
-  name              = "paragon-logging"
-  description       = "Paragon logging services"
-  chart             = "./charts/paragon-logging"
-  version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
+  name        = "paragon-logging"
+  description = "Paragon logging services"
+  chart       = "./charts/paragon-logging"
+  version     = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
+
   namespace         = kubernetes_namespace.paragon.id
-  create_namespace  = false
-  cleanup_on_fail   = true
   atomic            = true
-  verify            = false
-  timeout           = 900 # 15 minutes
+  cleanup_on_fail   = true
+  create_namespace  = false
   dependency_update = true
+  timeout           = 900 # 15 minutes
+  verify            = false
 
   values = fileexists("${path.root}/../.secure/values.yaml") ? [
     local.global_values,
@@ -405,17 +411,19 @@ resource "helm_release" "paragon_logging" {
 resource "helm_release" "paragon_monitoring" {
   count = var.monitors_enabled ? 1 : 0
 
-  name              = "paragon-monitoring"
-  description       = "Paragon monitors"
-  chart             = "./charts/paragon-monitoring"
-  version           = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
-  namespace         = "paragon"
+  name        = "paragon-monitoring"
+  description = "Paragon monitors"
+  chart       = "./charts/paragon-monitoring"
+  version     = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
+
+  namespace         = kubernetes_namespace.paragon.id
+  atomic            = true
   cleanup_on_fail   = true
   create_namespace  = false
-  atomic            = true
-  verify            = false
-  timeout           = 900 # 15 minutes
   dependency_update = true
+  force_update      = true
+  timeout           = 900 # 15 minutes
+  verify            = false
 
   values = [
     local.global_values,
