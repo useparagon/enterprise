@@ -31,3 +31,9 @@ variable "use_storage_account_key" {
   description = "Whether to use the storage service account privatekey for the storage service account."
   type        = bool
 }
+
+variable "managed_sync_enabled" {
+  description = "Whether to create the Managed Sync GCS bucket."
+  type        = bool
+  default     = false
+}
