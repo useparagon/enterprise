@@ -1,14 +1,15 @@
 # Managed Sync (when enabled) — GCP. Same strategy as AWS: values = [ global_values_minus_env, secret_hash ].
 # global_values_minus_env comes from var.helm_values (paragon workspace merges .secure/values.yaml via helm_yaml_path into helm_values).
 # Env vars: helm-config managed_sync_secrets → Secret paragon-managed-sync-secrets.
-# TEMPORARY: sandbox bucket; production uses paragon-helm-production.
+# Chart from prod S3 (same as AWS/Azure).
+# TEMPORARY: set blocks below mirror .secure/values.yaml so chart receives overrides until values flow is verified.
 
 resource "helm_release" "managed_sync" {
   count = var.managed_sync_enabled ? 1 : 0
 
   name             = "paragon-managed-sync"
   namespace        = kubernetes_namespace_v1.paragon.id
-  repository       = "https://managed-sync-helm-sandbox.s3.amazonaws.com"
+  repository       = "https://paragon-helm-production.s3.amazonaws.com"
   chart            = "managed-sync"
   version          = var.managed_sync_version
   create_namespace = false
@@ -16,7 +17,6 @@ resource "helm_release" "managed_sync" {
   atomic           = true
   verify           = false
   timeout          = 300
-  force_update     = true
 
   values = [
     local.global_values_minus_env,
