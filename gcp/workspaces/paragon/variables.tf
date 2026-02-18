@@ -624,11 +624,16 @@ locals {
     "false"
   )
 
+  # Build full redis:// or rediss:// URLs from infra (Memorystore uses TLS; connection_string has no scheme and causes 0x15 if app uses redis://).
+  redis_instance_urls = {
+    for name, r in try(local.infra_vars.redis.value, {}) :
+    name => r.ssl ? (r.password != null ? "rediss://:${urlencode(r.password)}@${r.host}:${r.port}" : "rediss://${r.host}:${r.port}") : (r.password != null ? "redis://:${urlencode(r.password)}@${r.host}:${r.port}" : "redis://${r.host}:${r.port}")
+  }
+
   default_redis_url = try(
     local.helm_vars.global.env["REDIS_URL"],
     "${local.helm_vars.global.env["REDIS_HOST"]}:${local.helm_vars.global.env["REDIS_PORT"]}",
-    local.infra_vars.redis.value.cache.connection_string,
-    "${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}"
+    try(local.redis_instance_urls["cache"], local.infra_vars.redis.value.cache.connection_string, "${local.infra_vars.redis.value.cache.host}:${local.infra_vars.redis.value.cache.port}")
   )
 
   helm_values = merge(local.helm_vars, {
@@ -789,21 +794,21 @@ locals {
         ZEUS_POSTGRES_SSL_ENABLED       = try(local.infra_vars.postgres.value.zeus.ssl, "true")
         ZEUS_POSTGRES_USERNAME          = try(local.infra_vars.postgres.value.zeus.user, local.infra_vars.postgres.value.paragon.user)
 
-        # Redis configurations
+        # Redis configurations (full redis:// or rediss:// URLs so TLS is used when infra has ssl=true, e.g. Memorystore).
         REDIS_URL = local.default_redis_url
 
         CACHE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.cache.cluster, local.default_redis_cluster)
         CACHE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.cache.ssl, local.default_redis_ssl)
-        CACHE_REDIS_URL                = try(local.infra_vars.redis.value.cache.connection_string, local.default_redis_url)
+        CACHE_REDIS_URL                = try(local.redis_instance_urls["cache"], local.default_redis_url)
         QUEUE_REDIS_CLUSTER_ENABLED    = try(local.infra_vars.redis.value.queue.cluster, local.default_redis_cluster)
         QUEUE_REDIS_TLS_ENABLED        = try(local.infra_vars.redis.value.queue.ssl, local.default_redis_ssl)
-        QUEUE_REDIS_URL                = try(local.infra_vars.redis.value.queue.connection_string, local.default_redis_url)
+        QUEUE_REDIS_URL                = try(local.redis_instance_urls["queue"], local.default_redis_url)
         SYSTEM_REDIS_CLUSTER_ENABLED   = try(local.infra_vars.redis.value.system.cluster, local.default_redis_cluster)
         SYSTEM_REDIS_TLS_ENABLED       = try(local.infra_vars.redis.value.system.ssl, local.default_redis_ssl)
-        SYSTEM_REDIS_URL               = try(local.infra_vars.redis.value.system.connection_string, local.default_redis_url)
+        SYSTEM_REDIS_URL               = try(local.redis_instance_urls["system"], local.default_redis_url)
         WORKFLOW_REDIS_CLUSTER_ENABLED = try(local.infra_vars.redis.value.workflow.cluster, local.default_redis_cluster)
         WORKFLOW_REDIS_TLS_ENABLED     = try(local.infra_vars.redis.value.workflow.ssl, local.default_redis_ssl)
-        WORKFLOW_REDIS_URL             = try(local.infra_vars.redis.value.workflow.connection_string, local.default_redis_url)
+        WORKFLOW_REDIS_URL             = try(local.redis_instance_urls["workflow"], local.default_redis_url)
 
         # Cloud Storage configurations
         CLOUD_STORAGE_MICROSERVICE_PASS = local.cloud_storage_type == "GCP" ? local.infra_vars.minio.value.root_password : local.infra_vars.minio.value.microservice_pass

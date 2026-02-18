@@ -24,6 +24,13 @@ variable "region" {
   default     = null
 }
 
+variable "gcp_storage_sa_key" {
+  description = "GCP service account key JSON for cloud storage (CLOUD_STORAGE_PASS). When set, used for managed-sync when storage type is GCP so the same credential as paragon is passed."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
 locals {
   postgres_instances = ["sync_instance", "sync_project", "openfga"]
 }

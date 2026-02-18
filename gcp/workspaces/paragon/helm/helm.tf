@@ -105,25 +105,29 @@ locals {
     }
   })
 
-  cloud_storage_services = [
-    "api-triggerkit",
-    "cache-replay",
-    "hades",
-    "health-checker",
-    "hermes",
-    "openobserve",
-    "release",
-    "worker-actionkit",
-    "worker-actions",
-    "worker-credentials",
-    "worker-crons",
-    "worker-deployments",
-    "worker-proxy",
-    "worker-triggers",
-    "worker-triggerkit",
-    "worker-workflows",
-    "zeus"
-  ]
+  # Managed-sync services only when enabled (avoids IAM bindings for SAs that don't exist).
+  cloud_storage_services = concat(
+    var.managed_sync_enabled ? ["api-sync", "worker-sync", "worker-history-sync"] : [],
+    [
+      "api-triggerkit",
+      "cache-replay",
+      "hades",
+      "health-checker",
+      "hermes",
+      "openobserve",
+      "release",
+      "worker-actionkit",
+      "worker-actions",
+      "worker-credentials",
+      "worker-crons",
+      "worker-deployments",
+      "worker-proxy",
+      "worker-triggers",
+      "worker-triggerkit",
+      "worker-workflows",
+      "zeus"
+    ]
+  )
 
   service_account_values = var.storage_service_account != null ? {
     for service_name in local.cloud_storage_services : service_name => {

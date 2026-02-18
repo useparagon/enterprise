@@ -112,3 +112,58 @@ resource "google_sql_user" "postgres_user" {
   instance = google_sql_database_instance.paragon[each.key].name
   project  = var.gcp_project_id
 }
+
+# OpenFGA user for managed-sync. The database "openfga" is created by the chart Job (postgres-config-openfga) if it does not exist.
+locals {
+  openfga_instance_key = var.managed_sync_enabled ? (contains(keys(local.postgres_instances), "managed_sync") ? "managed_sync" : "paragon") : null
+}
+
+resource "random_string" "openfga_username" {
+  count = local.openfga_instance_key != null ? 1 : 0
+
+  length  = 16
+  lower   = true
+  upper   = true
+  numeric = false
+  special = false
+}
+
+resource "random_password" "openfga_password" {
+  count = local.openfga_instance_key != null ? 1 : 0
+
+  length  = 32
+  lower   = true
+  upper   = true
+  numeric = true
+  special = false
+}
+
+resource "google_sql_user" "openfga" {
+  count = local.openfga_instance_key != null ? 1 : 0
+
+  name     = random_string.openfga_username[0].result
+  password = random_password.openfga_password[0].result
+  instance = google_sql_database_instance.paragon[local.openfga_instance_key].name
+  project  = var.gcp_project_id
+}
+
+# Cloud SQL default user "postgres" (superuser). Exported via output for managed_sync only so the
+# postgres-config-openfga init can connect as postgres and run GRANT on schema public successfully.
+resource "random_password" "postgres_superuser_password" {
+  count = local.openfga_instance_key != null ? 1 : 0
+
+  length  = 32
+  lower   = true
+  upper   = true
+  numeric = true
+  special = false
+}
+
+resource "google_sql_user" "postgres_superuser" {
+  count = local.openfga_instance_key != null ? 1 : 0
+
+  name     = "postgres"
+  password = random_password.postgres_superuser_password[0].result
+  instance = google_sql_database_instance.paragon[local.openfga_instance_key].name
+  project  = var.gcp_project_id
+}

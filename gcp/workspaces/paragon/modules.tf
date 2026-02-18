@@ -2,9 +2,10 @@ module "managed_sync_config" {
   source = "./helm-config"
   count  = var.managed_sync_enabled ? 1 : 0
 
-  base_helm_values = local.helm_vars
-  domain           = var.domain
-  infra_values     = local.infra_vars
+  base_helm_values   = local.helm_vars
+  domain             = var.domain
+  infra_values       = local.infra_vars
+  gcp_storage_sa_key = local.cloud_storage_type == "GCP" ? local.gcp_creds : null
   microservices = merge(local.microservices, {
     "api-sync" = {
       healthcheck_path = "/healthz"

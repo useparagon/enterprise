@@ -17,6 +17,7 @@ resource "helm_release" "managed_sync" {
   atomic           = true
   verify           = false
   timeout          = 300
+  force_update     = true
 
   values = [
     local.global_values_minus_env,

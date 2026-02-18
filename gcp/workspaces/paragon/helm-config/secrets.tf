@@ -15,11 +15,12 @@ locals {
       password = local._default_postgres_config.password
       database = local._default_postgres_config.database
     }
+    # Prefer infra openfga (GCP: DB and user created in Terraform to avoid init "Error granting schema privileges")
     openfga = {
-      host     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_HOST"], local._default_postgres_config.host)
-      port     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_PORT"], local._default_postgres_config.port)
-      username = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_USERNAME"], random_string.postgres_username["openfga"].result)
-      password = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_PASSWORD"], random_password.postgres_password["openfga"].result)
+      host     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_HOST"], try(var.infra_values.postgres.value.openfga.host, local._default_postgres_config.host))
+      port     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_PORT"], try(var.infra_values.postgres.value.openfga.port, local._default_postgres_config.port))
+      username = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_USERNAME"], try(var.infra_values.postgres.value.openfga.user, random_string.postgres_username["openfga"].result))
+      password = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_PASSWORD"], try(var.infra_values.postgres.value.openfga.password, random_password.postgres_password["openfga"].result))
       database = "openfga"
     }
     sync_instance = {
@@ -47,10 +48,11 @@ locals {
   }
 
   redis_config = {
-    host               = try(var.base_helm_values.global.env["REDIS_HOST"], try(var.infra_values.redis.value.managed_sync.host, var.infra_values.redis.value.cache.host))
-    port               = try(var.base_helm_values.global.env["REDIS_PORT"], try(var.infra_values.redis.value.managed_sync.port, var.infra_values.redis.value.cache.port))
-    cluster_enabled    = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CLUSTER_ENABLED"], try(var.infra_values.redis.value.managed_sync.cluster, var.infra_values.redis.value.cache.cluster, false))
-    redis_tls_enabled  = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_TLS_ENABLED"], try(var.infra_values.redis.value.managed_sync.ssl, false))
+    host                = try(var.base_helm_values.global.env["REDIS_HOST"], try(var.infra_values.redis.value.managed_sync.host, var.infra_values.redis.value.cache.host))
+    port                = try(var.base_helm_values.global.env["REDIS_PORT"], try(var.infra_values.redis.value.managed_sync.port, var.infra_values.redis.value.cache.port))
+    password            = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_PASSWORD"], try(var.infra_values.redis.value.managed_sync.password, var.infra_values.redis.value.cache.password, null))
+    cluster_enabled     = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CLUSTER_ENABLED"], try(var.infra_values.redis.value.managed_sync.cluster, var.infra_values.redis.value.cache.cluster, false))
+    redis_tls_enabled   = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_TLS_ENABLED"], try(var.infra_values.redis.value.managed_sync.ssl, var.infra_values.redis.value.cache.ssl, false))
     redis_ca_certificate = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CA_CERT"], try(var.infra_values.redis.value.managed_sync.ca_certificate, null))
   }
 
@@ -108,7 +110,8 @@ locals {
     CLOUD_STORAGE_PUBLIC_URL          = local.storage_config.public_url
     CLOUD_STORAGE_REGION              = local.storage_config.region
     CLOUD_STORAGE_USER                = local.storage_config.user
-    CLOUD_STORAGE_PASS                = local.storage_config.pass
+    # GCP: use same SA key as paragon (gcp_storage_sa_key) when provided; else storage_config.pass (infra minio.root_password)
+    CLOUD_STORAGE_PASS                = local.storage_type == "GCP" && try(var.gcp_storage_sa_key, null) != null ? var.gcp_storage_sa_key : local.storage_config.pass
     CLOUD_STORAGE_MANAGED_SYNC_BUCKET = local.storage_config.buckets.managed_sync
 
     MANAGED_SYNC_URL       = try(var.base_helm_values.global.env["MANAGED_SYNC_URL"], "https://sync.${var.domain}")
@@ -122,11 +125,13 @@ locals {
 
     MANAGED_SYNC_KAFKA_BROKER_URLS    = local.kafka_config.broker_urls
     MANAGED_SYNC_KAFKA_SASL_USERNAME  = local.kafka_config.sasl_username
-    MANAGED_SYNC_KAFKA_SASL_PASSWORD  = local.kafka_config.sasl_password
+    # GMK SASL PLAIN expects the password (service account JSON key) to be base64-encoded.
+    MANAGED_SYNC_KAFKA_SASL_PASSWORD  = local.kafka_config.sasl_mechanism == "plain" ? base64encode(local.kafka_config.sasl_password) : local.kafka_config.sasl_password
     MANAGED_SYNC_KAFKA_SASL_MECHANISM = local.kafka_config.sasl_mechanism
     MANAGED_SYNC_KAFKA_SSL_ENABLED    = tostring(local.kafka_config.ssl_enabled)
 
-    MANAGED_SYNC_REDIS_URL              = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_URL"], "${local.redis_config.host}:${local.redis_config.port}")
+    # Use rediss:// when TLS so client uses TLS (Memorystore; plain redis:// causes "0x15" protocol error). Include password when set.
+    MANAGED_SYNC_REDIS_URL              = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_URL"], local.redis_config.redis_tls_enabled ? (local.redis_config.password != null ? "rediss://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "rediss://${local.redis_config.host}:${local.redis_config.port}") : (local.redis_config.password != null ? "redis://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "redis://${local.redis_config.host}:${local.redis_config.port}"))
     MANAGED_SYNC_REDIS_CLUSTER_ENABLED  = local.redis_config.cluster_enabled
     MANAGED_SYNC_REDIS_TLS_ENABLED      = tostring(local.redis_config.redis_tls_enabled)
     MANAGED_SYNC_REDIS_CA_CERT          = local.redis_config.redis_ca_certificate != null ? local.redis_config.redis_ca_certificate : ""
@@ -155,11 +160,13 @@ locals {
     OPENFGA_POSTGRES_URI         = "postgres://${local.postgres_config.openfga.username}:${local.postgres_config.openfga.password}@${local.postgres_config.openfga.host}:${local.postgres_config.openfga.port}/${local.postgres_config.openfga.database}?sslmode=prefer"
     OPENFGA_AUTH_PRESHARED_KEY   = random_string.openfga_preshared_key.result
 
+    # GCP: use postgres superuser for ADMIN_* so postgres-config-openfga init can GRANT on schema public.
     ADMIN_POSTGRES_HOST        = local.postgres_config.admin.host
     ADMIN_POSTGRES_PORT        = local.postgres_config.admin.port
-    ADMIN_POSTGRES_USERNAME    = local.postgres_config.admin.username
-    ADMIN_POSTGRES_PASSWORD    = local.postgres_config.admin.password
-    ADMIN_POSTGRES_DATABASE    = local.postgres_config.admin.database
+    ADMIN_POSTGRES_USERNAME    = try(var.infra_values.postgres.value.postgres_superuser.user, local.postgres_config.admin.username)
+    ADMIN_POSTGRES_PASSWORD    = try(var.infra_values.postgres.value.postgres_superuser.password, local.postgres_config.admin.password)
+    # Use "postgres" so init can connect (openfga DB may not exist yet). Job main container uses -d openfga for GRANTs.
+    ADMIN_POSTGRES_DATABASE    = try(var.infra_values.postgres.value.postgres_superuser.user, null) != null ? "postgres" : local.postgres_config.admin.database
     ADMIN_POSTGRES_SSL_ENABLED = "true"
 
     MANAGED_SYNC_POSTGRES_HOST        = local.postgres_config.admin.host
@@ -180,7 +187,7 @@ locals {
 
     MONITOR_MANAGED_SYNC_KAFKA_BROKER_URLS    = local.kafka_config.broker_urls
     MONITOR_MANAGED_SYNC_KAFKA_SASL_USERNAME  = local.kafka_config.sasl_username
-    MONITOR_MANAGED_SYNC_KAFKA_SASL_PASSWORD  = local.kafka_config.sasl_password
+    MONITOR_MANAGED_SYNC_KAFKA_SASL_PASSWORD  = local.kafka_config.sasl_mechanism == "plain" ? base64encode(local.kafka_config.sasl_password) : local.kafka_config.sasl_password
     MONITOR_MANAGED_SYNC_KAFKA_SASL_MECHANISM = local.kafka_config.sasl_mechanism
     MONITOR_MANAGED_SYNC_KAFKA_SSL_ENABLED    = tostring(local.kafka_config.ssl_enabled)
 
