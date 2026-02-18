@@ -1,3 +1,12 @@
+resource "aws_iam_service_linked_role" "autoscaling" {
+  count            = var.create_autoscaling_linked_role ? 1 : 0
+  aws_service_name = "autoscaling.amazonaws.com"
+}
+
+locals {
+  autoscaling_role_arn = var.create_autoscaling_linked_role ? aws_iam_service_linked_role.autoscaling[0].arn : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+}
+
 resource "aws_autoscaling_group_tag" "cluster_autoscaler_label_tags" {
   for_each = local.cluster_autoscaler_asg_tags
 

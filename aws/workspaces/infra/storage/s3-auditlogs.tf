@@ -49,15 +49,6 @@ resource "aws_s3_bucket_object_lock_configuration" "auditlogs" {
   }
 }
 
-resource "aws_s3_bucket_acl" "auditlogs" {
-  bucket = aws_s3_bucket.auditlogs.id
-  acl    = "private"
-
-  depends_on = [
-    aws_s3_bucket_ownership_controls.auditlogs
-  ]
-}
-
 resource "aws_s3_bucket_public_access_block" "auditlogs" {
   bucket = aws_s3_bucket.auditlogs.bucket
 

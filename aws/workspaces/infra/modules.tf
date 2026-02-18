@@ -112,6 +112,7 @@ module "cluster" {
   bastion_role_arn          = module.bastion.bastion_role_arn
   bastion_security_group_id = module.bastion.security_group.host[0]
 
+  create_autoscaling_linked_role  = var.create_autoscaling_linked_role
   eks_admin_arns                  = var.eks_admin_arns
   eks_max_node_count              = var.eks_max_node_count
   eks_min_node_count              = var.eks_min_node_count
