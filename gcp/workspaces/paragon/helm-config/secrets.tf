@@ -47,13 +47,16 @@ locals {
     ssl_enabled    = try(var.base_helm_values.global.env["MANAGED_SYNC_KAFKA_SSL_ENABLED"], try(var.infra_values.kafka.value.cluster_tls_enabled, true))
   }
 
+  # Prefer infra Redis when present so TLS (ssl) and URL scheme come from infra (Memorystore → rediss://; else 0x15 error).
+  redis_from_infra = try(var.infra_values.redis.value.managed_sync, var.infra_values.redis.value.cache, null)
+
   redis_config = {
-    host                = try(var.base_helm_values.global.env["REDIS_HOST"], try(var.infra_values.redis.value.managed_sync.host, var.infra_values.redis.value.cache.host))
-    port                = try(var.base_helm_values.global.env["REDIS_PORT"], try(var.infra_values.redis.value.managed_sync.port, var.infra_values.redis.value.cache.port))
-    password            = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_PASSWORD"], try(var.infra_values.redis.value.managed_sync.password, var.infra_values.redis.value.cache.password, null))
-    cluster_enabled     = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CLUSTER_ENABLED"], try(var.infra_values.redis.value.managed_sync.cluster, var.infra_values.redis.value.cache.cluster, false))
-    redis_tls_enabled   = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_TLS_ENABLED"], try(var.infra_values.redis.value.managed_sync.ssl, var.infra_values.redis.value.cache.ssl, false))
-    redis_ca_certificate = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CA_CERT"], try(var.infra_values.redis.value.managed_sync.ca_certificate, null))
+    host                 = local.redis_from_infra != null ? local.redis_from_infra.host : try(var.base_helm_values.global.env["REDIS_HOST"], try(var.infra_values.redis.value.managed_sync.host, var.infra_values.redis.value.cache.host))
+    port                 = local.redis_from_infra != null ? local.redis_from_infra.port : try(var.base_helm_values.global.env["REDIS_PORT"], try(var.infra_values.redis.value.managed_sync.port, var.infra_values.redis.value.cache.port))
+    password             = local.redis_from_infra != null ? local.redis_from_infra.password : try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_PASSWORD"], try(var.infra_values.redis.value.managed_sync.password, var.infra_values.redis.value.cache.password, null))
+    cluster_enabled      = local.redis_from_infra != null ? try(local.redis_from_infra.cluster, false) : try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CLUSTER_ENABLED"], try(var.infra_values.redis.value.managed_sync.cluster, var.infra_values.redis.value.cache.cluster, false))
+    redis_tls_enabled    = local.redis_from_infra != null ? local.redis_from_infra.ssl : try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_TLS_ENABLED"], try(var.infra_values.redis.value.managed_sync.ssl, var.infra_values.redis.value.cache.ssl, false))
+    redis_ca_certificate = local.redis_from_infra != null ? try(local.redis_from_infra.ca_certificate, null) : try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CA_CERT"], try(var.infra_values.redis.value.managed_sync.ca_certificate, null))
   }
 
   # -------------------------------------------------------------------------
@@ -130,8 +133,8 @@ locals {
     MANAGED_SYNC_KAFKA_SASL_MECHANISM = local.kafka_config.sasl_mechanism
     MANAGED_SYNC_KAFKA_SSL_ENABLED    = tostring(local.kafka_config.ssl_enabled)
 
-    # Use rediss:// when TLS so client uses TLS (Memorystore; plain redis:// causes "0x15" protocol error). Include password when set.
-    MANAGED_SYNC_REDIS_URL              = try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_URL"], local.redis_config.redis_tls_enabled ? (local.redis_config.password != null ? "rediss://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "rediss://${local.redis_config.host}:${local.redis_config.port}") : (local.redis_config.password != null ? "redis://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "redis://${local.redis_config.host}:${local.redis_config.port}"))
+    # Redis from infra when present (TLS → rediss://; else 0x15). Do not override from base_helm_values so managed_sync always gets infra's scheme.
+    MANAGED_SYNC_REDIS_URL              = local.redis_from_infra != null ? (local.redis_config.redis_tls_enabled ? (local.redis_config.password != null ? "rediss://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "rediss://${local.redis_config.host}:${local.redis_config.port}") : (local.redis_config.password != null ? "redis://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "redis://${local.redis_config.host}:${local.redis_config.port}")) : try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_URL"], local.redis_config.redis_tls_enabled ? (local.redis_config.password != null ? "rediss://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "rediss://${local.redis_config.host}:${local.redis_config.port}") : (local.redis_config.password != null ? "redis://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "redis://${local.redis_config.host}:${local.redis_config.port}"))
     MANAGED_SYNC_REDIS_CLUSTER_ENABLED  = local.redis_config.cluster_enabled
     MANAGED_SYNC_REDIS_TLS_ENABLED      = tostring(local.redis_config.redis_tls_enabled)
     MANAGED_SYNC_REDIS_CA_CERT          = local.redis_config.redis_ca_certificate != null ? local.redis_config.redis_ca_certificate : ""
