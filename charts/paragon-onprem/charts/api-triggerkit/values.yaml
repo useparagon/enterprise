@@ -295,3 +295,13 @@ tolerations: []
 affinity: {}
 
 tls_secret: ''
+
+pdb:
+  enabled: true
+  maxUnavailable: 1
+
+topologySpread:
+  enabled: true
+  maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: ScheduleAnyway
