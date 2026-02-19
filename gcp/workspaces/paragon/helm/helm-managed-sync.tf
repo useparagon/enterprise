@@ -19,10 +19,11 @@ resource "helm_release" "managed_sync" {
   timeout          = 300
   force_update     = true
 
-  values = [
-    local.global_values_minus_env,
-    local.secret_hash
-  ]
+  values = concat(
+    [local.global_values_minus_env],
+    local.managed_sync_storage_values != {} ? [yamlencode(local.managed_sync_storage_values)] : [],
+    [local.secret_hash]
+  )
 
   set {
     name  = "secretName"

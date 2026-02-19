@@ -168,6 +168,14 @@ locals {
     }
   ))
 
+  # Workload Identity (GCS) for services deployed by the managed-sync chart. Without this,
+  # api-sync, worker-sync, worker-history-sync get "storage.buckets.get denied".
+  managed_sync_storage_values = var.storage_service_account != null && var.managed_sync_enabled ? {
+    "api-sync"             = local.service_account_values["api-sync"]
+    "worker-sync"          = local.service_account_values["worker-sync"]
+    "worker-history-sync"  = local.service_account_values["worker-history-sync"]
+  } : {}
+
   # changes to secrets should trigger redeploy
   secret_hash = yamlencode({
     secret_hash = sha256(jsonencode(nonsensitive(var.helm_values)))

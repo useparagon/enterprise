@@ -113,9 +113,17 @@ resource "google_sql_user" "postgres_user" {
   project  = var.gcp_project_id
 }
 
-# OpenFGA user for managed-sync. The database "openfga" is created by the chart Job (postgres-config-openfga) if it does not exist.
+# OpenFGA for managed-sync: DB and user in Terraform so the chart init only runs GRANTs (avoids "Error granting schema privileges").
 locals {
   openfga_instance_key = var.managed_sync_enabled ? (contains(keys(local.postgres_instances), "managed_sync") ? "managed_sync" : "paragon") : null
+}
+
+resource "google_sql_database" "openfga" {
+  count = local.openfga_instance_key != null ? 1 : 0
+
+  name     = "openfga"
+  project  = var.gcp_project_id
+  instance = google_sql_database_instance.paragon[local.openfga_instance_key].name
 }
 
 resource "random_string" "openfga_username" {

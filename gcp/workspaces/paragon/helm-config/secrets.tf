@@ -76,9 +76,9 @@ locals {
       managed_sync = coalesce(try(var.base_helm_values.global.env["CLOUD_STORAGE_MANAGED_SYNC_BUCKET"], null), try(var.infra_values.minio.value.managed_sync_bucket, null))
     }
     type = try(var.base_helm_values.global.env["CLOUD_STORAGE_TYPE"], "GCP")
-    # GCP: user = project_id or SA email; pass = service account key JSON (when use_storage_account_key)
+    # GCP: user = SA email (for Workload Identity / ADC); fallback root_user. pass = SA key JSON only when provided.
     user = try(
-      local.storage_type == "MINIO" ? try(var.base_helm_values.global.env["MINIO_MICROSERVICE_USER"], var.infra_values.minio.value.microservice_user) : try(var.base_helm_values.global.env["CLOUD_STORAGE_MICROSERVICE_USER"], var.infra_values.minio.value.root_user)
+      local.storage_type == "MINIO" ? try(var.base_helm_values.global.env["MINIO_MICROSERVICE_USER"], var.infra_values.minio.value.microservice_user) : try(var.base_helm_values.global.env["CLOUD_STORAGE_MICROSERVICE_USER"], try(var.infra_values.minio.value.service_account, var.infra_values.minio.value.root_user))
     )
     pass = try(
       local.storage_type == "MINIO" ? try(var.base_helm_values.global.env["MINIO_MICROSERVICE_PASS"], var.infra_values.minio.value.microservice_pass) : try(var.base_helm_values.global.env["CLOUD_STORAGE_MICROSERVICE_PASS"], var.infra_values.minio.value.root_password)
@@ -110,8 +110,8 @@ locals {
     CLOUD_STORAGE_PUBLIC_URL          = local.storage_config.public_url
     CLOUD_STORAGE_REGION              = local.storage_config.region
     CLOUD_STORAGE_USER                = local.storage_config.user
-    # GCP: use same SA key as paragon (gcp_storage_sa_key) when provided; else storage_config.pass (infra minio.root_password)
-    CLOUD_STORAGE_PASS                = local.storage_type == "GCP" && try(var.gcp_storage_sa_key, null) != null ? var.gcp_storage_sa_key : local.storage_config.pass
+    # GCP: SA key when provided; else empty so app uses Workload Identity (ADC) with CLOUD_STORAGE_USER SA.
+    CLOUD_STORAGE_PASS                = local.storage_type == "GCP" ? (try(var.gcp_storage_sa_key, null) != null ? var.gcp_storage_sa_key : "") : local.storage_config.pass
     CLOUD_STORAGE_MANAGED_SYNC_BUCKET = local.storage_config.buckets.managed_sync
 
     MANAGED_SYNC_URL       = try(var.base_helm_values.global.env["MANAGED_SYNC_URL"], "https://sync.${var.domain}")
@@ -160,13 +160,12 @@ locals {
     OPENFGA_POSTGRES_URI         = "postgres://${local.postgres_config.openfga.username}:${local.postgres_config.openfga.password}@${local.postgres_config.openfga.host}:${local.postgres_config.openfga.port}/${local.postgres_config.openfga.database}?sslmode=prefer"
     OPENFGA_AUTH_PRESHARED_KEY   = random_string.openfga_preshared_key.result
 
-    # GCP: use postgres superuser for ADMIN_* so postgres-config-openfga init can GRANT on schema public.
+    # GCP: postgres superuser + DB openfga so postgres-config-openfga init connects to openfga and runs GRANT on schema public.
     ADMIN_POSTGRES_HOST        = local.postgres_config.admin.host
     ADMIN_POSTGRES_PORT        = local.postgres_config.admin.port
     ADMIN_POSTGRES_USERNAME    = try(var.infra_values.postgres.value.postgres_superuser.user, local.postgres_config.admin.username)
     ADMIN_POSTGRES_PASSWORD    = try(var.infra_values.postgres.value.postgres_superuser.password, local.postgres_config.admin.password)
-    # Use "postgres" so init can connect (openfga DB may not exist yet). Job main container uses -d openfga for GRANTs.
-    ADMIN_POSTGRES_DATABASE    = try(var.infra_values.postgres.value.postgres_superuser.user, null) != null ? "postgres" : local.postgres_config.admin.database
+    ADMIN_POSTGRES_DATABASE    = try(var.infra_values.postgres.value.postgres_superuser.user, null) != null ? "openfga" : local.postgres_config.admin.database
     ADMIN_POSTGRES_SSL_ENABLED = "true"
 
     MANAGED_SYNC_POSTGRES_HOST        = local.postgres_config.admin.host
