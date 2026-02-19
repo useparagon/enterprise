@@ -49,3 +49,39 @@ resource "google_compute_router_nat" "nat_gateway" {
   router                             = google_compute_router.nat_router.name
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
+
+# Private service connection used by Cloud SQL and Memorystore. Lives in network so it is destroyed
+# after postgres and redis (GCP fails to delete the connection while producers still use it).
+resource "google_compute_global_address" "private_service_connect" {
+  name          = "${var.workspace}-global-psconnect-ip"
+  address_type  = "INTERNAL"
+  purpose       = "VPC_PEERING"
+  network       = google_compute_network.paragon.id
+  prefix_length = 16
+  project       = var.gcp_project_id
+}
+
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = google_compute_network.paragon.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.private_service_connect.name]
+}
+
+# Delay before destroying the connection so GCP has time to release it after Cloud SQL/Memorystore are gone.
+# Destroy order: this resource is destroyed first (runs sleep), then the connection can be removed.
+resource "null_resource" "service_connection_teardown_delay" {
+  depends_on = [google_service_networking_connection.private_vpc_connection]
+
+  triggers = {
+    connection_id = google_service_networking_connection.private_vpc_connection.id
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "sleep 90"
+  }
+}

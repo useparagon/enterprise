@@ -10,17 +10,18 @@ module "network" {
 module "postgres" {
   source = "./postgres"
 
-  auditlogs_lock_enabled      = var.auditlogs_lock_enabled
-  auditlogs_retention_days    = var.auditlogs_retention_days
-  disable_deletion_protection = var.disable_deletion_protection
-  gcp_project_id             = local.gcp_project_id
-  network                     = module.network.network
-  postgres_multiple_instances = var.postgres_multiple_instances
-  postgres_tier               = var.postgres_tier
-  private_subnet              = module.network.private_subnet
-  region                      = var.region
-  workspace                   = local.workspace
-  managed_sync_enabled = var.managed_sync_enabled
+  auditlogs_lock_enabled          = var.auditlogs_lock_enabled
+  auditlogs_retention_days        = var.auditlogs_retention_days
+  disable_deletion_protection    = var.disable_deletion_protection
+  gcp_project_id                 = local.gcp_project_id
+  network                         = module.network.network
+  postgres_multiple_instances     = var.postgres_multiple_instances
+  postgres_tier                   = var.postgres_tier
+  private_subnet                  = module.network.private_subnet
+  region                          = var.region
+  service_networking_connection    = module.network.service_networking_connection
+  workspace                       = local.workspace
+  managed_sync_enabled            = var.managed_sync_enabled
 }
 
 module "redis" {
