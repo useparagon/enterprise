@@ -98,10 +98,10 @@ locals {
       version = "v1.55.0-eksbuild.2"
     }
     coredns = {
-      version = "v1.11.4-eksbuild.28"
+      version = "v1.13.2-eksbuild.1"
     }
     kube-proxy = {
-      version = "v1.32.11-eksbuild.2"
+      version = "v1.33.7-eksbuild.2"
     }
     vpc-cni = {
       version = "v1.21.1-eksbuild.3"
