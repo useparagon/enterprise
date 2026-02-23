@@ -23,14 +23,6 @@ resource "azurerm_eventhub_namespace" "kafka" {
   tags = merge(var.tags, { Name = "${var.workspace}-kafka" })
 }
 
-# Event Hub (topic) for Kafka
-resource "azurerm_eventhub" "kafka" {
-  name              = var.workspace
-  namespace_id      = azurerm_eventhub_namespace.kafka.id
-  partition_count   = 3
-  message_retention = 7
-}
-
 # Authorization rule for SAS authentication (used by Kafka clients)
 resource "azurerm_eventhub_namespace_authorization_rule" "kafka" {
   name                = "${var.workspace}-kafka-auth"
@@ -41,4 +33,3 @@ resource "azurerm_eventhub_namespace_authorization_rule" "kafka" {
   send   = true
   manage = true
 }
-

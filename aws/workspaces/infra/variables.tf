@@ -108,7 +108,7 @@ variable "elasticache_multi_az" {
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
-  default     = "1.32"
+  default     = "1.33"
 }
 
 variable "eks_ondemand_node_instance_type" {
@@ -149,6 +149,12 @@ variable "eks_admin_arns" {
   description = "Array of ARNs for IAM users or roles that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
   type        = list(string)
   default     = []
+}
+
+variable "create_autoscaling_linked_role" {
+  description = "Whether or not to create an IAM role for autoscaling."
+  type        = bool
+  default     = true
 }
 
 # security

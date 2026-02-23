@@ -65,6 +65,11 @@ variable "bastion_security_group_id" {
   type        = string
 }
 
+variable "create_autoscaling_linked_role" {
+  description = "Whether or not to create an IAM role for autoscaling."
+  type        = bool
+}
+
 data "aws_caller_identity" "current" {}
 
 locals {
@@ -90,16 +95,16 @@ locals {
 
   cluster_addons = {
     aws-ebs-csi-driver = {
-      version = "v1.54.0-eksbuild.1"
+      version = "v1.55.0-eksbuild.2"
     }
     coredns = {
-      version = "v1.11.4-eksbuild.14"
+      version = "v1.13.2-eksbuild.1"
     }
     kube-proxy = {
-      version = "v1.31.10-eksbuild.2"
+      version = "v1.33.7-eksbuild.2"
     }
     vpc-cni = {
-      version = "v1.19.6-eksbuild.7"
+      version = "v1.21.1-eksbuild.3"
     }
   }
 
