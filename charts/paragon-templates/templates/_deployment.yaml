@@ -115,7 +115,7 @@ spec:
       {{- end }}
       {{- if and $root.Values.topologySpread $root.Values.topologySpread.enabled }}
       topologySpreadConstraints:
-        - maxSkew: {{ $root.Values.topologySpread.maxSkew | default 1 }}
+        - maxSkew: {{ if hasKey $root.Values.topologySpread "maxSkew" }}{{ $root.Values.topologySpread.maxSkew }}{{ else }}1{{ end }}
           topologyKey: {{ $root.Values.topologySpread.topologyKey | default "kubernetes.io/hostname" }}
           labelSelector:
             matchLabels:
