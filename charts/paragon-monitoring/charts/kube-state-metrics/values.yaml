@@ -264,6 +264,12 @@ tls_secret: ''
 tolerations: []
 
 ## Topology spread constraints for pod assignment
+topologySpread:
+  enabled: false
+  # maxSkew: 1
+  # topologyKey: kubernetes.io/hostname
+  # whenUnsatisfiable: ScheduleAnyway
+## Raw option: use when you need custom constraints (list of full constraint objects).
 ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
 topologySpreadConstraints: []
 
