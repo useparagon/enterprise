@@ -3,6 +3,7 @@ resource "google_compute_global_address" "paragon" {
   address_type  = "INTERNAL"
   purpose       = "VPC_PEERING"
   network       = var.network.id
+  project       = var.gcp_project_id
   prefix_length = 16
 }
 
@@ -71,6 +72,12 @@ resource "google_sql_database_instance" "paragon" {
       record_application_tags = true
       record_client_address   = true
     }
+  }
+
+  timeouts {
+    create = "30m"
+    update = "30m"
+    delete = "30m"
   }
 
   depends_on = [google_service_networking_connection.private_vpc_connection]

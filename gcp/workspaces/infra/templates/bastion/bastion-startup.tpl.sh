@@ -165,6 +165,19 @@ if [[ ! -z "${tfc_agent_token}" ]]; then
         -e TFC_AGENT_TOKEN="${tfc_agent_token}" \
         -e TFC_AGENT_NAME="${tunnel_name}" \
         hashicorp/tfc-agent:latest
+
+    # allow restarting with a new token
+    cat > /home/ubuntu/start-tfc-agent.sh << EOF
+#!/bin/sh
+
+set -e
+if sudo docker inspect tfc-agent >/dev/null 2>&1; then
+  sudo docker rm -f tfc-agent >/dev/null
+fi
+sudo docker run -d --platform=linux/amd64 --restart=unless-stopped --name tfc-agent -e TFC_AGENT_TOKEN="\$1" -e TFC_AGENT_NAME="${tunnel_name}" hashicorp/tfc-agent:latest
+EOF
+    chmod +x /home/ubuntu/start-tfc-agent.sh
+
 else
     writeLog "skipped docker and terraform agent installation"
 fi
