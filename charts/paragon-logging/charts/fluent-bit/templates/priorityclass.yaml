@@ -1,5 +1,5 @@
-{{- $priorityClassName := .Values.priorityClass.name | default "paragon-node-high" }}
-{{- if and .Values.priorityClass.create (not (lookup "scheduling.k8s.io/v1" "PriorityClass" "" $priorityClassName)) }}
+{{- $priorityClassName := .Values.priorityClass.name | default "paragon-fluent-bit-high" }}
+{{- if .Values.priorityClass.create }}
 apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
@@ -8,5 +8,5 @@ metadata:
     {{- include "fluent-bit.labels" . | nindent 4 }}
 value: {{ .Values.priorityClass.value | default 1000000 }}
 globalDefault: false
-description: {{ .Values.priorityClass.description | default "High priority for node-level Paragon services like logging and metrics" }}
+description: {{ .Values.priorityClass.description | default "High priority for Paragon fluent-bit DaemonSet" }}
 {{- end }} 

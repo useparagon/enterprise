@@ -15,8 +15,9 @@ spec:
     spec:
       hostNetwork: {{ .Values.hostNetwork }}
       hostPID: {{ .Values.hostPID }}
-      {{- if .Values.priorityClassName }}
-      priorityClassName: {{ .Values.priorityClassName }}
+      {{- $pc := .Values.priorityClassName | default .Values.priorityClass.name }}
+      {{- if $pc }}
+      priorityClassName: {{ $pc }}
       {{- end }}
       containers:
         - name: node-exporter

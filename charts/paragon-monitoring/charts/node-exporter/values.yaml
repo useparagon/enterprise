@@ -25,10 +25,9 @@ resources:
     cpu: 200m
     memory: 128Mi
 
-priorityClassName: "paragon-node-high"
-
+## PriorityClass: when create is true the chart creates it; pods use priorityClass.name
 priorityClass:
   create: true
-  name: "paragon-node-high"
+  name: "paragon-node-exporter-high"
   value: 1000000
-  description: "High priority for node-level Paragon services like logging and metrics"
+  description: "High priority for Paragon node-exporter DaemonSet"

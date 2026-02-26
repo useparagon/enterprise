@@ -4,8 +4,9 @@ serviceAccountName: {{ include "fluent-bit.serviceAccountName" . }}
 imagePullSecrets:
   {{- toYaml . | nindent 2 }}
 {{- end }}
-{{- if .Values.priorityClassName }}
-priorityClassName: {{ .Values.priorityClassName }}
+{{- $pc := .Values.priorityClassName | default .Values.priorityClass.name }}
+{{- if $pc }}
+priorityClassName: {{ $pc }}
 {{- end }}
 {{- with .Values.podSecurityContext }}
 securityContext:
