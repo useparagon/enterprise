@@ -8,6 +8,12 @@ variable "organization" {
   type        = string
 }
 
+variable "hoop_agent_name" {
+  description = "Override for the Hoop agent name in HOOP_KEY when organization does not identify the client (e.g. when organization is a region code like \"us\", set hoop_agent_name to a client-identifying value such as \"client-us\")."
+  type        = string
+  default     = null
+}
+
 variable "hoop_agent_id" {
   description = "Hoop agent ID for connections. Only used if hoop_enabled is true."
   type        = string

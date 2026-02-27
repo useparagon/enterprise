@@ -16,7 +16,7 @@ resource "helm_release" "hoopagent" {
 
   set {
     name  = "config.HOOP_KEY"
-    value = "grpcs://${var.organization}:${var.hoop_key}@${var.hoop_server}?mode=standard"
+    value = "grpcs://${coalesce(var.hoop_agent_name, var.organization)}:${var.hoop_key}@${var.hoop_server}?mode=standard"
   }
 
   set {

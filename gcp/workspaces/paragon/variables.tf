@@ -313,6 +313,12 @@ variable "hoop_restricted_access_groups" {
   default     = ["dev-team-oncall", "dev-team-managers", "admin"]
 }
 
+variable "hoop_agent_name" {
+  description = "Override Hoop agent name in HOOP_KEY when organization does not identify the client (e.g. when organization is a region code like \"us\", set to a client-identifying value such as \"client-us\")."
+  type        = string
+  default     = null
+}
+
 variable "hoop_reviewers_access_groups" {
   description = "Reviewer groups required for customer-facing app connections."
   type        = list(string)
