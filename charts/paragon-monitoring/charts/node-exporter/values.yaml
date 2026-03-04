@@ -18,12 +18,11 @@ tolerations:
 nodeSelector: {}
 
 resources:
+  limits:
+    memory: 100Mi
   requests:
     cpu: 100m
-    memory: 64Mi
-  limits:
-    cpu: 200m
-    memory: 128Mi
+    memory: 100Mi
 
 priorityClassName: "paragon-node-high"
 

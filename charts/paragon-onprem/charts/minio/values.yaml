@@ -25,8 +25,8 @@ autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 4
-  targetCPUUtilizationPercentage: 70
-  targetMemoryUtilizationPercentage: 70
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 75
 
 secretName: "paragon-secrets"
 
@@ -79,6 +79,6 @@ affinity:
         - key: useparagon.com/capacityType
           operator: In
           values:
-          - spot
+          - ondemand
 
 tls_secret: ''
