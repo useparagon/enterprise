@@ -1,10 +1,15 @@
 locals {
+  version = var.helm_values.global.env["VERSION"]
+
   subchart_values = yamlencode({
-    subchart = {
-      for microservice in keys(var.microservices) : microservice => {
-        enabled = true
-      }
-    }
+    subchart = merge(
+      {
+        for microservice in keys(var.microservices) : microservice => {
+          enabled = true
+        }
+      },
+      try(nonsensitive(var.helm_values.subchart), {})
+    )
   })
 
   microservice_values = yamlencode({
@@ -99,7 +104,7 @@ locals {
               secretName  = "paragon-secrets"
             }
           ),
-          paragon_version = var.helm_values.global.env["VERSION"]
+          paragon_version = local.version
         }
       )
     }
@@ -196,7 +201,7 @@ resource "helm_release" "paragon_on_prem" {
   name              = "paragon-on-prem"
   description       = "Paragon microservices"
   chart             = "./charts/paragon-onprem"
-  version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
+  version           = "${local.version}-${local.chart_hashes["paragon-onprem"]}"
   namespace         = kubernetes_namespace.paragon.id
   create_namespace  = false
   cleanup_on_fail   = true
@@ -227,7 +232,7 @@ resource "helm_release" "paragon_logging" {
   name              = "paragon-logging"
   description       = "Paragon logging services"
   chart             = "./charts/paragon-logging"
-  version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
+  version           = "${local.version}-${local.chart_hashes["paragon-logging"]}"
   namespace         = kubernetes_namespace.paragon.id
   create_namespace  = false
   cleanup_on_fail   = true

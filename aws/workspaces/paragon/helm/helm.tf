@@ -1,4 +1,17 @@
 locals {
+  version = var.helm_values.global.env["VERSION"]
+
+  subchart_values = yamlencode({
+    subchart = merge(
+      {
+        for microservice in keys(var.microservices) : microservice => {
+          enabled = true
+        }
+      },
+      try(nonsensitive(var.helm_values.subchart), {})
+    )
+  })
+
   flipt_values = yamlencode({
     flipt = {
       flipt = {
@@ -44,7 +57,7 @@ locals {
               secretName  = "paragon-secrets"
             }
           ),
-          paragon_version = var.helm_values.global.env["VERSION"]
+          paragon_version = local.version
         }
       )
     }
@@ -58,56 +71,6 @@ locals {
       } })
     }
   ))
-
-  supported_microservices_values = <<EOF
-subchart:
-  account:
-    enabled: ${contains(keys(var.microservices), "account")}
-  cache-replay:
-    enabled: ${contains(keys(var.microservices), "cache-replay")}
-  cerberus:
-    enabled: ${contains(keys(var.microservices), "cerberus")}
-  connect:
-    enabled: ${contains(keys(var.microservices), "connect")}
-  dashboard:
-    enabled: ${contains(keys(var.microservices), "dashboard")}
-  flipt:
-    enabled: ${contains(keys(var.microservices), "flipt")}
-  hades:
-    enabled: ${contains(keys(var.microservices), "hades")}
-  hermes:
-    enabled: ${contains(keys(var.microservices), "hermes")}
-  minio:
-    enabled: ${contains(keys(var.microservices), "minio")}
-  passport:
-    enabled: ${contains(keys(var.microservices), "passport")}
-  pheme:
-    enabled: ${contains(keys(var.microservices), "pheme")}
-  release:
-    enabled: ${contains(keys(var.microservices), "release")}
-  zeus:
-    enabled: ${contains(keys(var.microservices), "zeus")}
-  worker-actionkit:
-    enabled: ${contains(keys(var.microservices), "worker-actionkit")}
-  worker-actions:
-    enabled: ${contains(keys(var.microservices), "worker-actions")}
-  worker-auditlogs:
-    enabled: ${contains(keys(var.microservices), "worker-auditlogs")}
-  worker-credentials:
-    enabled: ${contains(keys(var.microservices), "worker-credentials")}
-  worker-crons:
-    enabled: ${contains(keys(var.microservices), "worker-crons")}
-  worker-deployments:
-    enabled: ${contains(keys(var.microservices), "worker-deployments")}
-  worker-eventlogs:
-    enabled: ${contains(keys(var.microservices), "worker-eventlogs")}
-  worker-proxy:
-    enabled: ${contains(keys(var.microservices), "worker-proxy")}
-  worker-triggers:
-    enabled: ${contains(keys(var.microservices), "worker-triggers")}
-  worker-workflows:
-    enabled: ${contains(keys(var.microservices), "worker-workflows")}
-EOF
 
   # changes to secrets should trigger redeploy
   secret_hash = yamlencode({
@@ -246,7 +209,7 @@ resource "helm_release" "paragon_on_prem" {
   name        = "paragon-on-prem"
   description = "Paragon microservices"
   chart       = "./charts/paragon-onprem"
-  version     = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
+  version     = "${local.version}-${local.chart_hashes["paragon-onprem"]}"
 
   namespace         = kubernetes_namespace.paragon.id
   atomic            = true
@@ -258,7 +221,7 @@ resource "helm_release" "paragon_on_prem" {
   verify            = false
 
   values = [
-    local.supported_microservices_values,
+    local.subchart_values,
     local.flipt_values,
     local.global_values,
     local.secret_hash
@@ -347,7 +310,7 @@ resource "helm_release" "paragon_logging" {
   name        = "paragon-logging"
   description = "Paragon logging services"
   chart       = "./charts/paragon-logging"
-  version     = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
+  version     = "${local.version}-${local.chart_hashes["paragon-logging"]}"
 
   namespace         = kubernetes_namespace.paragon.id
   atomic            = true
