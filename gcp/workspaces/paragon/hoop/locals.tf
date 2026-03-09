@@ -1,5 +1,6 @@
 locals {
-  detected_cloud = "gcp"
+  detected_cloud    = "gcp"
+  connection_prefix = coalesce(var.hoop_agent_name, var.organization)
 
   connection_environment = var.customer_facing ? "prod" : "staging"
   slack_enabled = (
@@ -12,7 +13,7 @@ locals {
   postgres_connections = try(var.infra_vars.postgres.value, null) != null ? {
     for db_schema, db_config in var.infra_vars.postgres.value :
     "postgres-${db_schema}" => {
-      name    = length(keys(var.infra_vars.postgres.value)) == 1 ? "${var.organization}-postgres-db" : "${var.organization}-${db_schema}-db"
+      name    = length(keys(var.infra_vars.postgres.value)) == 1 ? "${local.connection_prefix}-postgres-db" : "${local.connection_prefix}-${db_schema}-db"
       type    = "database"
       subtype = "postgres"
       command = null
@@ -48,7 +49,7 @@ locals {
     try(var.infra_vars.redis.value, null) != null ? {
       for instance_name, instance_config in var.infra_vars.redis.value :
       "redis-${instance_name}" => {
-        name    = "${var.organization}-redis-${instance_name}"
+        name    = "${local.connection_prefix}-redis-${instance_name}"
         type    = "custom"
         subtype = "redis"
         command = ["redis-cli", "-h", "$HOST", "-p", "$PORT", "-n", "$DB_NUMBER"]
@@ -82,7 +83,7 @@ locals {
     # pgadmin
     try(var.infra_vars.postgres.value, null) != null ? {
       "pgadmin" = {
-        name    = "${var.organization}-pgadmin"
+        name    = "${local.connection_prefix}-pgadmin"
         type    = "application"
         subtype = "tcp"
         command = ["bash"]
@@ -109,7 +110,7 @@ locals {
     # openobserve
     {
       "openobserve" = {
-        name    = "${var.organization}-openobserve"
+        name    = "${local.connection_prefix}-openobserve"
         type    = "application"
         subtype = "tcp"
         command = ["bash"]
@@ -135,7 +136,7 @@ locals {
     # redis-insight
     try(var.infra_vars.redis.value, null) != null ? {
       "redis-insight" = {
-        name    = "${var.organization}-redis-insight"
+        name    = "${local.connection_prefix}-redis-insight"
         type    = "application"
         subtype = "tcp"
         command = ["bash"]
@@ -163,7 +164,7 @@ locals {
     length(var.k8s_connections) > 0 ? {
       for conn_name, conn_config in var.k8s_connections :
       "k8s-${conn_name}" => {
-        name    = "${var.organization}-k8s-${conn_name}"
+        name    = "${local.connection_prefix}-k8s-${conn_name}"
         type    = try(conn_config.type, "custom")
         subtype = try(conn_config.subtype, null) != null && try(conn_config.subtype, null) != "" ? conn_config.subtype : null
         command = try(conn_config.command, ["bash"])
@@ -196,7 +197,7 @@ locals {
       } : {
       # Default k8s-admin connection if no k8s_connections defined
       "k8s-admin" = {
-        name    = "${var.organization}-k8s-admin"
+        name    = "${local.connection_prefix}-k8s-admin"
         type    = "custom"
         subtype = null
         command = ["bash"]
@@ -228,7 +229,7 @@ locals {
     try(var.custom_connections, {}) != {} ? {
       for conn_name, conn_config in var.custom_connections :
       "custom-${conn_name}" => {
-        name                 = "${var.organization}-${conn_name}"
+        name                 = "${local.connection_prefix}-${conn_name}"
         type                 = conn_config.type
         subtype              = try(conn_config.subtype, null) != null && try(conn_config.subtype, null) != "" ? conn_config.subtype : null
         command              = try(conn_config.command, null)
