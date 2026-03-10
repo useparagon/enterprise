@@ -201,8 +201,6 @@ locals {
     # TODO (PARA-14774): remove after keys renamed
     MONITOR_QUEUE_EXPORTER_HTTP_USERNAME              = local.queue_exporter_config.username
     MONITOR_QUEUE_EXPORTER_HTTP_PASSWORD              = local.queue_exporter_config.password
-    MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_HOST          = local.queue_exporter_config.host
-    MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_PORT          = local.queue_exporter_config.port
     MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_HTTP_USERNAME = local.queue_exporter_config.username
     MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_HTTP_PASSWORD = local.queue_exporter_config.password
 
