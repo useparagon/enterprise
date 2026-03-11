@@ -3,11 +3,18 @@ locals {
 
   subchart_values = yamlencode({
     subchart = merge(
-      {
-        for microservice in keys(var.microservices) : microservice => {
-          enabled = true
+      merge(
+        {
+          for microservice in keys(var.microservices) : microservice => {
+            enabled = true
+          }
+        },
+        {
+          kafka-exporter = {
+            enabled = var.managed_sync_enabled
+          }
         }
-      },
+      ),
       try(nonsensitive(var.helm_values.subchart), {})
     )
   })
