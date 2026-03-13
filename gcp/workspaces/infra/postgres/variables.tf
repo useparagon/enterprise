@@ -12,10 +12,6 @@ variable "network" {
   description = "The Virtual network where our resources will be deployed"
 }
 
-variable "service_networking_connection" {
-  description = "Service networking connection (from network module). Ensures instances are created after it and destroyed before it so GCP can delete the connection."
-}
-
 variable "private_subnet" {
   description = "The private subnet in our virtual network"
 }

@@ -1,3 +1,4 @@
+# Service networking: in postgres so destroy order works for you (connection deleted with postgres).
 resource "google_compute_global_address" "paragon" {
   name          = "${var.workspace}-global-psconnect-ip"
   address_type  = "INTERNAL"
@@ -14,7 +15,6 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 }
 
 # Instance name must use only lowercase letters, numbers, hyphens (no underscores).
-# Depends on service_networking_connection (in network module) so destroy order is: instances first, then connection.
 resource "google_sql_database_instance" "paragon" {
   for_each = local.postgres_instances
 

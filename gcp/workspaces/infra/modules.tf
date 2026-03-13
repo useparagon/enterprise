@@ -19,7 +19,6 @@ module "postgres" {
   postgres_tier                   = var.postgres_tier
   private_subnet                  = module.network.private_subnet
   region                          = var.region
-  service_networking_connection    = module.network.service_networking_connection
   workspace                       = local.workspace
   managed_sync_enabled            = var.managed_sync_enabled
 }
