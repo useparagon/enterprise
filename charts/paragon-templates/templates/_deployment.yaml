@@ -113,6 +113,15 @@ spec:
           secret:
             secretName: {{ $root.Values.global.redisCaCert.secretName | default "redis-ca-cert" }}
       {{- end }}
+      {{- if and $root.Values.topologySpread $root.Values.topologySpread.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ if hasKey $root.Values.topologySpread "maxSkew" }}{{ $root.Values.topologySpread.maxSkew }}{{ else }}1{{ end }}
+          topologyKey: {{ $root.Values.topologySpread.topologyKey | default "kubernetes.io/hostname" }}
+          labelSelector:
+            matchLabels:
+              {{- include (printf "%s.selectorLabels" $name) $root | nindent 14 }}
+          whenUnsatisfiable: {{ $root.Values.topologySpread.whenUnsatisfiable | default "ScheduleAnyway" }}
+      {{- end }}
       {{- with $root.Values.nodeSelector }}
       nodeSelector: {{ toYaml . | nindent 8 }}
       {{- end }}

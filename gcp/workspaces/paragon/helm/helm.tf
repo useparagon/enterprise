@@ -1,13 +1,15 @@
 locals {
-  namespace = "paragon"
-  version   = var.helm_values.global.env["VERSION"]
+  version = var.helm_values.global.env["VERSION"]
 
   subchart_values = yamlencode({
-    subchart = {
-      for microservice in keys(var.microservices) : microservice => {
-        enabled = true
-      }
-    }
+    subchart = merge(
+      {
+        for microservice in keys(var.microservices) : microservice => {
+          enabled = true
+        }
+      },
+      try(nonsensitive(var.helm_values.subchart), {})
+    )
   })
 
   microservice_values = yamlencode({
@@ -129,16 +131,21 @@ locals {
     ]
   )
 
-  service_account_values = var.storage_service_account != null ? {
-    for service_name in local.cloud_storage_services : service_name => {
-      serviceAccount = {
-        create = true
-        annotations = {
-          "iam.gke.io/gcp-service-account" = var.storage_service_account
+  service_account_values = {
+    # merge existing service values and inject service account config
+    for service_name in local.cloud_storage_services : service_name => merge(
+      try(nonsensitive(var.helm_values)[service_name], {}),
+      {
+        serviceAccount = {
+          create = true
+          annotations = {
+            "iam.gke.io/gcp-service-account" = var.storage_service_account
+          }
         }
       }
-    }
-  } : {}
+    )
+    if var.storage_service_account != null
+  }
 
   global_values = yamlencode(merge(
     nonsensitive(var.helm_values),
@@ -303,6 +310,7 @@ resource "helm_release" "paragon_on_prem" {
   verify            = false
   timeout           = 900 # 15 minutes
   dependency_update = true
+  force_update      = true
 
   values = [
     local.subchart_values,
@@ -334,6 +342,7 @@ resource "helm_release" "paragon_logging" {
   verify            = false
   timeout           = 900 # 15 minutes
   dependency_update = true
+  force_update      = true
 
   values = fileexists("${path.root}/../.secure/values.yaml") ? [
     local.global_values,
@@ -419,6 +428,7 @@ resource "helm_release" "paragon_monitoring" {
   verify            = false
   timeout           = 900 # 15 minutes
   dependency_update = true
+  force_update      = true
 
   values = [
     local.global_values,

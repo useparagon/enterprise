@@ -1,3 +1,18 @@
+resource "google_compute_global_address" "paragon" {
+  name          = "${var.workspace}-global-psconnect-ip"
+  address_type  = "INTERNAL"
+  purpose       = "VPC_PEERING"
+  network       = var.network.id
+  project       = var.gcp_project_id
+  prefix_length = 16
+}
+
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = var.network.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.paragon.name]
+}
+
 # Instance name must use only lowercase letters, numbers, hyphens (no underscores).
 # Depends on service_networking_connection (in network module) so destroy order is: instances first, then connection.
 resource "google_sql_database_instance" "paragon" {
@@ -60,7 +75,13 @@ resource "google_sql_database_instance" "paragon" {
     }
   }
 
-  depends_on = [var.service_networking_connection]
+  timeouts {
+    create = "30m"
+    update = "30m"
+    delete = "30m"
+  }
+
+  depends_on = [google_service_networking_connection.private_vpc_connection]
 }
 
 # Depend on users so destroy order is: databases first, then users (Cloud SQL cannot drop a role that owns objects).

@@ -215,6 +215,25 @@ global:
     MONITOR_REDIS_INSIGHT_HOST: http://redis-insight
     MONITOR_REDIS_INSIGHT_PORT: 8500
 
+# Optional: paragon-onprem subchart overrides (PDB and topology spread).
+# Services use template defaults; only set these when you want to override or disable.
+# Uncomment and customize per service (account, zeus, connect, etc.) as needed.
+#
+# subchart:
+#   account:
+#     pdb:
+#       enabled: true
+#       maxUnavailable: 1    # default; use 0 for no disruption, or omit to use default
+#     topologySpread:
+#       enabled: true
+#       maxSkew: 1           # default; use 0 for strict balance; omit to use default
+#       topologyKey: kubernetes.io/hostname
+#       whenUnsatisfiable: ScheduleAnyway
+#   # Disable PDB for a service:
+#   flipt:
+#     pdb:
+#       enabled: false
+
 # Secrets - Replace all values with your actual secrets
 secrets: 
   # License

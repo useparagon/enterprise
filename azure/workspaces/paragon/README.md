@@ -71,6 +71,7 @@ Do not commit real secrets to git. Prefer environment variables or a secret mana
 | <a name="input_helm_yaml"></a> [helm\_yaml](#input\_helm\_yaml) | YAML string of helm values to use instead of `helm_yaml_path` | `string` | `null` | no |
 | <a name="input_helm_yaml_path"></a> [helm\_yaml\_path](#input\_helm\_yaml\_path) | Path to helm values.yaml file. | `string` | `".secure/values.yaml"` | no |
 | <a name="input_hoop_agent_id"></a> [hoop\_agent\_id](#input\_hoop\_agent\_id) | Hoop agent ID for connections. Only used if hoop\_enabled is true. | `string` | `null` | no |
+| <a name="input_hoop_agent_name"></a> [hoop\_agent\_name](#input\_hoop\_agent\_name) | Override Hoop agent name in HOOP\_KEY when organization does not identify the client (e.g. when organization is a region code like 'us', set to a client-identifying value such as 'client-us'). | `string` | `null` | no |
 | <a name="input_hoop_all_access_groups"></a> [hoop\_all\_access\_groups](#input\_hoop\_all\_access\_groups) | Additional access-control groups allowed when customer\_facing is false. | `list(string)` | <pre>[<br/>  "dev-team-engineering"<br/>]</pre> | no |
 | <a name="input_hoop_api_key"></a> [hoop\_api\_key](#input\_hoop\_api\_key) | Hoop API key. Only used if hoop\_enabled is true. | `string` | `null` | no |
 | <a name="input_hoop_api_url"></a> [hoop\_api\_url](#input\_hoop\_api\_url) | Hoop API URL. | `string` | `"https://hoop.ops.paragoninternal.com/api"` | no |

@@ -78,3 +78,9 @@ tolerations: []
 affinity: {}
 
 tls_secret: ''
+
+pdb:
+  enabled: true
+
+topologySpread:
+  enabled: true

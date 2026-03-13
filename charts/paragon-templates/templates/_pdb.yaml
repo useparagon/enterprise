@@ -1,0 +1,26 @@
+{{/*
+Standard PodDisruptionBudget for microservices.
+Call with: include "pdb.standard" .
+*/}}
+{{- define "pdb.standard" -}}
+{{- if and .Values.pdb .Values.pdb.enabled }}
+{{- $name := .Chart.Name -}}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include (printf "%s.fullname" $name) . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include (printf "%s.labels" $name) . | nindent 4 }}
+spec:
+  {{- if hasKey .Values.pdb "maxUnavailable" }}
+  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
+  {{- else }}
+  maxUnavailable: 1
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include (printf "%s.selectorLabels" $name) . | nindent 6 }}
+{{- end }}
+{{- end -}}

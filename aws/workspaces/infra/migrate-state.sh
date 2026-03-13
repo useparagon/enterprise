@@ -5,7 +5,7 @@
 # Safe to run repeatedly: imports and cleanup are idempotent (skip if already in state / already done).
 #
 # If terraform apply fails with ResourceInUseException on EKS access entries, run this script with
-# the failing entry ID as the first argument (e.g. ./migrate-state.sh 'paragon-enterprise-sinch:arn:aws:iam::024848480976:role/paragon-setup-role').
+# the failing entry ID as the first argument (e.g. ./migrate-state.sh 'paragon-enterprise:arn:aws:iam::024680246802:role/paragon-setup-role').
 # The script loads AWS creds from vars.auto.tfvars and runs the import.
 #
 # IMPORTANT: This script must be run in this workspace directory where the resources are defined.

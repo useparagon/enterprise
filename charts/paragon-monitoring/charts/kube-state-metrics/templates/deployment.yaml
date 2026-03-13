@@ -249,7 +249,15 @@ spec:
       tolerations:
 {{ toYaml .Values.tolerations | indent 8 }}
       {{- end }}
-      {{- if .Values.topologySpreadConstraints }}
+      {{- if and .Values.topologySpread .Values.topologySpread.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ if hasKey .Values.topologySpread "maxSkew" }}{{ .Values.topologySpread.maxSkew }}{{ else }}1{{ end }}
+          topologyKey: {{ .Values.topologySpread.topologyKey | default "kubernetes.io/hostname" }}
+          labelSelector:
+            matchLabels:
+              {{- include "kube-state-metrics.selectorLabels" . | nindent 14 }}
+          whenUnsatisfiable: {{ .Values.topologySpread.whenUnsatisfiable | default "ScheduleAnyway" }}
+      {{- else if and .Values.topologySpreadConstraints (gt (len .Values.topologySpreadConstraints) 0) }}
       topologySpreadConstraints:
 {{ toYaml .Values.topologySpreadConstraints | indent 8 }}
       {{- end }}
