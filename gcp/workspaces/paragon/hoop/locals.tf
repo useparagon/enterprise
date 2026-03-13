@@ -52,7 +52,7 @@ locals {
         name    = "${local.connection_prefix}-redis-${instance_name}"
         type    = "custom"
         subtype = "redis"
-        command = ["redis-cli", "-h", "$HOST", "-p", "$PORT", "-n", "$DB_NUMBER"]
+        command = ["redis-cli", "-c", "-h", "$HOST", "-p", "$PORT", "-n", "$DB_NUMBER"]
         secrets = merge(
           {
             "envvar:HOST"      = instance_config.host
