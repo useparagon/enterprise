@@ -1,4 +1,3 @@
-# Service networking: in postgres so destroy order works for you (connection deleted with postgres).
 resource "google_compute_global_address" "paragon" {
   name          = "${var.workspace}-global-psconnect-ip"
   address_type  = "INTERNAL"
@@ -14,7 +13,6 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   reserved_peering_ranges = [google_compute_global_address.paragon.name]
 }
 
-# Instance name must use only lowercase letters, numbers, hyphens (no underscores).
 resource "google_sql_database_instance" "paragon" {
   for_each = local.postgres_instances
 
@@ -84,7 +82,6 @@ resource "google_sql_database_instance" "paragon" {
   depends_on = [google_service_networking_connection.private_vpc_connection]
 }
 
-# Depend on users so destroy order is: databases first, then users (Cloud SQL cannot drop a role that owns objects).
 resource "google_sql_database" "paragon" {
   for_each = local.postgres_instances
 
@@ -123,32 +120,28 @@ resource "google_sql_user" "postgres_user" {
   project  = var.gcp_project_id
 }
 
-# OpenFGA for managed-sync: DB and user in Terraform so the chart init only runs GRANTs (avoids "Error granting schema privileges").
 locals {
-  openfga_instance_key = var.managed_sync_enabled ? (contains(keys(local.postgres_instances), "managed_sync") ? "managed_sync" : "paragon") : null
-  # DBs created by the app on managed_sync; we manage them in TF so destroy drops them before users (postgres cannot be dropped while owning these).
+  openfga_instance_key       = var.managed_sync_enabled ? (contains(keys(local.postgres_instances), "managed_sync") ? "managed_sync" : "paragon") : null
   managed_sync_extra_db_names = toset(local.openfga_instance_key != null ? ["sync_project", "sync_instance"] : [])
 }
 
-# Depend on openfga and postgres_superuser so destroy order is: DB first, then users (Cloud SQL cannot drop a role that owns/has privileges on objects).
 resource "google_sql_database" "openfga" {
   count = local.openfga_instance_key != null ? 1 : 0
 
   name       = "openfga"
   project    = var.gcp_project_id
   instance   = google_sql_database_instance.paragon[local.openfga_instance_key].name
-  depends_on = [google_sql_user.openfga, google_sql_user.postgres_superuser]
+  depends_on = [google_sql_user.openfga]
 }
 
-# managed_sync app-created DBs: declare in TF so destroy drops them before users (postgres owns them; cannot drop role otherwise).
-# If they already exist, import before apply: terraform import 'google_sql_database.managed_sync_extra["sync_project"]' PROJECT_ID:INSTANCE_NAME:sync_project (same for sync_instance).
+# managed_sync: DBs and users in TF (destroy order: drop DBs before users).
 resource "google_sql_database" "managed_sync_extra" {
   for_each = local.managed_sync_extra_db_names
 
   name       = each.value
   project    = var.gcp_project_id
   instance   = google_sql_database_instance.paragon[local.openfga_instance_key].name
-  depends_on = [google_sql_user.openfga, google_sql_user.postgres_superuser]
+  depends_on = [google_sql_user.openfga, google_sql_user.sync_project, google_sql_user.sync_instance]
 }
 
 resource "random_string" "openfga_username" {
@@ -180,9 +173,45 @@ resource "google_sql_user" "openfga" {
   project  = var.gcp_project_id
 }
 
-# Cloud SQL default user "postgres" (superuser). Exported via output for managed_sync only so the
-# postgres-config-openfga init can connect as postgres and run GRANT on schema public successfully.
-resource "random_password" "postgres_superuser_password" {
+resource "random_string" "managed_sync_db_username" {
+  for_each = local.managed_sync_extra_db_names
+
+  length  = 16
+  lower   = true
+  upper   = true
+  numeric = false
+  special = false
+}
+
+resource "random_password" "managed_sync_db_password" {
+  for_each = local.managed_sync_extra_db_names
+
+  length  = 32
+  lower   = true
+  upper   = true
+  numeric = true
+  special = false
+}
+
+resource "google_sql_user" "sync_project" {
+  count = local.openfga_instance_key != null ? 1 : 0
+
+  name     = random_string.managed_sync_db_username["sync_project"].result
+  password = random_password.managed_sync_db_password["sync_project"].result
+  instance = google_sql_database_instance.paragon[local.openfga_instance_key].name
+  project  = var.gcp_project_id
+}
+
+resource "google_sql_user" "sync_instance" {
+  count = local.openfga_instance_key != null ? 1 : 0
+
+  name     = random_string.managed_sync_db_username["sync_instance"].result
+  password = random_password.managed_sync_db_password["sync_instance"].result
+  instance = google_sql_database_instance.paragon[local.openfga_instance_key].name
+  project  = var.gcp_project_id
+}
+
+resource "random_password" "postgres_admin_password" {
   count = local.openfga_instance_key != null ? 1 : 0
 
   length  = 32
@@ -192,11 +221,11 @@ resource "random_password" "postgres_superuser_password" {
   special = false
 }
 
-resource "google_sql_user" "postgres_superuser" {
+resource "google_sql_user" "postgres_admin" {
   count = local.openfga_instance_key != null ? 1 : 0
 
   name     = "postgres"
-  password = random_password.postgres_superuser_password[0].result
+  password = random_password.postgres_admin_password[0].result
   instance = google_sql_database_instance.paragon[local.openfga_instance_key].name
   project  = var.gcp_project_id
 }

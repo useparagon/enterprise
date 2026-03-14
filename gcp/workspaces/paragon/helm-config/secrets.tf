@@ -15,7 +15,6 @@ locals {
       password = local._default_postgres_config.password
       database = local._default_postgres_config.database
     }
-    # Prefer infra openfga (GCP: DB and user created in Terraform to avoid init "Error granting schema privileges")
     openfga = {
       host     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_HOST"], try(var.infra_values.postgres.value.openfga.host, local._default_postgres_config.host))
       port     = try(var.base_helm_values.global.env["OPENFGA_POSTGRES_PORT"], try(var.infra_values.postgres.value.openfga.port, local._default_postgres_config.port))
@@ -24,17 +23,17 @@ locals {
       database = "openfga"
     }
     sync_instance = {
-      host     = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_HOST"], local._default_postgres_config.host)
-      port     = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_PORT"], local._default_postgres_config.port)
-      username = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_USERNAME"], random_string.postgres_username["sync_instance"].result)
-      password = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_PASSWORD"], random_password.postgres_password["sync_instance"].result)
+      host     = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_HOST"], try(var.infra_values.postgres.value.sync_instance.host, local._default_postgres_config.host))
+      port     = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_PORT"], try(var.infra_values.postgres.value.sync_instance.port, local._default_postgres_config.port))
+      username = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_USERNAME"], try(var.infra_values.postgres.value.sync_instance.user, random_string.postgres_username["sync_instance"].result))
+      password = try(var.base_helm_values.global.env["SYNC_INSTANCE_POSTGRES_PASSWORD"], try(var.infra_values.postgres.value.sync_instance.password, random_password.postgres_password["sync_instance"].result))
       database = "sync_instance"
     }
     sync_project = {
-      host     = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_HOST"], local._default_postgres_config.host)
-      port     = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_PORT"], local._default_postgres_config.port)
-      username = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_USERNAME"], random_string.postgres_username["sync_project"].result)
-      password = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_PASSWORD"], random_password.postgres_password["sync_project"].result)
+      host     = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_HOST"], try(var.infra_values.postgres.value.sync_project.host, local._default_postgres_config.host))
+      port     = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_PORT"], try(var.infra_values.postgres.value.sync_project.port, local._default_postgres_config.port))
+      username = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_USERNAME"], try(var.infra_values.postgres.value.sync_project.user, random_string.postgres_username["sync_project"].result))
+      password = try(var.base_helm_values.global.env["SYNC_PROJECT_POSTGRES_PASSWORD"], try(var.infra_values.postgres.value.sync_project.password, random_password.postgres_password["sync_project"].result))
       database = "sync_project"
     }
   }
@@ -59,18 +58,6 @@ locals {
     redis_ca_certificate = local.redis_from_infra != null ? try(local.redis_from_infra.ca_certificate, null) : try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CA_CERT"], try(var.infra_values.redis.value.managed_sync.ca_certificate, null))
   }
 
-  # -------------------------------------------------------------------------
-  # Managed Sync storage: same env var names as AWS (CLOUD_STORAGE_*) for chart compatibility.
-  # AWS -> GCP mapping:
-  #   CLOUD_STORAGE_TYPE                AWS: S3 | GCP: GCP
-  #   CLOUD_STORAGE_PUBLIC_BUCKET       AWS: S3 bucket name (cdn) | GCP: GCS bucket name (cdn)
-  #   CLOUD_STORAGE_MANAGED_SYNC_BUCKET AWS: S3 bucket name | GCP: GCS bucket name (managed_sync)
-  #   CLOUD_STORAGE_PUBLIC_URL          AWS: https://s3.<region>.amazonaws.com | GCP: https://storage.googleapis.com
-  #   CLOUD_STORAGE_PRIVATE_URL         same as PUBLIC_URL in both
-  #   CLOUD_STORAGE_REGION              AWS: aws_region | GCP: region (e.g. us-central1)
-  #   CLOUD_STORAGE_USER                AWS: S3 access key / MinIO user | GCP: project_id or SA email (infra minio.root_user)
-  #   CLOUD_STORAGE_PASS                AWS: S3 secret key / MinIO pass | GCP: SA key JSON (infra minio.root_password when use_storage_account_key)
-  # -------------------------------------------------------------------------
   storage_type = try(var.base_helm_values.global.env["CLOUD_STORAGE_TYPE"], "GCP")
 
   storage_config = {
@@ -79,7 +66,6 @@ locals {
       managed_sync = coalesce(try(var.base_helm_values.global.env["CLOUD_STORAGE_MANAGED_SYNC_BUCKET"], null), try(var.infra_values.minio.value.managed_sync_bucket, null))
     }
     type = try(var.base_helm_values.global.env["CLOUD_STORAGE_TYPE"], "GCP")
-    # GCP: user = SA email (for Workload Identity / ADC); fallback root_user. pass = SA key JSON only when provided.
     user = try(
       local.storage_type == "MINIO" ? try(var.base_helm_values.global.env["MINIO_MICROSERVICE_USER"], var.infra_values.minio.value.microservice_user) : try(var.base_helm_values.global.env["CLOUD_STORAGE_MICROSERVICE_USER"], try(var.infra_values.minio.value.service_account, var.infra_values.minio.value.root_user))
     )
@@ -113,8 +99,7 @@ locals {
     CLOUD_STORAGE_PUBLIC_URL          = local.storage_config.public_url
     CLOUD_STORAGE_REGION              = local.storage_config.region
     CLOUD_STORAGE_USER                = local.storage_config.user
-    # GCP: SA key when provided; else empty so app uses Workload Identity (ADC) with CLOUD_STORAGE_USER SA.
-    CLOUD_STORAGE_PASS                = local.storage_type == "GCP" ? (try(var.gcp_storage_sa_key, null) != null ? var.gcp_storage_sa_key : "") : local.storage_config.pass
+    CLOUD_STORAGE_PASS                = local.storage_type == "GCP" ? (try(var.gcp_storage_sa_key, null) != null ? base64encode(var.gcp_storage_sa_key) : "") : local.storage_config.pass
     CLOUD_STORAGE_MANAGED_SYNC_BUCKET = local.storage_config.buckets.managed_sync
 
     MANAGED_SYNC_URL       = try(var.base_helm_values.global.env["MANAGED_SYNC_URL"], "https://sync.${var.domain}")
@@ -163,12 +148,11 @@ locals {
     OPENFGA_POSTGRES_URI         = "postgres://${local.postgres_config.openfga.username}:${local.postgres_config.openfga.password}@${local.postgres_config.openfga.host}:${local.postgres_config.openfga.port}/${local.postgres_config.openfga.database}?sslmode=prefer"
     OPENFGA_AUTH_PRESHARED_KEY   = random_string.openfga_preshared_key.result
 
-    # GCP: postgres superuser + DB openfga so postgres-config-openfga init connects to openfga and runs GRANT on schema public.
-    ADMIN_POSTGRES_HOST        = local.postgres_config.admin.host
-    ADMIN_POSTGRES_PORT        = local.postgres_config.admin.port
+    ADMIN_POSTGRES_HOST        = try(var.infra_values.postgres.value.postgres_superuser.host, local.postgres_config.admin.host)
+    ADMIN_POSTGRES_PORT        = try(var.infra_values.postgres.value.postgres_superuser.port, local.postgres_config.admin.port)
     ADMIN_POSTGRES_USERNAME    = try(var.infra_values.postgres.value.postgres_superuser.user, local.postgres_config.admin.username)
     ADMIN_POSTGRES_PASSWORD    = try(var.infra_values.postgres.value.postgres_superuser.password, local.postgres_config.admin.password)
-    ADMIN_POSTGRES_DATABASE    = try(var.infra_values.postgres.value.postgres_superuser.user, null) != null ? "openfga" : local.postgres_config.admin.database
+    ADMIN_POSTGRES_DATABASE    = try(var.infra_values.postgres.value.postgres_superuser.user, null) != null ? "postgres" : local.postgres_config.admin.database
     ADMIN_POSTGRES_SSL_ENABLED = "true"
 
     MANAGED_SYNC_POSTGRES_HOST        = local.postgres_config.admin.host

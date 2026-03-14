@@ -1,8 +1,28 @@
-# Managed Sync (when enabled) — GCP. Same strategy as AWS: values = [ global_values_minus_env, secret_hash ].
-# global_values_minus_env comes from var.helm_values (paragon workspace merges .secure/values.yaml via helm_yaml_path into helm_values).
-# Env vars: helm-config managed_sync_secrets → Secret paragon-managed-sync-secrets.
-# Chart from prod S3 (same as AWS/Azure).
-# TEMPORARY: set blocks below mirror .secure/values.yaml so chart receives overrides until values flow is verified.
+# Job immutable: delete postgres-config-openfga, postgres-config-project, postgres-config-sync-instance then re-apply.
+locals {
+  managed_sync_jobs_env_from = {
+    postgresConfigOpenfga = {
+      envFrom = [
+        { secretRef = { name = "paragon-managed-sync-secrets" } }
+      ]
+    }
+    postgresConfigProject = {
+      envFrom = [
+        { secretRef = { name = "paragon-managed-sync-secrets" } }
+      ]
+    }
+    postgresConfigSyncInstance = {
+      envFrom = [
+        { secretRef = { name = "paragon-managed-sync-secrets" } }
+      ]
+    }
+    initJob = {
+      envFrom = [
+        { secretRef = { name = "paragon-managed-sync-secrets" } }
+      ]
+    }
+  }
+}
 
 resource "helm_release" "managed_sync" {
   count = var.managed_sync_enabled ? 1 : 0
@@ -22,6 +42,7 @@ resource "helm_release" "managed_sync" {
   values = concat(
     [local.global_values_minus_env],
     local.managed_sync_storage_values != {} ? [yamlencode(local.managed_sync_storage_values)] : [],
+    [yamlencode(local.managed_sync_jobs_env_from)],
     [local.secret_hash]
   )
 
