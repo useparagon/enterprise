@@ -107,25 +107,29 @@ locals {
     }
   })
 
-  cloud_storage_services = [
-    "api-triggerkit",
-    "cache-replay",
-    "hades",
-    "health-checker",
-    "hermes",
-    "openobserve",
-    "release",
-    "worker-actionkit",
-    "worker-actions",
-    "worker-credentials",
-    "worker-crons",
-    "worker-deployments",
-    "worker-proxy",
-    "worker-triggers",
-    "worker-triggerkit",
-    "worker-workflows",
-    "zeus"
-  ]
+  # Managed-sync services only when enabled (avoids IAM bindings for SAs that don't exist).
+  cloud_storage_services = concat(
+    var.managed_sync_enabled ? ["api-sync", "worker-sync", "worker-history-sync"] : [],
+    [
+      "api-triggerkit",
+      "cache-replay",
+      "hades",
+      "health-checker",
+      "hermes",
+      "openobserve",
+      "release",
+      "worker-actionkit",
+      "worker-actions",
+      "worker-credentials",
+      "worker-crons",
+      "worker-deployments",
+      "worker-proxy",
+      "worker-triggers",
+      "worker-triggerkit",
+      "worker-workflows",
+      "zeus"
+    ]
+  )
 
   service_account_values = {
     # merge existing service values and inject service account config
@@ -162,6 +166,23 @@ locals {
       )
     }
   ))
+
+  # helm_values with only global.env.HOST_ENV for managed_sync (repo chart).
+  global_values_minus_env = yamlencode(merge(
+    nonsensitive(var.helm_values),
+    {
+      global = merge(nonsensitive(var.helm_values).global, { env = { HOST_ENV = "GCP_K8" } })
+    }
+  ))
+
+  # Workload Identity (GCS) for services deployed by the managed-sync chart. Without this,
+  # api-sync, worker-sync, worker-history-sync get "storage.buckets.get denied".
+  # Use for+if so both branches have the same map type (avoids "inconsistent conditional result types").
+  managed_sync_storage_values = {
+    for k in ["api-sync", "worker-sync", "worker-history-sync"] :
+    k => local.service_account_values[k]
+    if var.storage_service_account != null && var.managed_sync_enabled
+  }
 
   # changes to secrets should trigger redeploy
   secret_hash = yamlencode({
@@ -216,17 +237,19 @@ resource "kubernetes_secret_v1" "docker_login" {
   }
 }
 
-# shared secrets
+# shared secrets (paragon-secrets always; paragon-managed-sync-secrets when managed_sync enabled)
 resource "kubernetes_secret_v1" "paragon_secrets" {
+  for_each = toset(var.managed_sync_enabled ? ["paragon-secrets", "paragon-managed-sync-secrets"] : ["paragon-secrets"])
+
   metadata {
-    name      = "paragon-secrets"
+    name      = each.value
     namespace = kubernetes_namespace_v1.paragon.id
   }
 
   type = "Opaque"
 
   data = {
-    # Map global.env from helm_values into secret data
+    # Map global.env from helm_values into secret data (includes managed_sync_secrets when enabled)
     for key, value in nonsensitive(var.helm_values.global.env) :
     key => value
   }

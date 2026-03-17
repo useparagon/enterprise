@@ -14,13 +14,13 @@ module "postgres" {
   auditlogs_retention_days    = var.auditlogs_retention_days
   disable_deletion_protection = var.disable_deletion_protection
   gcp_project_id              = local.gcp_project_id
+  managed_sync_enabled        = var.managed_sync_enabled
   network                     = module.network.network
   postgres_multiple_instances = var.postgres_multiple_instances
   postgres_tier               = var.postgres_tier
   private_subnet              = module.network.private_subnet
   region                      = var.region
   workspace                   = local.workspace
-  managed_sync_enabled        = var.managed_sync_enabled
 }
 
 module "redis" {
@@ -42,16 +42,16 @@ module "kafka" {
   count  = var.managed_sync_enabled ? 1 : 0
   source = "./kafka"
 
-  gcp_project_id     = local.gcp_project_id
-  region             = var.region
-  workspace          = local.workspace
-  private_subnet_uri = module.network.private_subnet.self_link
-  gmk_vcpu_count     = var.gmk_vcpu_count
-  gmk_memory_bytes   = var.gmk_memory_gib * 1024 * 1024 * 1024
-  gmk_disk_size_gib  = var.gmk_disk_size_gib
-  gmk_auto_rebalance          = var.gmk_auto_rebalance
-  gmk_kafka_version           = var.gmk_kafka_version
-  gmk_sasl_mechanism          = var.gmk_sasl_mechanism
+  gcp_project_id               = local.gcp_project_id
+  region                       = var.region
+  workspace                    = local.workspace
+  private_subnet_uri           = module.network.private_subnet.self_link
+  gmk_vcpu_count               = var.gmk_vcpu_count
+  gmk_memory_bytes             = var.gmk_memory_gib * 1024 * 1024 * 1024
+  gmk_disk_size_gib            = var.gmk_disk_size_gib
+  gmk_auto_rebalance           = var.gmk_auto_rebalance
+  gmk_kafka_version            = var.gmk_kafka_version
+  gmk_sasl_mechanism           = var.gmk_sasl_mechanism
   gmk_sasl_plain_key_file_path = var.gmk_sasl_plain_key_file_path
 }
 
@@ -74,6 +74,7 @@ module "cluster" {
   disable_deletion_protection     = var.disable_deletion_protection
   disable_public_endpoint         = var.k8s_disable_public_endpoint
   gcp_project_id                  = local.gcp_project_id
+  k8s_master_authorized_networks  = var.k8s_master_authorized_networks
   k8s_max_node_count              = var.k8s_max_node_count
   k8s_min_node_count              = var.k8s_min_node_count
   k8s_ondemand_node_instance_type = var.k8s_ondemand_node_instance_type
@@ -98,8 +99,8 @@ module "bastion" {
   cloudflare_tunnel_subdomain    = var.cloudflare_tunnel_subdomain
   cloudflare_tunnel_zone_id      = var.cloudflare_tunnel_zone_id
 
-  cluster_name    = module.cluster.kubernetes.name
-  gcp_project_id  = local.gcp_project_id
+  cluster_name   = module.cluster.kubernetes.name
+  gcp_project_id = local.gcp_project_id
   network         = module.network.network
   k8s_version     = var.k8s_version
   private_subnet  = module.network.private_subnet

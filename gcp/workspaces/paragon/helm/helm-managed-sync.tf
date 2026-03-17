@@ -1,0 +1,111 @@
+# Job immutable: delete postgres-config-openfga, postgres-config-project, postgres-config-sync-instance then re-apply.
+locals {
+  managed_sync_jobs_env_from = {
+    postgresConfigOpenfga = {
+      envFrom = [
+        { secretRef = { name = "paragon-managed-sync-secrets" } }
+      ]
+    }
+    postgresConfigProject = {
+      envFrom = [
+        { secretRef = { name = "paragon-managed-sync-secrets" } }
+      ]
+    }
+    postgresConfigSyncInstance = {
+      envFrom = [
+        { secretRef = { name = "paragon-managed-sync-secrets" } }
+      ]
+    }
+    initJob = {
+      envFrom = [
+        { secretRef = { name = "paragon-managed-sync-secrets" } }
+      ]
+    }
+  }
+}
+
+resource "helm_release" "managed_sync" {
+  count = var.managed_sync_enabled ? 1 : 0
+
+  name             = "paragon-managed-sync"
+  namespace        = kubernetes_namespace_v1.paragon.id
+  repository       = "https://paragon-helm-production.s3.amazonaws.com"
+  chart            = "managed-sync"
+  version          = var.managed_sync_version
+  create_namespace = false
+  cleanup_on_fail  = true
+  atomic           = true
+  verify           = false
+  timeout          = 300
+  force_update     = true
+
+  values = concat(
+    [local.global_values_minus_env],
+    local.managed_sync_storage_values != {} ? [yamlencode(local.managed_sync_storage_values)] : [],
+    [yamlencode(local.managed_sync_jobs_env_from)],
+    [local.secret_hash]
+  )
+
+  set {
+    name  = "secretName"
+    value = "paragon-managed-sync-secrets"
+  }
+
+  set {
+    name  = "ingress.certificate"
+    value = google_compute_managed_ssl_certificate.cert.name
+  }
+
+  set {
+    name  = "ingress.className"
+    value = "gce"
+  }
+
+  set {
+    name  = "ingress.frontendConfig"
+    value = google_compute_region_url_map.frontend_config.name
+  }
+
+  set {
+    name  = "ingress.healthCheckPath"
+    value = "/healthz"
+  }
+
+  set {
+    name  = "ingress.host"
+    value = replace(replace(try(var.microservices["api-sync"].public_url, "https://sync.${var.domain}"), "https://", ""), "http://", "")
+  }
+
+  set {
+    name  = "ingress.loadBalancerName"
+    value = google_compute_global_address.loadbalancer.name
+  }
+
+  set {
+    name  = "ingress.logsBucket"
+    value = var.logs_bucket
+  }
+
+  set {
+    name  = "ingress.listenPorts[0].HTTP"
+    value = "80"
+  }
+
+  set {
+    name  = "ingress.listenPorts[1].HTTPS"
+    value = "443"
+  }
+
+  set {
+    name  = "ingress.scheme"
+    value = var.ingress_scheme
+  }
+
+  depends_on = [
+    google_compute_managed_ssl_certificate.cert,
+    google_compute_global_address.loadbalancer,
+    google_compute_region_url_map.frontend_config,
+    kubernetes_secret_v1.docker_login,
+    kubernetes_secret_v1.paragon_secrets,
+  ]
+}

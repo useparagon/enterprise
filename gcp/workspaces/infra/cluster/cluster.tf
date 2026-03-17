@@ -32,6 +32,9 @@ module "gke" {
   enable_private_nodes            = var.disable_public_endpoint
   gcp_public_cidrs_access_enabled = !var.disable_public_endpoint
 
+  # Master Authorized Networks: who can reach the control plane API. Empty = restricted.
+  master_authorized_networks = [for n in var.k8s_master_authorized_networks : { cidr_block = n.cidr_block, display_name = coalesce(n.display_name, "") }]
+
   node_pools = flatten([
     var.k8s_spot_instance_percent < 100 ? [
       {

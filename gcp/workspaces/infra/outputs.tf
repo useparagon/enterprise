@@ -24,6 +24,12 @@ output "logs_container" {
   sensitive   = true
 }
 
+output "logs_bucket" {
+  description = "Alias for logs_container; used by paragon for managed-sync ingress.logsBucket."
+  value       = module.storage.storage.logs_bucket
+  sensitive   = true
+}
+
 output "auditlogs_bucket" {
   description = "The bucket used to store audit logs."
   value       = module.storage.storage.auditlogs_bucket

@@ -9,7 +9,7 @@ variable "workspace" {
 }
 
 variable "network" {
-  description = "The Virtual network  where our resources will be deployed"
+  description = "The Virtual network where our resources will be deployed"
 }
 
 variable "private_subnet" {

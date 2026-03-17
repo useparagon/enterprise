@@ -49,3 +49,5 @@ resource "google_compute_router_nat" "nat_gateway" {
   router                             = google_compute_router.nat_router.name
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
+
+# Service networking (global address + connection) lives in the postgres module so destroy order works as desired.

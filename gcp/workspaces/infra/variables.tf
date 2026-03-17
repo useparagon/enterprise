@@ -284,6 +284,15 @@ variable "k8s_disable_public_endpoint" {
   default     = true
 }
 
+variable "k8s_master_authorized_networks" {
+  description = "List of CIDRs allowed to reach the GKE control plane (Master Authorized Networks). Use [{ cidr_block = \"0.0.0.0/0\", display_name = \"all\" }] to allow all IPs (e.g. from any country). Empty list = only cluster nodes (restricted)."
+  type = list(object({
+    cidr_block   = string
+    display_name = optional(string, "")
+  }))
+  default = []
+}
+
 variable "use_storage_account_key" {
   description = "Whether to use the storage service account privatekey for the storage service account."
   type        = bool
