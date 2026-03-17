@@ -148,11 +148,11 @@ locals {
     OPENFGA_POSTGRES_URI         = "postgres://${local.postgres_config.openfga.username}:${local.postgres_config.openfga.password}@${local.postgres_config.openfga.host}:${local.postgres_config.openfga.port}/${local.postgres_config.openfga.database}?sslmode=prefer"
     OPENFGA_AUTH_PRESHARED_KEY   = random_string.openfga_preshared_key.result
 
-    ADMIN_POSTGRES_HOST        = try(var.infra_values.postgres.value.postgres_superuser.host, local.postgres_config.admin.host)
-    ADMIN_POSTGRES_PORT        = try(var.infra_values.postgres.value.postgres_superuser.port, local.postgres_config.admin.port)
-    ADMIN_POSTGRES_USERNAME    = try(var.infra_values.postgres.value.postgres_superuser.user, local.postgres_config.admin.username)
-    ADMIN_POSTGRES_PASSWORD    = try(var.infra_values.postgres.value.postgres_superuser.password, local.postgres_config.admin.password)
-    ADMIN_POSTGRES_DATABASE    = try(var.infra_values.postgres.value.postgres_superuser.user, null) != null ? "postgres" : local.postgres_config.admin.database
+    ADMIN_POSTGRES_HOST        = local.postgres_config.admin.host
+    ADMIN_POSTGRES_PORT        = local.postgres_config.admin.port
+    ADMIN_POSTGRES_USERNAME    = local.postgres_config.admin.username
+    ADMIN_POSTGRES_PASSWORD    = local.postgres_config.admin.password
+    ADMIN_POSTGRES_DATABASE    = local.postgres_config.admin.database
     ADMIN_POSTGRES_SSL_ENABLED = "true"
 
     MANAGED_SYNC_POSTGRES_HOST        = local.postgres_config.admin.host

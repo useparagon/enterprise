@@ -211,21 +211,3 @@ resource "google_sql_user" "sync_instance" {
   project  = var.gcp_project_id
 }
 
-resource "random_password" "postgres_admin_password" {
-  count = local.openfga_instance_key != null ? 1 : 0
-
-  length  = 32
-  lower   = true
-  upper   = true
-  numeric = true
-  special = false
-}
-
-resource "google_sql_user" "postgres_admin" {
-  count = local.openfga_instance_key != null ? 1 : 0
-
-  name     = "postgres"
-  password = random_password.postgres_admin_password[0].result
-  instance = google_sql_database_instance.paragon[local.openfga_instance_key].name
-  project  = var.gcp_project_id
-}
