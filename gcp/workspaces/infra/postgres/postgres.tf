@@ -145,7 +145,7 @@ resource "google_sql_database" "managed_sync_extra" {
 }
 
 resource "random_string" "openfga_username" {
-  count = local.openfga_instance_key != null ? 1 : 0
+  count = var.managed_sync_enabled ? 1 : 0
 
   length  = 16
   lower   = true
@@ -155,7 +155,7 @@ resource "random_string" "openfga_username" {
 }
 
 resource "random_password" "openfga_password" {
-  count = local.openfga_instance_key != null ? 1 : 0
+  count = var.managed_sync_enabled ? 1 : 0
 
   length  = 32
   lower   = true
@@ -165,7 +165,7 @@ resource "random_password" "openfga_password" {
 }
 
 resource "google_sql_user" "openfga" {
-  count = local.openfga_instance_key != null ? 1 : 0
+  count = var.managed_sync_enabled ? 1 : 0
 
   name     = random_string.openfga_username[0].result
   password = random_password.openfga_password[0].result
@@ -194,7 +194,7 @@ resource "random_password" "managed_sync_db_password" {
 }
 
 resource "google_sql_user" "sync_project" {
-  count = local.openfga_instance_key != null ? 1 : 0
+  count = var.managed_sync_enabled ? 1 : 0
 
   name     = random_string.managed_sync_db_username["sync_project"].result
   password = random_password.managed_sync_db_password["sync_project"].result
@@ -203,7 +203,7 @@ resource "google_sql_user" "sync_project" {
 }
 
 resource "google_sql_user" "sync_instance" {
-  count = local.openfga_instance_key != null ? 1 : 0
+  count = var.managed_sync_enabled ? 1 : 0
 
   name     = random_string.managed_sync_db_username["sync_instance"].result
   password = random_password.managed_sync_db_password["sync_instance"].result
