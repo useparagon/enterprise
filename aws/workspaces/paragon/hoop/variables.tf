@@ -130,6 +130,18 @@ variable "infra_vars" {
   }
 }
 
+variable "eks_oidc_provider_arn" {
+  description = "ARN of the EKS OIDC provider for IRSA role creation."
+  type        = string
+  default     = null
+}
+
+variable "eks_oidc_issuer_url" {
+  description = "URL of the EKS OIDC issuer for IRSA trust policy."
+  type        = string
+  default     = null
+}
+
 variable "namespace_paragon" {
   description = "Reference to kubernetes_namespace.paragon from helm module."
   type        = any

@@ -50,6 +50,7 @@ module "hoop" {
   namespace_paragon             = module.helm.namespace_paragon
   custom_connections            = var.hoop_custom_connections
   k8s_connections               = var.hoop_k8s_connections
+  gcp_project_id                = local.gcp_project_id
   infra_vars = {
     postgres = try(local.infra_vars.postgres, null)
     redis    = try(local.infra_vars.redis, null)
