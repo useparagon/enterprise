@@ -60,10 +60,7 @@ resource "google_compute_instance_template" "bastion_v2" {
     ]
   }
 
-  tags = concat(
-    local.only_cloudflare_tunnel ? [] : ["allow-ssh"],
-    var.enable_iap ? ["allow-iap"] : []
-  )
+  tags = local.only_cloudflare_tunnel ? [] : ["allow-ssh"]
 
   labels = {
     "name" = local.bastion_name

@@ -138,12 +138,6 @@ variable "ssh_whitelist" {
   default     = ""
 }
 
-variable "enable_iap_bastion" {
-  description = "Allow bastion SSH via IAP TCP forwarding (like AWS Session Manager). Connect with: gcloud compute start-iap-tunnel INSTANCE 22 --local-host-port=localhost:2222 --zone=ZONE --project=PROJECT"
-  type        = bool
-  default     = true
-}
-
 variable "disable_deletion_protection" {
   description = "Used to disable deletion protection on database and storage resources."
   type        = bool
