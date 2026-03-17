@@ -58,6 +58,8 @@ locals {
     redis_ca_certificate = local.redis_from_infra != null ? try(local.redis_from_infra.ca_certificate, null) : try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_CA_CERT"], try(var.infra_values.redis.value.managed_sync.ca_certificate, null))
   }
 
+  managed_sync_redis_url = "${local.redis_config.redis_tls_enabled ? "rediss" : "redis"}://${local.redis_config.password != null ? ":${urlencode(local.redis_config.password)}@" : ""}${local.redis_config.host}:${local.redis_config.port}"
+
   storage_type = try(var.base_helm_values.global.env["CLOUD_STORAGE_TYPE"], "GCP")
 
   storage_config = {
@@ -119,7 +121,7 @@ locals {
     MANAGED_SYNC_KAFKA_SSL_ENABLED    = tostring(local.kafka_config.ssl_enabled)
 
     # Redis from infra when present (TLS → rediss://; else 0x15). Do not override from base_helm_values so managed_sync always gets infra's scheme.
-    MANAGED_SYNC_REDIS_URL              = local.redis_from_infra != null ? (local.redis_config.redis_tls_enabled ? (local.redis_config.password != null ? "rediss://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "rediss://${local.redis_config.host}:${local.redis_config.port}") : (local.redis_config.password != null ? "redis://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "redis://${local.redis_config.host}:${local.redis_config.port}")) : try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_URL"], local.redis_config.redis_tls_enabled ? (local.redis_config.password != null ? "rediss://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "rediss://${local.redis_config.host}:${local.redis_config.port}") : (local.redis_config.password != null ? "redis://:${urlencode(local.redis_config.password)}@${local.redis_config.host}:${local.redis_config.port}" : "redis://${local.redis_config.host}:${local.redis_config.port}"))
+    MANAGED_SYNC_REDIS_URL              = local.redis_from_infra != null ? local.managed_sync_redis_url : try(var.base_helm_values.global.env["MANAGED_SYNC_REDIS_URL"], local.managed_sync_redis_url)
     MANAGED_SYNC_REDIS_CLUSTER_ENABLED  = local.redis_config.cluster_enabled
     MANAGED_SYNC_REDIS_TLS_ENABLED      = tostring(local.redis_config.redis_tls_enabled)
     MANAGED_SYNC_REDIS_CA_CERT          = local.redis_config.redis_ca_certificate != null ? local.redis_config.redis_ca_certificate : ""

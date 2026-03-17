@@ -633,7 +633,7 @@ locals {
   # Build full redis:// or rediss:// URLs from infra (Memorystore uses TLS; connection_string has no scheme and causes 0x15 if app uses redis://).
   redis_instance_urls = {
     for name, r in try(local.infra_vars.redis.value, {}) :
-    name => r.ssl ? (r.password != null ? "rediss://:${urlencode(r.password)}@${r.host}:${r.port}" : "rediss://${r.host}:${r.port}") : (r.password != null ? "redis://:${urlencode(r.password)}@${r.host}:${r.port}" : "redis://${r.host}:${r.port}")
+    name => "${r.ssl ? "rediss" : "redis"}://${r.password != null ? ":${urlencode(r.password)}@" : ""}${r.host}:${r.port}"
   }
 
   default_redis_url = try(
