@@ -59,3 +59,7 @@ node_modules/
 
 # atlas generated service-inputs.json files
 charts/*/**/files/service-inputs.json
+__pycache__/
+raw_pages/
+clean_pages/
+scripts/__pycache__/
