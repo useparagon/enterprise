@@ -1,4 +1,4 @@
-# Outputs match the contract expected by paragon (same shape as AWS kafka output).
+# Outputs match the contract expected by paragon.
 # Supports both: OAUTHBEARER (bind cluster_service_account_email via Workload Identity) or SASL/PLAIN (key JSON at cluster_password_file_path).
 
 output "cluster_id" {

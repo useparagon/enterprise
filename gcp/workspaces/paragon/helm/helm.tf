@@ -167,7 +167,7 @@ locals {
     }
   ))
 
-  # Same as AWS: helm_values with only global.env.HOST_ENV for managed_sync (repo chart).
+  # helm_values with only global.env.HOST_ENV for managed_sync (repo chart).
   global_values_minus_env = yamlencode(merge(
     nonsensitive(var.helm_values),
     {
