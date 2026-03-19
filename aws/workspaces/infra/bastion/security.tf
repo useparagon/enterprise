@@ -12,24 +12,34 @@ data "aws_iam_role" "bastion" {
 data "aws_iam_policy_document" "bastion_infra_read_only" {
   statement {
     actions = [
+      "acm:Describe*",
+      "acm:Get*",
+      "acm:List*",
       "autoscaling:Describe*",
       "autoscaling:Get*",
       "cloudformation:Describe*",
-      "cloudformation:List*",
       "cloudformation:Get*",
+      "cloudformation:List*",
+      "cloudtrail:Describe*",
+      "cloudtrail:Get*",
+      "cloudtrail:List*",
+      "cloudtrail:LookupEvents",
+      "cloudwatch:Describe*",
+      "cloudwatch:Get*",
+      "cloudwatch:List*",
       "ec2:Describe*",
       "ec2:Get*",
-      "ecr:Describe*",
       "ecr:BatchGet*",
+      "ecr:Describe*",
       "ecr:Get*",
       "ecr:List*",
       "eks:Describe*",
       "eks:List*",
       "iam:Get*",
       "iam:List*",
-      "ssm:Get*",
       "kms:Describe*",
       "kms:Get*",
+      "ssm:Get*"
     ]
     effect    = "Allow"
     resources = ["*"]

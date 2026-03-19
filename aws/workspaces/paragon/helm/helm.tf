@@ -1,6 +1,8 @@
 locals {
   version = var.helm_values.global.env["VERSION"]
 
+  helm_values_yaml = yamlencode(nonsensitive(var.helm_values))
+
   subchart_values = yamlencode({
     subchart = merge(
       merge(
@@ -51,24 +53,65 @@ locals {
     }
   })
 
-  global_values = yamlencode(merge(
-    nonsensitive(var.helm_values),
-    {
-      global = merge(
-        nonsensitive(var.helm_values.global),
-        {
-          env = merge(
-            nonsensitive(var.helm_values.global.env),
-            {
-              k8s_version = var.k8s_version
-              secretName  = "paragon-secrets"
-            }
-          ),
-          paragon_version = local.version
-        }
-      )
+  microservice_values = yamlencode({
+    for microservice_name, microservice_config in var.microservices : microservice_name => {
+      env = {
+        SERVICE = microservice_name
+      }
     }
-  ))
+  })
+
+  public_microservice_values = yamlencode({
+    for microservice_name, microservice_config in var.public_microservices : microservice_name => {
+      ingress = {
+        className          = "alb"
+        host               = replace(replace(microservice_config.public_url, "https://", ""), "http://", "")
+        scheme             = var.ingress_scheme
+        certificate        = var.certificate
+        load_balancer_name = var.workspace
+        logs_bucket        = var.logs_bucket
+      }
+    }
+  })
+
+  monitor_values = yamlencode({
+    for monitor_name, monitor_config in var.monitors : monitor_name => {
+      image = {
+        tag = var.monitor_version
+      }
+      ingress = {
+        logs_bucket = var.logs_bucket
+      }
+    }
+  })
+
+  public_monitor_values = yamlencode({
+    for monitor_name, monitor_config in var.public_monitors : monitor_name => {
+      ingress = {
+        className          = "alb"
+        host               = replace(replace(monitor_config.public_url, "https://", ""), "http://", "")
+        scheme             = var.ingress_scheme
+        certificate        = var.certificate
+        load_balancer_name = var.workspace
+      }
+    }
+  })
+
+  global_values = yamlencode({
+    global = merge(
+      nonsensitive(var.helm_values.global),
+      {
+        env = merge(
+          nonsensitive(var.helm_values.global.env),
+          {
+            k8s_version = var.k8s_version
+            secretName  = "paragon-secrets"
+          }
+        ),
+        paragon_version = local.version
+      }
+    )
+  })
 
   global_values_minus_env = yamlencode(merge(
     nonsensitive(var.helm_values),
@@ -92,6 +135,10 @@ resource "kubernetes_namespace" "paragon" {
 
     annotations = {
       name = "paragon"
+    }
+
+    labels = {
+      "elbv2.k8s.aws/pod-readiness-gate-inject" = "enabled"
     }
   }
 }
@@ -228,80 +275,14 @@ resource "helm_release" "paragon_on_prem" {
   verify            = false
 
   values = [
+    local.helm_values_yaml,
     local.subchart_values,
-    local.flipt_values,
     local.global_values,
+    local.flipt_values,
+    local.microservice_values,
+    local.public_microservice_values,
     local.secret_hash
   ]
-
-  dynamic "set" {
-    for_each = var.microservices
-
-    content {
-      name  = "${set.key}.env.SERVICE"
-      value = set.key
-    }
-  }
-
-  # used to set map the ingress to the public url of each microservice
-  dynamic "set" {
-    for_each = var.public_microservices
-
-    content {
-      name  = "${set.key}.ingress.host"
-      value = replace(replace(set.value.public_url, "https://", ""), "http://", "")
-    }
-  }
-
-  # configures whether the load balancer is 'internet-facing' (public) or 'internal' (private)
-  dynamic "set" {
-    for_each = var.public_microservices
-
-    content {
-      name  = "${set.key}.ingress.scheme"
-      value = var.ingress_scheme
-    }
-  }
-
-  # configures the ssl cert to the load balancer
-  dynamic "set" {
-    for_each = var.public_microservices
-
-    content {
-      name  = "${set.key}.ingress.certificate"
-      value = var.certificate
-    }
-  }
-
-  # configures the load balancer name
-  dynamic "set" {
-    for_each = var.public_microservices
-
-    content {
-      name  = "${set.key}.ingress.load_balancer_name"
-      value = var.workspace
-    }
-  }
-
-  # configures load balancer bucket for logging
-  dynamic "set" {
-    for_each = var.public_microservices
-
-    content {
-      name  = "${set.key}.ingress.logs_bucket"
-      value = var.logs_bucket
-    }
-  }
-
-  # configures load balancer className
-  dynamic "set" {
-    for_each = var.public_microservices
-
-    content {
-      name  = "${set.key}.ingress.className"
-      value = "alb"
-    }
-  }
 
   depends_on = [
     helm_release.ingress,
@@ -324,13 +305,12 @@ resource "helm_release" "paragon_logging" {
   cleanup_on_fail   = true
   create_namespace  = false
   dependency_update = true
+  force_update      = true
   timeout           = 900 # 15 minutes
   verify            = false
 
-  values = fileexists("${path.root}/../.secure/values.yaml") ? [
-    local.global_values,
-    file("${path.root}/../.secure/values.yaml")
-    ] : [
+  values = [
+    local.helm_values_yaml,
     local.global_values
   ]
 
@@ -369,7 +349,6 @@ resource "helm_release" "paragon_logging" {
     value = local.openobserve_password
   }
 
-
   depends_on = [
     helm_release.ingress,
     kubernetes_secret.docker_login,
@@ -396,79 +375,13 @@ resource "helm_release" "paragon_monitoring" {
   verify            = false
 
   values = [
+    local.helm_values_yaml,
+    local.subchart_values,
     local.global_values,
+    local.monitor_values,
+    local.public_monitor_values,
     local.secret_hash
   ]
-
-  # set image tag to pull
-  dynamic "set" {
-    for_each = var.monitors
-
-    content {
-      name  = "${set.key}.image.tag"
-      value = var.monitor_version
-    }
-  }
-
-  # used to set map the ingress to the public url of each microservice
-  dynamic "set" {
-    for_each = var.public_monitors
-
-    content {
-      name  = "${set.key}.ingress.host"
-      value = replace(replace(set.value.public_url, "https://", ""), "http://", "")
-    }
-  }
-
-  # configures whether the load balancer is 'internet-facing' (public) or 'internal' (private)
-  dynamic "set" {
-    for_each = var.public_monitors
-
-    content {
-      name  = "${set.key}.ingress.scheme"
-      value = var.ingress_scheme
-    }
-  }
-
-  # configures the ssl cert to the load balancer
-  dynamic "set" {
-    for_each = var.public_monitors
-
-    content {
-      name  = "${set.key}.ingress.certificate"
-      value = var.certificate
-    }
-  }
-
-  # configures the load balancer name
-  dynamic "set" {
-    for_each = var.public_monitors
-
-    content {
-      name  = "${set.key}.ingress.load_balancer_name"
-      value = var.workspace
-    }
-  }
-
-  # configures load balancer bucket for logging
-  dynamic "set" {
-    for_each = var.monitors
-
-    content {
-      name  = "${set.key}.ingress.logs_bucket"
-      value = var.logs_bucket
-    }
-  }
-
-  # configures load balancer className
-  dynamic "set" {
-    for_each = var.public_monitors
-
-    content {
-      name  = "${set.key}.ingress.className"
-      value = "alb"
-    }
-  }
 
   set {
     name  = "global.env.k8s_version"

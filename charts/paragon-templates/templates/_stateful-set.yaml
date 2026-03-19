@@ -90,14 +90,20 @@ spec:
           volumeMounts:
             - name: {{ $volumeName }}
               mountPath: {{ $mountPath }}
-      {{- if and $root.Values.topologySpread $root.Values.topologySpread.enabled }}
+      {{- $tsEnabled := true -}}
+      {{- if $root.Values.topologySpread -}}
+      {{- if hasKey $root.Values.topologySpread "enabled" -}}
+      {{- $tsEnabled = $root.Values.topologySpread.enabled -}}
+      {{- end -}}
+      {{- end -}}
+      {{- if $tsEnabled }}
       topologySpreadConstraints:
-        - maxSkew: {{ if hasKey $root.Values.topologySpread "maxSkew" }}{{ $root.Values.topologySpread.maxSkew }}{{ else }}1{{ end }}
-          topologyKey: {{ $root.Values.topologySpread.topologyKey | default "kubernetes.io/hostname" }}
+        - maxSkew: {{ if and $root.Values.topologySpread (hasKey $root.Values.topologySpread "maxSkew") }}{{ $root.Values.topologySpread.maxSkew }}{{ else }}1{{ end }}
+          topologyKey: {{ if $root.Values.topologySpread }}{{ $root.Values.topologySpread.topologyKey | default "kubernetes.io/hostname" }}{{ else }}kubernetes.io/hostname{{ end }}
           labelSelector:
             matchLabels:
               {{- include (printf "%s.selectorLabels" $name) $root | nindent 14 }}
-          whenUnsatisfiable: {{ $root.Values.topologySpread.whenUnsatisfiable | default "ScheduleAnyway" }}
+          whenUnsatisfiable: {{ if $root.Values.topologySpread }}{{ $root.Values.topologySpread.whenUnsatisfiable | default "ScheduleAnyway" }}{{ else }}ScheduleAnyway{{ end }}
       {{- end }}
       {{- with $root.Values.nodeSelector }}
       nodeSelector:
