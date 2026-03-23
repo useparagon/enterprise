@@ -19,13 +19,11 @@ spec:
             - |
               for kind in deployment statefulset; do
                 for filter in paragon-on-prem paragon-monitoring; do
-                  kubectl get ${kind}s -n paragon -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.annotations}{"\n"}{end}' \
-                    | grep "$filter" | awk '{print $1}' \
-                    | while read name; do
-                        echo "Restarting $kind/$name"
-                        kubectl rollout restart "$kind/$name" -n paragon
-                        kubectl rollout status "$kind/$name" -n paragon --timeout=300s
-                      done
+                  for name in $(kubectl get $kind -n paragon -l app.kubernetes.io/instance=$filter -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}'); do
+                    echo "Restarting $kind/$name"
+                    kubectl rollout restart "$kind/$name" -n paragon
+                    kubectl rollout status "$kind/$name" -n paragon --timeout=300s      
+                  done
                 done
               done
           restartPolicy: OnFailure
