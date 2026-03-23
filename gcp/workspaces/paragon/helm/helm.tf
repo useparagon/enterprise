@@ -1,13 +1,22 @@
 locals {
   version = var.helm_values.global.env["VERSION"]
 
+  helm_values_yaml = yamlencode(nonsensitive(var.helm_values))
+
   subchart_values = yamlencode({
     subchart = merge(
-      {
-        for microservice in keys(var.microservices) : microservice => {
-          enabled = true
+      merge(
+        {
+          for microservice in keys(var.microservices) : microservice => {
+            enabled = true
+          }
+        },
+        {
+          kafka-exporter = {
+            enabled = var.managed_sync_enabled
+          }
         }
-      },
+      ),
       try(nonsensitive(var.helm_values.subchart), {})
     )
   })
@@ -148,7 +157,6 @@ locals {
   }
 
   global_values = yamlencode(merge(
-    nonsensitive(var.helm_values),
     local.service_account_values,
     {
       global = merge(
@@ -314,6 +322,7 @@ resource "helm_release" "paragon_on_prem" {
   force_update      = true
 
   values = [
+    local.helm_values_yaml,
     local.subchart_values,
     local.global_values,
     local.flipt_values,
@@ -345,10 +354,8 @@ resource "helm_release" "paragon_logging" {
   dependency_update = true
   force_update      = true
 
-  values = fileexists("${path.root}/../.secure/values.yaml") ? [
-    local.global_values,
-    file("${path.root}/../.secure/values.yaml")
-    ] : [
+  values = [
+    local.helm_values_yaml,
     local.global_values
   ]
 
@@ -422,7 +429,7 @@ resource "helm_release" "paragon_monitoring" {
   description       = "Paragon monitors"
   chart             = "./charts/paragon-monitoring"
   version           = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
-  namespace         = "paragon"
+  namespace         = kubernetes_namespace_v1.paragon.id
   cleanup_on_fail   = true
   create_namespace  = false
   atomic            = true
@@ -432,6 +439,8 @@ resource "helm_release" "paragon_monitoring" {
   force_update      = true
 
   values = [
+    local.helm_values_yaml,
+    local.subchart_values,
     local.global_values,
     local.monitor_values,
     local.public_monitor_values,

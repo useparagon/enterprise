@@ -82,9 +82,3 @@ affinity:
           - spot
 
 tls_secret: ''
-
-pdb:
-  enabled: true
-
-topologySpread:
-  enabled: true

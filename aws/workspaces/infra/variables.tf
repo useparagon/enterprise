@@ -203,7 +203,7 @@ variable "auditlogs_retention_days" {
 variable "auditlogs_lock_enabled" {
   description = "Whether to enable S3 Object Lock for the audit logs bucket."
   type        = bool
-  default     = true
+  default     = false
 }
 
 # cloudflare

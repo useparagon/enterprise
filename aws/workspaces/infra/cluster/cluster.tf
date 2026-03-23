@@ -130,7 +130,7 @@ module "eks_managed_node_group" {
     "useparagon.com/capacityType" = each.key
   }
   update_config = {
-    max_unavailable_percentage = 33
+    max_unavailable = 1
   }
   ebs_optimized           = true
   disable_api_termination = false

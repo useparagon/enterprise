@@ -1,9 +1,16 @@
 {{/*
 Standard PodDisruptionBudget for microservices.
 Call with: include "pdb.standard" .
+Enabled by default. Set pdb.enabled=false to opt out.
 */}}
 {{- define "pdb.standard" -}}
-{{- if and .Values.pdb .Values.pdb.enabled }}
+{{- $enabled := true -}}
+{{- if .Values.pdb -}}
+{{- if hasKey .Values.pdb "enabled" -}}
+{{- $enabled = .Values.pdb.enabled -}}
+{{- end -}}
+{{- end -}}
+{{- if $enabled }}
 {{- $name := .Chart.Name -}}
 ---
 apiVersion: policy/v1
@@ -14,7 +21,7 @@ metadata:
   labels:
     {{- include (printf "%s.labels" $name) . | nindent 4 }}
 spec:
-  {{- if hasKey .Values.pdb "maxUnavailable" }}
+  {{- if and .Values.pdb (hasKey .Values.pdb "maxUnavailable") }}
   maxUnavailable: {{ .Values.pdb.maxUnavailable }}
   {{- else }}
   maxUnavailable: 1
