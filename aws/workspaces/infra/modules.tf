@@ -1,3 +1,10 @@
+# TODO: remove import blocks after all environments have been applied
+import {
+  for_each = { for i in range(var.az_count) : i => module.network.private_route_table[i].id }
+  to       = module.network.aws_route.private_nat[each.key]
+  id       = "${each.value}_0.0.0.0/0"
+}
+
 module "network" {
   source = "./network"
 

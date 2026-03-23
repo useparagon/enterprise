@@ -17,3 +17,7 @@ output "availability_zones" {
 output "gateway_ip" {
   value = aws_eip.gw.*.public_ip
 }
+
+output "private_route_table" {
+  value = aws_route_table.private
+}

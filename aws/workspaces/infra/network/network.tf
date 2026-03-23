@@ -79,19 +79,22 @@ resource "aws_nat_gateway" "gw" {
   }
 }
 
-# Create a new route table for the private subnets, make it route non-local traffic through the NAT gateway to the internet
+# Create a new route table for the private subnets
 resource "aws_route_table" "private" {
   count  = var.az_count
   vpc_id = aws_vpc.app.id
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = element(aws_nat_gateway.gw.*.id, count.index)
-  }
-
   tags = {
     Name = "${var.workspace}-private-route-table"
   }
+}
+
+# Route non-local traffic through the NAT gateway to the internet
+resource "aws_route" "private_nat" {
+  for_each               = { for i in range(var.az_count) : tostring(i) => i }
+  route_table_id         = aws_route_table.private[each.value].id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.gw[each.value].id
 }
 
 # Explicitly associate the newly created route tables to the private subnets (so they don't default to the main route table)
