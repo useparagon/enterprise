@@ -17,7 +17,7 @@ resource "aws_iam_role" "eks_cluster_admin" {
 
 resource "aws_iam_policy" "eks_cluster_admin" {
   name   = "${var.workspace}-eks-admin"
-  policy = file("./templates/eks/eks-admin-policy.json")
+  policy = file("${path.module}/../templates/eks/eks-admin-policy.json")
 
   tags = {
     Name = "${var.workspace}-eks-admin"
@@ -50,7 +50,7 @@ resource "aws_iam_role" "node_role" {
 resource "aws_iam_policy" "eks_worker_policy" {
   name        = "${var.workspace}-eks-worker-policy"
   description = "Worker policy for the ALB Ingress."
-  policy      = file("./templates/eks/eks-worker-policy.json")
+  policy      = file("${path.module}/../templates/eks/eks-worker-policy.json")
 
   tags = {
     Name = "${var.workspace}-eks-worker-policy"
