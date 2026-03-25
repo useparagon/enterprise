@@ -8,12 +8,14 @@ variable "aws_access_key_id" {
   description = "AWS Access Key for AWS account to provision resources on."
   type        = string
   sensitive   = true
+  default     = null
 }
 
 variable "aws_secret_access_key" {
   description = "AWS Secret Access Key for AWS account to provision resources on."
   type        = string
   sensitive   = true
+  default     = null
 }
 
 variable "aws_session_token" {
@@ -58,7 +60,7 @@ variable "rds_instance_class" {
 variable "rds_postgres_version" {
   description = "Postgres version for the database."
   type        = string
-  default     = "14"
+  default     = "16"
 }
 
 variable "rds_multiple_instances" {
@@ -108,7 +110,7 @@ variable "elasticache_multi_az" {
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
-  default     = "1.33"
+  default     = "1.34"
 }
 
 variable "eks_ondemand_node_instance_type" {
@@ -136,13 +138,13 @@ variable "eks_spot_instance_percent" {
 variable "eks_min_node_count" {
   description = "The minimum number of nodes to run in the Kubernetes cluster."
   type        = number
-  default     = 4
+  default     = 2
 }
 
 variable "eks_max_node_count" {
   description = "The maximum number of nodes to run in the Kubernetes cluster."
   type        = number
-  default     = 30
+  default     = 40
 }
 
 variable "eks_admin_arns" {
