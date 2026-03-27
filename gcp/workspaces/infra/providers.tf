@@ -1,15 +1,14 @@
-provider "google" {
-  credentials    = var.gcp_assume_role ? null : local.gcp_creds
-  default_labels = local.default_labels
-  project        = local.gcp_project_id
-  region         = var.region
-  zone           = var.region_zone
-}
+terraform {
+  required_version = ">= 1.7.0"
 
-provider "google-beta" {
-  credentials    = var.gcp_assume_role ? null : local.gcp_creds
-  default_labels = local.default_labels
-  project        = local.gcp_project_id
-  region         = var.region
-  zone           = var.region_zone
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 7.0"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 7.0"
+    }
+  }
 }

@@ -99,8 +99,8 @@ module "bastion" {
   cloudflare_tunnel_subdomain    = var.cloudflare_tunnel_subdomain
   cloudflare_tunnel_zone_id      = var.cloudflare_tunnel_zone_id
 
-  cluster_name   = module.cluster.kubernetes.name
-  gcp_project_id = local.gcp_project_id
+  cluster_name    = module.cluster.kubernetes.name
+  gcp_project_id  = local.gcp_project_id
   network         = module.network.network
   k8s_version     = var.k8s_version
   private_subnet  = module.network.private_subnet
