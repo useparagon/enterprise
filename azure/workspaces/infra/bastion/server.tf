@@ -30,15 +30,17 @@ resource "azurerm_linux_virtual_machine_scale_set" "bastion" {
     }
   }
 
+  # Bastion runtime auth to Azure/AKS is always this identity (not the Terraform principal).
+  identity {
+    type = "SystemAssigned"
+  }
+
   custom_data = base64encode(templatefile("${path.module}/../templates/bastion/bastion-startup.tpl.sh", {
     account_id      = var.cloudflare_tunnel_account_id,
-    client_id       = var.azure_client_id,
-    client_secret   = var.azure_client_secret,
     cluster_name    = var.cluster_name,
     cluster_version = local.k8s_version_major_minor,
     resource_group  = var.resource_group.name
     subscription_id = var.azure_subscription_id,
-    tenant_id       = var.azure_tenant_id,
     tunnel_id       = local.tunnel_id,
     tunnel_name     = local.tunnel_domain,
     tunnel_secret   = local.tunnel_secret,
@@ -75,4 +77,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "bastion" {
   upgrade_mode = "Automatic"
 
   tags = merge(var.tags, { Name = local.bastion_name })
+}
+
+# Allow the bastion VMSS managed identity to fetch kubeconfig and use kubectl against AKS.
+resource "azurerm_role_assignment" "bastion_aks_cluster_admin" {
+  scope                = var.cluster_id
+  role_definition_name = "Azure Kubernetes Service Cluster Admin Role"
+  principal_id         = azurerm_linux_virtual_machine_scale_set.bastion.identity[0].principal_id
 }

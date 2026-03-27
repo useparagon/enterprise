@@ -1,5 +1,6 @@
 output "kubernetes" {
   value = {
+    id                     = azurerm_kubernetes_cluster.cluster.id
     name                   = azurerm_kubernetes_cluster.cluster.name
     host                   = azurerm_kubernetes_cluster.cluster.kube_config.0.host
     client_certificate     = azurerm_kubernetes_cluster.cluster.kube_config.0.client_certificate

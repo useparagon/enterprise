@@ -1,25 +1,34 @@
-# credentials
-variable "azure_client_id" {
-  description = "Azure client ID"
-  type        = string
-  sensitive   = true
-}
-
-variable "azure_client_secret" {
-  description = "Azure client secret"
-  type        = string
-  sensitive   = true
-}
-
 variable "azure_subscription_id" {
   description = "Azure subscription ID"
   type        = string
   sensitive   = true
 }
 
+# Optional service principal for the azurerm / azuread providers when this workspace is
+# the Terraform root. Leave null (omit in tfvars) to use ARM_* / Azure CLI / OIDC.
+# When this path is used as a child module, omit these so the parent workspace owns
+# provider auth (same env-based chain).
 variable "azure_tenant_id" {
-  description = "Azure tenant ID"
+  description = "Azure AD tenant ID for provider auth. Optional if using ARM_TENANT_ID / CLI."
   type        = string
+  default     = null
+  nullable    = true
+  sensitive   = true
+}
+
+variable "azure_client_id" {
+  description = "Azure AD application (client) ID for provider auth. Optional if using ARM_CLIENT_ID / CLI."
+  type        = string
+  default     = null
+  nullable    = true
+  sensitive   = true
+}
+
+variable "azure_client_secret" {
+  description = "Azure AD client secret for provider auth. Optional if using ARM_CLIENT_SECRET / CLI."
+  type        = string
+  default     = null
+  nullable    = true
   sensitive   = true
 }
 

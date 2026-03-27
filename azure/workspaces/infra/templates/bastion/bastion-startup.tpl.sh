@@ -163,7 +163,7 @@ chmod 644 /home/ubuntu/.bash_aliases
 
 # configure az, aks and kubectl
 writeLog "configuring k8s tools as ubuntu"
-sudo -u ubuntu az login --service-principal -u ${client_id} -p ${client_secret} --tenant ${tenant_id}
+sudo -u ubuntu az login --identity
 sudo -u ubuntu az account set --subscription ${subscription_id}
 sudo -u ubuntu az aks get-credentials --overwrite-existing --resource-group ${resource_group} --name ${cluster_name}
 sudo -u ubuntu kubectl config set-context --current --namespace=paragon
