@@ -47,6 +47,7 @@ build/
 
 # ignore IDE files
 .cursor
+!.cursor/skills/
 .idea/
 .vscode/
 
