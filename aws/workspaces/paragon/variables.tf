@@ -564,6 +564,10 @@ locals {
       "port"       = 8500
       "public_url" = null
     }
+    "monitor-queue-exporter" = {
+      "port"       = 1806
+      "public_url" = null
+    }
   }
 
   public_monitors = var.monitors_enabled ? {
