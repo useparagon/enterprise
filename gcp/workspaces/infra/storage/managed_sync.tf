@@ -1,4 +1,4 @@
-# Managed Sync bucket (homologue to AWS S3 workspace-managed-sync).
+# Managed Sync bucket.
 # Used by Managed Sync for storage; same MinIO SA has access for paragon.
 resource "google_storage_bucket" "managed_sync" {
   count         = var.managed_sync_enabled ? 1 : 0

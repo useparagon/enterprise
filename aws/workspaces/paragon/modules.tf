@@ -95,6 +95,8 @@ module "hoop" {
   namespace_paragon             = module.helm.namespace_paragon
   custom_connections            = var.hoop_custom_connections
   k8s_connections               = var.hoop_k8s_connections
+  eks_oidc_issuer_url           = try(data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer, null)
+  eks_oidc_provider_arn         = try("arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${replace(data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer, "https://", "")}", null)
   infra_vars = {
     postgres = try(local.infra_vars.postgres, null)
     redis    = try(local.infra_vars.redis, null)

@@ -130,6 +130,12 @@ variable "infra_vars" {
   }
 }
 
+variable "gcp_project_id" {
+  description = "GCP project ID for Workload Identity and service account creation."
+  type        = string
+  default     = null
+}
+
 variable "namespace_paragon" {
   description = "Reference to kubernetes_namespace.paragon from helm module."
   type        = any

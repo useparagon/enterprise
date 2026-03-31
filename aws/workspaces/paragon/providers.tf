@@ -26,7 +26,3 @@ provider "hoop" {
   api_url = var.hoop_api_url
   api_key = coalesce(var.hoop_api_key, "dummy-token")
 }
-
-# provider "cloudflare" {
-#   api_token = var.cloudflare_dns_api_token
-# }

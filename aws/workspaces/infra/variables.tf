@@ -203,7 +203,7 @@ variable "auditlogs_retention_days" {
 variable "auditlogs_lock_enabled" {
   description = "Whether to enable S3 Object Lock for the audit logs bucket."
   type        = bool
-  default     = true
+  default     = false
 }
 
 # cloudflare
@@ -298,12 +298,14 @@ locals {
   workspace   = coalesce(var.migrated_workspace, "paragon-${var.organization}-${local.hash}")
 
   # NOTE hash and workspace can't be included in tags since it creates a circular reference
-  default_tags = {
-    Name         = "paragon-${var.organization}"
-    Environment  = local.environment
-    Organization = var.organization
-    Creator      = "Terraform"
-  }
+  default_tags = merge(
+    {
+      Name        = "paragon-${var.organization}"
+      Environment = local.environment
+      Creator     = "Terraform"
+    },
+    trimspace(var.organization) == "" ? {} : { Organization = var.organization }
+  )
 
   # get distinct values from comma-separated list, filter empty values and trim them
   # for `ip_whitelist`, if an ip doesn't contain a range at the end (e.g. `<IP_ADDRESS>/32`), then add `/32` to the end. `1.1.1.1` becomes `1.1.1.1/32`; `2.2.2.2/24` remains unchanged

@@ -1,10 +1,24 @@
 locals {
+  version = var.helm_values.global.env["VERSION"]
+
+  helm_values_yaml = yamlencode(nonsensitive(var.helm_values))
+
   subchart_values = yamlencode({
-    subchart = {
-      for microservice in keys(var.microservices) : microservice => {
-        enabled = true
-      }
-    }
+    subchart = merge(
+      merge(
+        {
+          for microservice in keys(var.microservices) : microservice => {
+            enabled = true
+          }
+        },
+        {
+          kafka-exporter = {
+            enabled = var.managed_sync_enabled
+          }
+        }
+      ),
+      try(nonsensitive(var.helm_values.subchart), {})
+    )
   })
 
   microservice_values = yamlencode({
@@ -86,24 +100,21 @@ locals {
     }
   })
 
-  global_values = yamlencode(merge(
-    nonsensitive(var.helm_values),
-    {
-      global = merge(
-        nonsensitive(var.helm_values.global),
-        {
-          env = merge(
-            nonsensitive(var.helm_values.global.env),
-            {
-              k8s_version = var.k8s_version
-              secretName  = "paragon-secrets"
-            }
-          ),
-          paragon_version = var.helm_values.global.env["VERSION"]
-        }
-      )
-    }
-  ))
+  global_values = yamlencode({
+    global = merge(
+      nonsensitive(var.helm_values.global),
+      {
+        env = merge(
+          nonsensitive(var.helm_values.global.env),
+          {
+            k8s_version = var.k8s_version
+            secretName  = "paragon-secrets"
+          }
+        ),
+        paragon_version = local.version
+      }
+    )
+  })
 
   global_values_minus_env = yamlencode(merge(
     nonsensitive(var.helm_values),
@@ -196,16 +207,18 @@ resource "helm_release" "paragon_on_prem" {
   name              = "paragon-on-prem"
   description       = "Paragon microservices"
   chart             = "./charts/paragon-onprem"
-  version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-onprem"]}"
+  version           = "${local.version}-${local.chart_hashes["paragon-onprem"]}"
   namespace         = kubernetes_namespace.paragon.id
   create_namespace  = false
   cleanup_on_fail   = true
   atomic            = true
+  force_update      = true
   verify            = false
   timeout           = 900 # 15 minutes
   dependency_update = true
 
   values = [
+    local.helm_values_yaml,
     local.subchart_values,
     local.global_values,
     local.flipt_values,
@@ -227,19 +240,22 @@ resource "helm_release" "paragon_logging" {
   name              = "paragon-logging"
   description       = "Paragon logging services"
   chart             = "./charts/paragon-logging"
-  version           = "${var.helm_values.global.env["VERSION"]}-${local.chart_hashes["paragon-logging"]}"
+  version           = "${local.version}-${local.chart_hashes["paragon-logging"]}"
   namespace         = kubernetes_namespace.paragon.id
   create_namespace  = false
   cleanup_on_fail   = true
   atomic            = true
+  force_update      = true
   verify            = false
   timeout           = 900 # 15 minutes
   dependency_update = true
 
   values = fileexists("${path.root}/../.secure/values.yaml") ? [
+    local.helm_values_yaml,
     local.global_values,
     file("${path.root}/../.secure/values.yaml")
     ] : [
+    local.helm_values_yaml,
     local.global_values
   ]
 
@@ -288,15 +304,18 @@ resource "helm_release" "paragon_monitoring" {
   description       = "Paragon monitors"
   chart             = "./charts/paragon-monitoring"
   version           = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
-  namespace         = "paragon"
+  namespace         = kubernetes_namespace.paragon.id
   cleanup_on_fail   = true
   create_namespace  = false
   atomic            = true
+  force_update      = true
   verify            = false
   timeout           = 900 # 15 minutes
   dependency_update = true
 
   values = [
+    local.helm_values_yaml,
+    local.subchart_values,
     local.global_values,
     local.monitor_values,
     local.public_monitor_values,

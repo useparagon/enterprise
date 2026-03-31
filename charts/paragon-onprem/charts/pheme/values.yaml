@@ -44,6 +44,11 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ''
 
+env:
+  WORKER_SHARED_AUTOSCALING_DISABLED: false
+  WORKER_SHARED_SERVICE_MAX_INSTANCES: 4
+  WORKER_SHARED_SERVICE_MIN_INSTANCES: 2
+
 podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/scheme: "http"

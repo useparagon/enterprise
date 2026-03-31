@@ -1,13 +1,24 @@
 locals {
-  namespace = "paragon"
-  version   = var.helm_values.global.env["VERSION"]
+  version = var.helm_values.global.env["VERSION"]
+
+  helm_values_yaml = yamlencode(nonsensitive(var.helm_values))
 
   subchart_values = yamlencode({
-    subchart = {
-      for microservice in keys(var.microservices) : microservice => {
-        enabled = true
-      }
-    }
+    subchart = merge(
+      merge(
+        {
+          for microservice in keys(var.microservices) : microservice => {
+            enabled = true
+          }
+        },
+        {
+          kafka-exporter = {
+            enabled = var.managed_sync_enabled
+          }
+        }
+      ),
+      try(nonsensitive(var.helm_values.subchart), {})
+    )
   })
 
   microservice_values = yamlencode({
@@ -105,39 +116,47 @@ locals {
     }
   })
 
-  cloud_storage_services = [
-    "api-triggerkit",
-    "cache-replay",
-    "hades",
-    "health-checker",
-    "hermes",
-    "openobserve",
-    "release",
-    "worker-actionkit",
-    "worker-actions",
-    "worker-credentials",
-    "worker-crons",
-    "worker-deployments",
-    "worker-proxy",
-    "worker-triggers",
-    "worker-triggerkit",
-    "worker-workflows",
-    "zeus"
-  ]
+  # Managed-sync services only when enabled (avoids IAM bindings for SAs that don't exist).
+  cloud_storage_services = concat(
+    var.managed_sync_enabled ? ["api-sync", "worker-sync", "worker-history-sync"] : [],
+    [
+      "api-triggerkit",
+      "cache-replay",
+      "hades",
+      "health-checker",
+      "hermes",
+      "openobserve",
+      "release",
+      "worker-actionkit",
+      "worker-actions",
+      "worker-credentials",
+      "worker-crons",
+      "worker-deployments",
+      "worker-proxy",
+      "worker-triggers",
+      "worker-triggerkit",
+      "worker-workflows",
+      "zeus"
+    ]
+  )
 
-  service_account_values = var.storage_service_account != null ? {
-    for service_name in local.cloud_storage_services : service_name => {
-      serviceAccount = {
-        create = true
-        annotations = {
-          "iam.gke.io/gcp-service-account" = var.storage_service_account
+  service_account_values = {
+    # merge existing service values and inject service account config
+    for service_name in local.cloud_storage_services : service_name => merge(
+      try(nonsensitive(var.helm_values)[service_name], {}),
+      {
+        serviceAccount = {
+          create = true
+          annotations = {
+            "iam.gke.io/gcp-service-account" = var.storage_service_account
+          }
         }
       }
-    }
-  } : {}
+    )
+    if var.storage_service_account != null
+  }
 
   global_values = yamlencode(merge(
-    nonsensitive(var.helm_values),
     local.service_account_values,
     {
       global = merge(
@@ -155,6 +174,23 @@ locals {
       )
     }
   ))
+
+  # helm_values with only global.env.HOST_ENV for managed_sync (repo chart).
+  global_values_minus_env = yamlencode(merge(
+    nonsensitive(var.helm_values),
+    {
+      global = merge(nonsensitive(var.helm_values).global, { env = { HOST_ENV = "GCP_K8" } })
+    }
+  ))
+
+  # Workload Identity (GCS) for services deployed by the managed-sync chart. Without this,
+  # api-sync, worker-sync, worker-history-sync get "storage.buckets.get denied".
+  # Use for+if so both branches have the same map type (avoids "inconsistent conditional result types").
+  managed_sync_storage_values = {
+    for k in ["api-sync", "worker-sync", "worker-history-sync"] :
+    k => local.service_account_values[k]
+    if var.storage_service_account != null && var.managed_sync_enabled
+  }
 
   # changes to secrets should trigger redeploy
   secret_hash = yamlencode({
@@ -209,17 +245,19 @@ resource "kubernetes_secret_v1" "docker_login" {
   }
 }
 
-# shared secrets
+# shared secrets (paragon-secrets always; paragon-managed-sync-secrets when managed_sync enabled)
 resource "kubernetes_secret_v1" "paragon_secrets" {
+  for_each = toset(var.managed_sync_enabled ? ["paragon-secrets", "paragon-managed-sync-secrets"] : ["paragon-secrets"])
+
   metadata {
-    name      = "paragon-secrets"
+    name      = each.value
     namespace = kubernetes_namespace_v1.paragon.id
   }
 
   type = "Opaque"
 
   data = {
-    # Map global.env from helm_values into secret data
+    # Map global.env from helm_values into secret data (includes managed_sync_secrets when enabled)
     for key, value in nonsensitive(var.helm_values.global.env) :
     key => value
   }
@@ -284,6 +322,7 @@ resource "helm_release" "paragon_on_prem" {
   force_update      = true
 
   values = [
+    local.helm_values_yaml,
     local.subchart_values,
     local.global_values,
     local.flipt_values,
@@ -315,10 +354,8 @@ resource "helm_release" "paragon_logging" {
   dependency_update = true
   force_update      = true
 
-  values = fileexists("${path.root}/../.secure/values.yaml") ? [
-    local.global_values,
-    file("${path.root}/../.secure/values.yaml")
-    ] : [
+  values = [
+    local.helm_values_yaml,
     local.global_values
   ]
 
@@ -392,7 +429,7 @@ resource "helm_release" "paragon_monitoring" {
   description       = "Paragon monitors"
   chart             = "./charts/paragon-monitoring"
   version           = "${var.monitor_version}-${local.chart_hashes["paragon-monitoring"]}"
-  namespace         = "paragon"
+  namespace         = kubernetes_namespace_v1.paragon.id
   cleanup_on_fail   = true
   create_namespace  = false
   atomic            = true
@@ -402,6 +439,8 @@ resource "helm_release" "paragon_monitoring" {
   force_update      = true
 
   values = [
+    local.helm_values_yaml,
+    local.subchart_values,
     local.global_values,
     local.monitor_values,
     local.public_monitor_values,

@@ -564,6 +564,10 @@ locals {
       "port"       = 8500
       "public_url" = null
     }
+    "monitor-queue-exporter" = {
+      "port"       = 1806
+      "public_url" = null
+    }
   }
 
   public_monitors = var.monitors_enabled ? {
@@ -790,35 +794,37 @@ locals {
           MINIO_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
 
           # Monitor configurations
-          MONITOR_BULL_EXPORTER_HOST              = "http://bull-exporter"
-          MONITOR_BULL_EXPORTER_PORT              = try(local.monitors["bull-exporter"].port, null)
-          MONITOR_GRAFANA_AWS_ACCESS_ID           = var.monitors_enabled ? module.monitors[0].grafana_aws_access_key_id : null
-          MONITOR_GRAFANA_AWS_SECRET_KEY          = var.monitors_enabled ? module.monitors[0].grafana_aws_secret_access_key : null
-          MONITOR_GRAFANA_HOST                    = "http://grafana"
-          MONITOR_GRAFANA_PORT                    = try(local.monitors["grafana"].port, null)
-          MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD = var.monitors_enabled ? module.monitors[0].grafana_admin_password : null
-          MONITOR_GRAFANA_SECURITY_ADMIN_USER     = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
-          MONITOR_GRAFANA_SERVER_DOMAIN           = try(local.monitors["grafana"].public_url, null)
-          MONITOR_GRAFANA_UPTIME_WEBHOOK_URL      = module.uptime.webhook
-          MONITOR_KAFKA_EXPORTER_HOST             = "http://kafka-exporter"
-          MONITOR_KAFKA_EXPORTER_PORT             = try(local.monitors["kafka-exporter"].port, null)
-          MONITOR_KUBE_STATE_METRICS_HOST         = "http://kube-state-metrics"
-          MONITOR_KUBE_STATE_METRICS_PORT         = try(local.monitors["kube-state-metrics"].port, null)
-          MONITOR_PGADMIN_EMAIL                   = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null
-          MONITOR_PGADMIN_HOST                    = "http://pgadmin"
-          MONITOR_PGADMIN_PASSWORD                = var.monitors_enabled ? module.monitors[0].pgadmin_admin_password : null
-          MONITOR_PGADMIN_PORT                    = try(local.monitors["pgadmin"].port, null)
-          MONITOR_PGADMIN_SSL_MODE                = "disable"
-          MONITOR_POSTGRES_EXPORTER_HOST          = "http://postgres-exporter"
-          MONITOR_POSTGRES_EXPORTER_PORT          = try(local.monitors["postgres-exporter"].port, null)
-          MONITOR_POSTGRES_EXPORTER_SSL_MODE      = "require"
-          MONITOR_PROMETHEUS_HOST                 = "http://prometheus"
-          MONITOR_PROMETHEUS_PORT                 = try(local.monitors["prometheus"].port, null)
-          MONITOR_QUEUE_REDIS_TARGET              = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
-          MONITOR_REDIS_EXPORTER_HOST             = "http://redis-exporter"
-          MONITOR_REDIS_EXPORTER_PORT             = try(local.monitors["redis-exporter"].port, null)
-          MONITOR_REDIS_INSIGHT_HOST              = "http://redis-insight"
-          MONITOR_REDIS_INSIGHT_PORT              = try(local.monitors["redis-insight"].port, null)
+          MONITOR_BULL_EXPORTER_HOST               = "http://bull-exporter"
+          MONITOR_BULL_EXPORTER_PORT               = try(local.monitors["bull-exporter"].port, null)
+          MONITOR_GRAFANA_AWS_ACCESS_ID            = var.monitors_enabled ? module.monitors[0].grafana_aws_access_key_id : null
+          MONITOR_GRAFANA_AWS_SECRET_KEY           = var.monitors_enabled ? module.monitors[0].grafana_aws_secret_access_key : null
+          MONITOR_GRAFANA_HOST                     = "http://grafana"
+          MONITOR_GRAFANA_PORT                     = try(local.monitors["grafana"].port, null)
+          MONITOR_GRAFANA_SECURITY_ADMIN_PASSWORD  = var.monitors_enabled ? module.monitors[0].grafana_admin_password : null
+          MONITOR_GRAFANA_SECURITY_ADMIN_USER      = var.monitors_enabled ? module.monitors[0].grafana_admin_email : null
+          MONITOR_GRAFANA_SERVER_DOMAIN            = try(local.monitors["grafana"].public_url, null)
+          MONITOR_GRAFANA_UPTIME_WEBHOOK_URL       = module.uptime.webhook
+          MONITOR_KAFKA_EXPORTER_HOST              = "http://kafka-exporter"
+          MONITOR_KAFKA_EXPORTER_PORT              = try(local.monitors["kafka-exporter"].port, null)
+          MONITOR_KUBE_STATE_METRICS_HOST          = "http://kube-state-metrics"
+          MONITOR_KUBE_STATE_METRICS_PORT          = try(local.monitors["kube-state-metrics"].port, null)
+          MONITOR_PGADMIN_EMAIL                    = var.monitors_enabled ? module.monitors[0].pgadmin_admin_email : null
+          MONITOR_PGADMIN_HOST                     = "http://pgadmin"
+          MONITOR_PGADMIN_PASSWORD                 = var.monitors_enabled ? module.monitors[0].pgadmin_admin_password : null
+          MONITOR_PGADMIN_PORT                     = try(local.monitors["pgadmin"].port, null)
+          MONITOR_PGADMIN_SSL_MODE                 = "disable"
+          MONITOR_POSTGRES_EXPORTER_HOST           = "http://postgres-exporter"
+          MONITOR_POSTGRES_EXPORTER_PORT           = try(local.monitors["postgres-exporter"].port, null)
+          MONITOR_POSTGRES_EXPORTER_SSL_MODE       = "require"
+          MONITOR_PROMETHEUS_HOST                  = "http://prometheus"
+          MONITOR_PROMETHEUS_PORT                  = try(local.monitors["prometheus"].port, null)
+          MONITOR_QUEUE_REDIS_TARGET               = try(local.infra_vars.redis.value.queue.host, local.infra_vars.redis.value.cache.host)
+          MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_HOST = "http://monitor-queue-exporter"
+          MONITOR_MANAGED_SYNC_QUEUE_EXPORTER_PORT = try(local.monitors["monitor-queue-exporter"].port, null)
+          MONITOR_REDIS_EXPORTER_HOST              = "http://redis-exporter"
+          MONITOR_REDIS_EXPORTER_PORT              = try(local.monitors["redis-exporter"].port, null)
+          MONITOR_REDIS_INSIGHT_HOST               = "http://redis-insight"
+          MONITOR_REDIS_INSIGHT_PORT               = try(local.monitors["redis-insight"].port, null)
           }, {
           for key, value in local.helm_vars.global.env :
           key => value if value != null && !contains(local.helm_keys_to_remove, key) && !startswith(key, "FLIPT_")

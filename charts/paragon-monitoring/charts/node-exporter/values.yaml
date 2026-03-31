@@ -24,10 +24,6 @@ resources:
     cpu: 100m
     memory: 100Mi
 
-priorityClassName: "paragon-node-high"
-
 priorityClass:
   create: true
-  name: "paragon-node-high"
-  value: 1000000
-  description: "High priority for node-level Paragon services like logging and metrics"
+  name: "paragon-node-exporter-high"

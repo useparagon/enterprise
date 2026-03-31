@@ -153,7 +153,7 @@ variable "auditlogs_retention_days" {
 variable "auditlogs_lock_enabled" {
   description = "Whether to lock the GCS audit logs bucket retention policy."
   type        = bool
-  default     = true
+  default     = false
 }
 
 # postgres
@@ -241,7 +241,7 @@ variable "gmk_sasl_plain_key_file_path" {
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
-  default     = "1.32"
+  default     = "1.33"
 }
 
 variable "k8s_min_node_count" {
@@ -282,6 +282,15 @@ variable "k8s_disable_public_endpoint" {
   description = "Used to disable public endpoint on GKE cluster."
   type        = bool
   default     = true
+}
+
+variable "k8s_master_authorized_networks" {
+  description = "List of CIDRs allowed to reach the GKE control plane (Master Authorized Networks). Use [{ cidr_block = \"0.0.0.0/0\", display_name = \"all\" }] to allow all IPs (e.g. from any country). Empty list = only cluster nodes (restricted)."
+  type = list(object({
+    cidr_block   = string
+    display_name = optional(string, "")
+  }))
+  default = []
 }
 
 variable "use_storage_account_key" {

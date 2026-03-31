@@ -67,7 +67,7 @@ variable "auditlogs_retention_days" {
 variable "auditlogs_lock_enabled" {
   description = "Whether to lock the audit logs container immutability policy."
   type        = bool
-  default     = true
+  default     = false
 }
 
 # cloudflare
@@ -199,7 +199,7 @@ variable "redis_multiple_instances" {
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
-  default     = "1.32"
+  default     = "1.33"
 }
 
 variable "k8s_min_node_count" {
