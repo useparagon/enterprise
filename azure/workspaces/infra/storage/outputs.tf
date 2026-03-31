@@ -1,14 +1,15 @@
 output "blob" {
   value = {
-    name                    = local.storage_account_name
-    access_key              = azurerm_storage_account.blob.primary_access_key
-    private_container       = azurerm_storage_container.app.name
-    public_container        = azurerm_storage_container.cdn.name
-    logs_container          = azurerm_storage_container.logs.name
-    managed_sync_container  = var.managed_sync_enabled ? azurerm_storage_container.managed_sync[0].name : null
-    auditlogs_container     = azurerm_storage_container.auditlogs.name
-    minio_microservice_user = random_string.minio_microservice_user.result
-    minio_microservice_pass = random_password.minio_microservice_pass.result
+    name                        = local.storage_account_name
+    access_key                  = azurerm_storage_account.blob.primary_access_key
+    private_container           = azurerm_storage_container.app.name
+    public_container            = azurerm_storage_container.cdn.name
+    public_storage_account_name = azurerm_storage_account.cdn_public.name
+    logs_container              = azurerm_storage_container.logs.name
+    managed_sync_container      = var.managed_sync_enabled ? azurerm_storage_container.managed_sync[0].name : null
+    auditlogs_container         = azurerm_storage_container.auditlogs.name
+    minio_microservice_user     = random_string.minio_microservice_user.result
+    minio_microservice_pass     = random_password.minio_microservice_pass.result
   }
   sensitive = true
 }

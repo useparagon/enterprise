@@ -6,9 +6,20 @@ resource "random_string" "storage_hash" {
   special = false
 }
 
+resource "random_string" "cdn_public_hash" {
+  length  = 8
+  lower   = true
+  upper   = false
+  numeric = true
+  special = false
+}
+
 locals {
+  clean_prefix = substr(replace(var.workspace, "/[^a-z0-9]/", ""), 0, 16)
   # storage accounts must be globally unique and only up to 24 lower case alphanumeric characters
-  storage_account_name = "${substr(replace(var.workspace, "/[^a-z0-9]/", ""), 0, 16)}${random_string.storage_hash.result}"
+  storage_account_name = "${local.clean_prefix}${random_string.storage_hash.result}"
+  # Premium BlockBlob cannot host public containers; anonymous CDN uses a separate Standard account.
+  cdn_storage_account_name = "${substr(local.clean_prefix, 0, 13)}cd${random_string.cdn_public_hash.result}"
 }
 
 resource "azurerm_storage_account" "blob" {
@@ -23,6 +34,18 @@ resource "azurerm_storage_account" "blob" {
   tags                            = merge(var.tags, { Name = local.storage_account_name })
 }
 
+resource "azurerm_storage_account" "cdn_public" {
+  name                = local.cdn_storage_account_name
+  resource_group_name = var.resource_group.name
+  location            = var.resource_group.location
+
+  account_kind                    = "StorageV2"
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  allow_nested_items_to_be_public = true
+  tags                            = merge(var.tags, { Name = local.cdn_storage_account_name })
+}
+
 resource "azurerm_storage_container" "app" {
   name                  = "${var.workspace}-app"
   container_access_type = "private"
@@ -32,7 +55,7 @@ resource "azurerm_storage_container" "app" {
 resource "azurerm_storage_container" "cdn" {
   name                  = "${var.workspace}-cdn"
   container_access_type = "container"
-  storage_account_id    = azurerm_storage_account.blob.id
+  storage_account_id    = azurerm_storage_account.cdn_public.id
 }
 
 resource "azurerm_storage_container" "logs" {
@@ -64,6 +87,15 @@ resource "azurerm_storage_container_immutability_policy" "auditlogs" {
 
 resource "azurerm_storage_account_network_rules" "storage" {
   storage_account_id = azurerm_storage_account.blob.id
+
+  bypass                     = ["Metrics"]
+  default_action             = "Allow"
+  ip_rules                   = []
+  virtual_network_subnet_ids = var.virtual_network_subnet_ids
+}
+
+resource "azurerm_storage_account_network_rules" "cdn_public" {
+  storage_account_id = azurerm_storage_account.cdn_public.id
 
   bypass                     = ["Metrics"]
   default_action             = "Allow"
