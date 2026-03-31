@@ -92,12 +92,6 @@ affinity:
 
 tls_secret: ''
 
-pdb:
-  enabled: true
-
-topologySpread:
-  enabled: true
-
 env:
   WORKER_SHARED_AUTOSCALING_DISABLED: false
   WORKER_SHARED_SERVICE_MAX_INSTANCES: 4
