@@ -4,9 +4,9 @@
 
 This document evaluates replacing the Terraform Helm provider (used in each cloud provider's `paragon` workspace) with ArgoCD for managing Helm chart deployments across 40 customer clusters (primarily AWS). The goal is to eliminate the need for Terraform to access the Kubernetes API, enable daily GitOps-based upgrades (up from monthly), provide rollback and drift detection, and stay on Spacelift Starter.
 
-**Recommendation:** Adopt ArgoCD with External Secrets Operator (ESO). The entire `paragon` workspace can be eliminated by moving cloud-API-only resources (ALB, DNS, uptime, monitors, Hoop API connections) into the `infra` workspace and moving all Helm releases / K8s resources to ArgoCD. The `infra` workspace's Helm/Kubernetes provider dependency (cluster-autoscaler module) can also be removed by switching to the EKS-managed Karpenter addon. ArgoCD itself can be bootstrapped via an EKS addon (the ArgoCD EKS add-on from the AWS marketplace) or a single `helm_release` during initial cluster provisioning.
+**Recommendation:** Adopt ArgoCD with External Secrets Operator (ESO). The entire `paragon` workspace can be eliminated by moving cloud-API-only resources (ALB, DNS, uptime, monitors, Hoop API connections) into the `infra` workspace and moving all Helm releases / K8s resources to ArgoCD. The `infra` workspace's Helm/Kubernetes provider dependency (cluster-autoscaler module) can also be removed by moving the autoscaler to ArgoCD management (and optionally migrating to Karpenter later). ArgoCD itself can be bootstrapped without a public K8s API on all three clouds — via EKS addon on AWS, `az aks command invoke` on Azure, and GKE Connect Gateway on GCP.
 
-This results in a single Terraform workspace (`infra`) that only calls cloud provider APIs — no K8s API access, no private runners, Spacelift Starter is sufficient.
+This results in a single Terraform workspace (`infra`) per customer that only calls cloud provider APIs — no K8s API access, no private runners, Spacelift Starter is sufficient. The Karpenter migration is recommended but should be decoupled from the ArgoCD adoption to reduce risk across the 40 clusters.
 
 ---
 
@@ -208,7 +208,7 @@ Since customer configs already live as Spacelift stacks in `enterprise-deploymen
 
 ---
 
-## Answering Your Two New Questions
+## Answering Additional Questions
 
 ### Q1: Can the EBS CSI driver and ArgoCD be deployed without `helm_release`?
 
@@ -249,6 +249,108 @@ This is a pure AWS API call — no Kubernetes or Helm provider needed. The `aws_
 3. **Replace with EKS Auto Mode:** If on EKS 1.29+, EKS Auto Mode provides managed Karpenter — no addon or Helm chart needed at all. Just a cluster configuration flag.
 
 Any of these eliminates the last `helm_release` from the `infra` workspace, allowing you to remove the Helm and Kubernetes providers entirely.
+
+### Q3: Can ArgoCD be deployed to Azure and GCP clusters without a public K8s API?
+
+**Yes — and Azure/GCP are actually easier than AWS in this regard.**
+
+The key insight is that ArgoCD runs *inside* the cluster it manages. It never needs external K8s API access — it uses the in-cluster ServiceAccount. The question is really about how to *bootstrap* ArgoCD onto a private cluster, since Terraform (running outside the cluster) can't reach the K8s API.
+
+#### Azure (AKS)
+
+The Azure `infra` workspace already has **no Kubernetes or Helm providers** — `providers.tf` only declares `azurerm` and `azuread`. AKS is provisioned entirely via `azurerm_kubernetes_cluster` and `azurerm_kubernetes_cluster_node_pool` resources (pure Azure ARM API calls). There is nothing to remove.
+
+**Bootstrap options for ArgoCD on private AKS:**
+
+| Option | How it works | Needs public API? |
+|--------|-------------|-------------------|
+| **AKS GitOps extension (Flux-based)** | `azurerm_kubernetes_cluster_extension` with `extension_type = "Microsoft.Flux"` — a native AKS feature that installs GitOps from the Azure API. While this installs Flux rather than ArgoCD, it can be used to bootstrap ArgoCD as the first Flux `HelmRelease`. | **No** — pure Azure ARM API |
+| **AKS `command invoke`** | `azurerm_kubernetes_command` (or `az aks command invoke` via `null_resource`) runs `kubectl`/`helm` commands on the cluster through the Azure API, tunneled via the managed control plane. Works even with fully private endpoints. | **No** — tunneled through Azure API |
+| **Azure Deployment Script** | `azurerm_resource_group_template_deployment` with a deployment script that runs inside the VNet and applies ArgoCD manifests. | **No** — runs in-VNet |
+| **One-time `helm_release`** | Accept a single `helm_release` for bootstrap, same as AWS. Run `terraform apply` once with public endpoint, then disable it. | **Temporarily** — one-time only |
+
+**Recommended for Azure:** Use `az aks command invoke` via a `null_resource` / `local-exec` provisioner. This is the simplest option — it sends `kubectl apply` commands through the Azure API without exposing the K8s endpoint. Example:
+
+```hcl
+resource "null_resource" "argocd_bootstrap" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      az aks command invoke \
+        --resource-group ${azurerm_kubernetes_cluster.cluster.resource_group_name} \
+        --name ${azurerm_kubernetes_cluster.cluster.name} \
+        --command "kubectl create namespace argocd && kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
+    EOT
+  }
+  depends_on = [azurerm_kubernetes_cluster_node_pool.pool]
+}
+```
+
+After this one-time bootstrap, ArgoCD manages itself (self-managing Application) and all other charts. No ongoing external K8s API access needed.
+
+#### GCP (GKE)
+
+The GCP `infra` workspace also has **no Kubernetes or Helm providers** — `providers.tf` only declares `google` and `google-beta`. The GKE cluster is provisioned via the `terraform-google-modules/kubernetes-engine/google//modules/private-cluster` module, which already supports a `disable_public_endpoint` variable (currently exposed as `var.disable_public_endpoint` in the cluster config).
+
+**Bootstrap options for ArgoCD on private GKE:**
+
+| Option | How it works | Needs public API? |
+|--------|-------------|-------------------|
+| **GKE Config Management** | `google_gke_hub_feature` + `google_gke_hub_feature_membership` with Config Sync — a native GKE feature that enables GitOps via the GCP API. Can bootstrap ArgoCD as its first sync target. | **No** — pure GCP API |
+| **Connect Gateway** | GKE Connect Gateway (`gcloud container fleet memberships generate-gateway-rbac`) allows `kubectl` access through the GCP API for Fleet-enrolled clusters. Use a `null_resource` with `gcloud` commands to apply ArgoCD manifests via the gateway. | **No** — tunneled through GCP API |
+| **Bastion / IAP tunnel** | The GCP infra workspace already provisions a bastion. A `null_resource` can SSH through IAP to the bastion and run `kubectl apply` to install ArgoCD. | **No** — tunneled through IAP |
+| **Master authorized networks** | The GKE module already supports `master_authorized_networks`. Allow the Spacelift runner's IP temporarily, apply ArgoCD, then remove. | **Temporarily** — restricted window |
+| **One-time `helm_release`** | Same as AWS/Azure — accept a one-time Helm provider usage during initial provisioning. | **Temporarily** |
+
+**Recommended for GCP:** Use GKE Connect Gateway via `null_resource`. Fleet enrollment is a single `google_gke_hub_membership` resource (GCP API), and `kubectl` commands then go through the GCP API without exposing the K8s endpoint. Alternatively, if the bastion is already provisioned, tunnel through it.
+
+#### Summary: ArgoCD bootstrap without public K8s API
+
+| Cloud | Current K8s/Helm provider in `infra`? | ArgoCD bootstrap method | Public K8s API needed? |
+|-------|---------------------------------------|------------------------|----------------------|
+| **AWS** | Yes (cluster-autoscaler only) | `aws_eks_addon` or one-time `helm_release` | EKS addon: **No**. `helm_release`: temporarily |
+| **Azure** | **No** | `az aks command invoke` via `null_resource` | **No** |
+| **GCP** | **No** | GKE Connect Gateway or bastion tunnel via `null_resource` | **No** |
+
+Azure and GCP are actually in a better position than AWS — their `infra` workspaces already have zero Helm/K8s provider usage, and both clouds offer API-tunneled `kubectl` access for the one-time ArgoCD bootstrap.
+
+### Q4: Are there other downsides or benefits to switching to the Karpenter addon for AWS?
+
+The current setup uses `lablabs/eks-cluster-autoscaler` (Helm-based Cluster Autoscaler) in the `infra` workspace and `qvest-digital/aws-node-termination-handler` (Helm-based NTH) in the `paragon` workspace. Switching to Karpenter replaces both.
+
+#### Benefits
+
+| Benefit | Details |
+|---------|---------|
+| **Eliminates Helm/K8s providers from `infra`** | The cluster-autoscaler module is the only reason the AWS `infra` workspace needs the Helm and Kubernetes providers. Karpenter as an EKS addon (`aws_eks_addon`) is a pure AWS API call — same pattern as the existing EBS CSI, CoreDNS, kube-proxy, and vpc-cni addons. |
+| **Eliminates aws-node-termination-handler** | Karpenter natively handles spot interruptions, instance rebalancing, and EC2 health events. The separate `aws_node_termination_handler` module (currently in the `paragon/helm/` workspace) is no longer needed. That's one less Helm chart to manage. |
+| **Faster scaling** | Cluster Autoscaler works at the Auto Scaling Group level — it adjusts `desired_count` and waits for the ASG to provision. Karpenter provisions EC2 instances directly, bypassing the ASG. Typical improvement: 60-90 seconds vs. 3-5 minutes for new nodes. |
+| **Better instance selection** | Cluster Autoscaler is limited to the instance types defined in the managed node group. The current config uses `eks_ondemand_node_instance_type` and `eks_spot_node_instance_type` (single-type lists). Karpenter can dynamically select from a wide range of instance types based on pod requirements and availability, improving cost and availability. |
+| **Simplified node group management** | Currently, Terraform manages explicit node groups with `module.eks_managed_node_group` (on-demand and spot pools with separate instance types, min/max counts). Karpenter replaces this with `NodePool` and `EC2NodeClass` CRDs that declaratively express constraints. Node groups become optional or can be minimal (one small on-demand group for system components). |
+| **Better bin-packing** | Karpenter consolidates underutilized nodes by moving pods and terminating empty nodes. Cluster Autoscaler only scales down nodes that become fully empty (or where all pods are movable). This can reduce costs for workloads with variable load — relevant if the 40 clusters have uneven utilization. |
+| **ArgoCD-managed after bootstrap** | Since Karpenter's `NodePool`/`EC2NodeClass` CRDs are Kubernetes manifests, ArgoCD can manage them. Changes to node configuration become GitOps-driven and auditable — aligning with the overall goal. |
+| **AWS-recommended path** | AWS has officially designated Karpenter as the recommended autoscaler for EKS. The Cluster Autoscaler continues to work but receives less investment. |
+
+#### Downsides / Risks
+
+| Risk | Details | Mitigation |
+|------|---------|------------|
+| **Migration complexity for 40 clusters** | Switching autoscalers requires careful node draining. Karpenter and Cluster Autoscaler can't run simultaneously on the same node groups — Karpenter needs to manage its own nodes. | Run Karpenter alongside existing managed node groups during transition. Karpenter ignores nodes it didn't create. Gradually taint/drain old node groups as Karpenter provisions replacements. |
+| **`NodePool`/`EC2NodeClass` CRD management** | Today, node configuration is Terraform variables (`eks_ondemand_node_instance_type`, `eks_spot_instance_percent`, `eks_min/max_node_count`). With Karpenter, these become K8s CRDs. The configuration format changes. | ArgoCD manages the CRDs. Customer-specific node config goes into the same values/config system as the rest of the application. Actually a benefit — node config is now GitOps-managed alongside everything else. |
+| **Managed node groups still needed for system components** | Karpenter itself, CoreDNS, and kube-proxy need nodes to run on. You can't remove all managed node groups — you need at least a small on-demand group for the control plane components. | Keep the existing `default_node_pool` (or a minimal managed node group). The current AWS config already has separate on-demand/spot groups; the on-demand group can be minimized to a small always-on pool. |
+| **Spot handling behavioral changes** | Cluster Autoscaler + NTH uses ASG-based spot pools with explicit instance types. Karpenter uses `capacity-spread` and `on-demand` fallback. The spot behavior is different — instance diversity is broader, which is generally better but changes the cost/availability profile. | Configure Karpenter's `NodePool` with explicit `instanceTypes` constraints if you need to restrict instance families. The current `eks_spot_node_instance_type` list can be directly mapped. |
+| **IAM changes** | Karpenter needs its own IAM role with EC2 permissions (launch instances, create/tag ENIs, manage security groups). Different from the Cluster Autoscaler's ASG-only permissions. | The `aws_eks_addon` for Karpenter can use pod identity or IRSA. The EKS Blueprints addon module handles IAM automatically. Straightforward Terraform IAM resources, same pattern as the existing `aws_ebs_csi_driver_iam_role`. |
+| **Learning curve** | Operations team needs to understand Karpenter's `NodePool`/`EC2NodeClass` model instead of ASG-based autoscaling. Debugging is different (Karpenter logs vs. ASG events). | Karpenter has excellent documentation and observability. The Prometheus metrics are richer than Cluster Autoscaler's. The ArgoCD UI + Grafana dashboards provide visibility into node provisioning. |
+| **Version compatibility** | Karpenter versions are tied to specific EKS versions. Must validate compatibility with the current `k8s_version = "1.31"` in `cluster/variables.tf`. | Karpenter v1.x supports EKS 1.25+. Version 1.31 is well within support range. Pin the addon version, same as other EKS addons. |
+| **Terraform variable changes** | The current `eks_spot_instance_percent`, `eks_min/max_node_count`, `eks_ondemand/spot_node_instance_type` variables in `infra/cluster/variables.tf` no longer directly apply. The 40 customers' `vars.auto.tfvars` files reference these. | During migration, keep the variables but use them to generate Karpenter `NodePool` CRDs (via a ConfigMap or ArgoCD values). Or migrate customer configs in the `enterprise-deployments` repo to the new Karpenter-native format. |
+
+#### Recommendation
+
+**Switch to Karpenter, but decouple it from the ArgoCD migration.**
+
+- **Phase 0 (ArgoCD migration):** Keep Cluster Autoscaler as-is but move it from `infra` Terraform to ArgoCD management (ArgoCD installs the existing cluster-autoscaler Helm chart). This eliminates the Helm provider from `infra` without changing autoscaler behavior. Also move `aws-node-termination-handler` to ArgoCD.
+- **Phase N (later):** Migrate from Cluster Autoscaler to Karpenter. This is a separate project that can be done per-cluster at your own pace. ArgoCD manages the Karpenter `NodePool` CRDs. Once migrated, remove the cluster-autoscaler and NTH ArgoCD Applications.
+
+This avoids conflating two significant changes (GitOps migration + autoscaler migration) in one risky step across 40 clusters. However, if you want to minimize the number of migrations, doing both together on the pilot cluster (Phase 1) is reasonable — just don't batch-roll both changes to all 40 at once.
 
 ### Q2: Can paragon workspace resources that won't be replaced by ArgoCD move to infra?
 
@@ -590,15 +692,17 @@ Since managed sync is only enabled for a subset of customers, this complexity on
 | Criterion | Current (Terraform Helm) | Proposed (ArgoCD + ESO) |
 |-----------|--------------------------|-------------------------|
 | Terraform workspaces per customer | 2 (infra + paragon) | **1 (infra only)** |
-| K8s API access from CI | Required (both workspaces on AWS) | **Not required** |
-| Spacelift plan required | Enterprise (private runners) or public K8s API | **Starter (public APIs only)** |
+| K8s API access from CI | Required (both workspaces on AWS) | **Not required (any cloud)** |
+| Public K8s API required | Yes (or VPC runner) | **No — bootstrap tunneled via cloud API on all 3 clouds** |
+| Spacelift plan required | Enterprise (private runners) or public K8s API | **Starter (public cloud APIs only)** |
 | Upgrade frequency achievable | Monthly (manual per-customer) | **Daily (Git push → auto-sync)** |
 | Upgrade effort per release | `prepare.sh` + `terraform apply` × 40 clusters | **Single Git commit** |
 | Rollback | Complex (state revert + re-apply × 40) | **One-click per cluster, automatable** |
 | Drift detection | None | **Continuous (3 min interval)** |
 | Self-healing | None | **Automatic (`selfHeal: true`)** |
 | Config duplication | High (TF locals + values.yaml + set blocks) | **Single source (Secrets Manager + values file)** |
-| Secrets management | Terraform state (S3) | **AWS Secrets Manager (cloud-native)** |
+| Secrets management | Terraform state (S3) | **Cloud-native secret managers (AWS SM, Azure KV, GCP SM)** |
 | Deployment observability | Terraform logs in Spacelift | **ArgoCD UI + Slack notifications** |
 | Chart management | `prepare.sh` + in-repo copies | **OCI registry with semver** |
+| Node autoscaling | Cluster Autoscaler (Helm) + NTH (Helm) | **ArgoCD-managed (Karpenter migration optional)** |
 | Adding new customer | 2 Spacelift stacks + manual setup | **1 Spacelift stack + auto-deploy** |
