@@ -664,12 +664,210 @@ The `alb/` module currently depends on `helm_release.ingress` (to wait for the A
 
 ### State migration for 40 clusters
 
-Each cluster has Terraform state containing Helm release resources. Migration per cluster:
-1. `terraform state rm` all `helm_release.*` and `kubernetes_*` resources
-2. Run `terraform apply` (no-op — resources are removed from state)
-3. ArgoCD adopts the running workloads
+State migration requires two operations per cluster: **`terraform state rm`** to remove K8s/Helm resources from the `paragon` workspace, and **`terraform import`** to bring cloud-API resources into the `infra` workspace. The import step is critical — without it, the next `terraform apply` on `infra` would attempt to create resources that already exist, causing conflicts or destruction.
 
-This is safe because we're not destroying resources — just removing them from Terraform's knowledge. The workloads continue running. ArgoCD compares live state against desired state and takes over management.
+#### Migration strategy overview
+
+The migration is a three-step process per cluster:
+
+1. **`terraform import`** cloud-API resources into the `infra` workspace (new module addresses)
+2. **`terraform state rm`** all resources from the `paragon` workspace (both K8s-bound and cloud-API)
+3. **`terraform plan`** on both workspaces to verify zero-diff (no changes planned)
+
+Step 1 must happen before step 2 to ensure cloud resources are always managed by at least one workspace. The order prevents any window where a resource is unmanaged.
+
+#### Automation approach
+
+With 40 clusters, manual import is impractical. A migration script should:
+
+1. Read the `paragon` workspace state via `terraform state list` and `terraform state show` to extract resource IDs
+2. Map each resource to its new address in the `infra` workspace
+3. Generate and execute `terraform import` commands against the `infra` workspace
+4. Generate and execute `terraform state rm` commands against the `paragon` workspace
+5. Run `terraform plan` on both workspaces to verify zero-diff
+
+This script can be templated and run per-customer via Spacelift or a CI pipeline.
+
+#### AWS resource import inventory
+
+Resources being moved from `module.*` in the `paragon` workspace to new addresses in the `infra` workspace. The `for_each` keys and `count` indices vary per customer — the migration script must enumerate them from the source state.
+
+**`module.alb` → `module.alb` (or `module.dns`) in `infra`**
+
+| Source address | Resource type | Import ID (from state) | Notes |
+|---------------|---------------|----------------------|-------|
+| `module.alb.aws_route53_zone.paragon` | `aws_route53_zone` | Zone ID (`Z...`) | Core dependency — import first |
+| `module.alb.aws_route53_record.microservice["<key>"]` | `aws_route53_record` | `{zone_id}_{fqdn}_{type}` | `for_each` keys = service names from `merge(public_microservices, public_monitors)` |
+| `module.alb.aws_route53_record.caa` | `aws_route53_record` | `{zone_id}_{domain}_{CAA}` | Single resource |
+| `module.alb.cloudflare_record.nameserver[<n>]` | `cloudflare_record` | `{zone_id}/{record_id}` | `count` = number of NS records; only when Cloudflare is configured |
+| `module.alb.module.acm_request_certificate[0].aws_acm_certificate.default[0]` | `aws_acm_certificate` | Certificate ARN | Only when `var.certificate == null` (Terraform-managed cert) |
+| `module.alb.module.acm_request_certificate[0].aws_route53_record.default["<domain>"]` | `aws_route53_record` | `{zone_id}_{fqdn}_{type}` | ACM DNS validation records |
+
+**`module.uptime` → `module.uptime` in `infra`**
+
+| Source address | Resource type | Import ID | Notes |
+|---------------|---------------|-----------|-------|
+| `module.uptime.betteruptime_monitor_group.group[0]` | `betteruptime_monitor_group` | Numeric group ID | Only when `uptime_api_token` is set |
+| `module.uptime.betteruptime_monitor.monitor["<key>"]` | `betteruptime_monitor` | Numeric monitor ID | `for_each` keys = microservice names |
+| `module.uptime.betteruptime_grafana_integration.webhook[0]` | `betteruptime_grafana_integration` | Numeric integration ID | Single resource |
+
+**`module.monitors[0]` → `module.monitors[0]` in `infra`** (only when `monitors_enabled = true`)
+
+| Source address | Resource type | Import ID | Notes |
+|---------------|---------------|-----------|-------|
+| `module.monitors[0].aws_iam_user.grafana[0]` | `aws_iam_user` | IAM user name | Only when Grafana keys not supplied in tfvars |
+| `module.monitors[0].aws_iam_access_key.grafana[0]` | `aws_iam_access_key` | Access key ID | |
+| `module.monitors[0].aws_iam_group.grafana[0]` | `aws_iam_group` | Group name | |
+| `module.monitors[0].aws_iam_group_membership.grafana[0]` | `aws_iam_group_membership` | Membership name | |
+| `module.monitors[0].aws_iam_group_policy.grafana_ro[0]` | `aws_iam_group_policy` | `{group_name}:{policy_name}` | |
+| `module.monitors[0].random_string.grafana_admin_email_prefix[0]` | `random_string` | See note below | |
+| `module.monitors[0].random_password.grafana_admin_password[0]` | `random_password` | See note below | |
+| `module.monitors[0].random_string.pgadmin_admin_email_prefix[0]` | `random_string` | See note below | |
+| `module.monitors[0].random_password.pgadmin_admin_password[0]` | `random_password` | See note below | |
+
+**`module.managed_sync_config[0]` → `module.managed_sync_config[0]` in `infra`** (only when `managed_sync_enabled = true`)
+
+| Source address | Resource type | Import ID | Notes |
+|---------------|---------------|-----------|-------|
+| `module.managed_sync_config[0].random_string.postgres_username["openfga"]` | `random_string` | See note below | `for_each` over `["openfga", "sync_instance", "sync_project"]` |
+| `module.managed_sync_config[0].random_string.postgres_username["sync_instance"]` | `random_string` | | |
+| `module.managed_sync_config[0].random_string.postgres_username["sync_project"]` | `random_string` | | |
+| `module.managed_sync_config[0].random_password.postgres_password["openfga"]` | `random_password` | | Same `for_each` keys |
+| `module.managed_sync_config[0].random_password.postgres_password["sync_instance"]` | `random_password` | | |
+| `module.managed_sync_config[0].random_password.postgres_password["sync_project"]` | `random_password` | | |
+| `module.managed_sync_config[0].random_string.queue_exporter_username` | `random_string` | | Single resource |
+| `module.managed_sync_config[0].random_password.queue_exporter_password` | `random_password` | | |
+| `module.managed_sync_config[0].random_string.openfga_preshared_key` | `random_string` | | |
+| `module.managed_sync_config[0].tls_private_key.managed_sync_signing_key` | `tls_private_key` | Not importable — see note below | |
+
+**`module.hoop` → `module.hoop_connections` in `infra`** (cloud-API-only resources)
+
+| Source address | Resource type | Import ID | Notes |
+|---------------|---------------|-----------|-------|
+| `module.hoop.aws_iam_role.hoop_support[0]` | `aws_iam_role` | Role name | Only when OIDC provider ARN is set |
+| `module.hoop.aws_iam_role_policy_attachment.hoop_support[0]` | `aws_iam_role_policy_attachment` | `{role_name}/{policy_arn}` | |
+| `module.hoop.hoop_connection.all_connections["<key>"]` | `hoop_connection` | Connection ID from Hoop API | `for_each` keys vary per customer |
+| `module.hoop.hoop_connection.postgres_connections["<key>"]` | `hoop_connection` | Connection ID | `for_each` keys vary per customer |
+| `module.hoop.hoop_plugin_connection.custom_connections_access_control["<key>"]` | `hoop_plugin_connection` | Plugin connection ID | |
+| `module.hoop.hoop_plugin_connection.default_connections_access_control["<key>"]` | `hoop_plugin_connection` | Plugin connection ID | |
+| `module.hoop.hoop_plugin_connection.postgres_connections_access_control["<key>"]` | `hoop_plugin_connection` | Plugin connection ID | |
+| `module.hoop.hoop_plugin_config.slack[0]` | `hoop_plugin_config` | Plugin config ID | Only when Slack is enabled |
+| `module.hoop.hoop_plugin_connection.slack["<key>"]` | `hoop_plugin_connection` | Plugin connection ID | |
+
+#### Azure and GCP differences
+
+Azure and GCP have the same general pattern but with:
+- **`module.dns`** (Cloudflare records) instead of `module.alb` (Route53/ACM)
+- **No IAM resources** in Azure `module.monitors` or `module.hoop` (just `random_*` resources)
+- **GCP-specific IAM** in `module.hoop`: `google_service_account`, `google_project_iam_member`, `google_service_account_iam_member`
+
+#### Special handling for `random` and `tls` resources
+
+`random_string`, `random_password`, and `tls_private_key` resources are **stateful** — their values exist only in Terraform state. These are the most sensitive resources to migrate because:
+
+- **`random_*` import:** The `random` provider supports import, but the imported resource will generate a **new** random value on the next `apply` unless the state matches exactly. The correct approach is to use **`terraform state mv`** (state-to-state transfer) rather than `import`:
+
+  ```bash
+  # Extract from paragon state, inject into infra state
+  terraform state pull -state=paragon.tfstate | \
+    jq '.resources[] | select(.module == "module.managed_sync_config[0]")' > extracted.json
+  # Then terraform state push into infra (with address remapping)
+  ```
+
+  Alternatively, use the **`terraform_remote_state`** data source during a transition period to read values from the paragon workspace state before removing it.
+
+- **`tls_private_key` import:** The `tls` provider **does not support import** for `tls_private_key`. The private key exists only in state. Options:
+  1. **`terraform state mv`** from paragon to infra state (requires direct state manipulation)
+  2. **Read the key from state before migration,** write it to AWS Secrets Manager, and have the new Terraform config read it from there instead of generating it
+  3. **Accept key rotation** for managed-sync signing keys — generate new keys during migration and update the dependent services. This is simpler but requires coordinating the key change with the managed-sync deployment.
+
+  Recommendation: Option 2 — extract the existing key into Secrets Manager. This is already aligned with the broader move to External Secrets Operator.
+
+#### Recommended migration script outline
+
+```bash
+#!/bin/bash
+# migrate-customer.sh <customer-org> <cloud-provider>
+# Run per customer to migrate state from paragon → infra workspace
+
+set -euo pipefail
+ORG="$1"
+CLOUD="$2"
+PARAGON_DIR="${CLOUD}/workspaces/paragon"
+INFRA_DIR="${CLOUD}/workspaces/infra"
+
+# Phase 1: Extract resource IDs from paragon state
+echo "=== Extracting resource IDs from paragon workspace ==="
+cd "$PARAGON_DIR"
+
+# Get all resource addresses and their IDs
+terraform state list | while read -r addr; do
+  # Filter to cloud-API-only resources (skip helm_release, kubernetes_*)
+  case "$addr" in
+    *helm_release*|*kubernetes_*|*kubectl_manifest*|*time_sleep*) continue ;;
+  esac
+  echo "$addr"
+done > /tmp/resources_to_move.txt
+
+# For each resource, extract its import ID
+while read -r addr; do
+  terraform state show -json "$addr" | jq -r '{address: .address, id: .values.id // .values.arn // .values.zone_id}' >> /tmp/import_ids.json
+done < /tmp/resources_to_move.txt
+
+# Phase 2: Import into infra workspace
+echo "=== Importing resources into infra workspace ==="
+cd "../../$INFRA_DIR"
+
+# Map old addresses → new addresses and import
+# (address mapping depends on the new module structure)
+while read -r line; do
+  OLD_ADDR=$(echo "$line" | jq -r '.address')
+  IMPORT_ID=$(echo "$line" | jq -r '.id')
+  NEW_ADDR=$(map_address "$OLD_ADDR")  # custom function for address remapping
+
+  terraform import "$NEW_ADDR" "$IMPORT_ID"
+done < /tmp/import_ids.json
+
+# Phase 3: Handle random/tls resources via state manipulation
+echo "=== Migrating stateful resources (random, tls) ==="
+# These require terraform state mv or state pull/push
+# ... (see detailed handling above)
+
+# Phase 4: Remove all resources from paragon state
+echo "=== Removing resources from paragon workspace ==="
+cd "../../$PARAGON_DIR"
+
+terraform state list | while read -r addr; do
+  terraform state rm "$addr"
+done
+
+# Phase 5: Verify
+echo "=== Verifying zero-diff on both workspaces ==="
+cd "../../$INFRA_DIR"
+terraform plan -detailed-exitcode  # exit code 0 = no changes
+
+cd "../../$PARAGON_DIR"
+terraform plan -detailed-exitcode  # should show empty plan (no resources)
+
+echo "=== Migration complete for $ORG ==="
+```
+
+#### Migration order and batching
+
+Given 40 clusters:
+
+1. **Pilot cluster (1):** Full dry run. Execute migration script, verify zero-diff, validate all resources are intact. Document any edge cases.
+2. **Internal clusters (2-3):** Migrate a small batch of internal/test clusters. Soak for 1-2 days.
+3. **Production batches (5-10 per batch):** Roll out in batches. Between batches, verify no regressions.
+4. **Stragglers:** Handle any clusters with unique configurations (custom Hoop connections, non-standard monitors, etc.) individually.
+
+#### Rollback plan
+
+If migration fails for a cluster:
+1. The paragon workspace state still exists (until step 4) — `terraform state rm` can be undone by re-importing
+2. The infra workspace imports can be reverted with `terraform state rm`
+3. No real resources are created or destroyed during migration — only state files change
+4. Worst case: restore both state files from S3 versioned backups (S3 backend supports versioning)
 
 ### ArgoCD availability
 
