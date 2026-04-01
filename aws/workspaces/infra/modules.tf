@@ -124,3 +124,85 @@ module "cluster" {
   vpc_id             = module.network.vpc.id
   private_subnet_ids = module.network.private_subnet[*].id
 }
+
+# ---------------------------------------------------------------------------
+# ArgoCD / GitOps modules — only created when argocd_enabled = true
+# ---------------------------------------------------------------------------
+
+module "secrets" {
+  source = "./secrets"
+  count  = var.argocd_enabled && local.argocd_secrets_ready ? 1 : 0
+
+  workspace    = local.workspace
+  organization = var.organization
+  env_config   = var.argocd_env_config
+
+  docker_config = jsonencode({
+    auths = {
+      (var.argocd_docker_registry_server) = {
+        username = var.argocd_docker_username
+        password = var.argocd_docker_password
+        email    = var.argocd_docker_email
+        auth     = base64encode("${var.argocd_docker_username}:${var.argocd_docker_password}")
+      }
+    }
+  })
+
+  managed_sync_config     = var.paragon_managed_sync_config
+  openobserve_credentials = local.argocd_openobserve_credentials
+}
+
+module "argocd" {
+  source = "./argocd"
+  count  = var.argocd_enabled ? 1 : 0
+
+  cluster_name      = module.cluster.eks_cluster.name
+  oidc_provider_arn = module.cluster.eks_cluster.oidc_provider_arn
+  oidc_issuer_url   = module.cluster.eks_cluster.cluster_oidc_issuer_url
+  workspace         = local.workspace
+  aws_region        = var.aws_region
+  bastion_asg_name  = module.bastion.bastion_name
+
+  argocd_version    = var.argocd_version
+  eso_chart_version = var.eso_chart_version
+  slack_token       = var.argocd_slack_token
+  slack_channel     = var.argocd_slack_channel
+
+  secrets_manager_secret_arns  = local.argocd_secrets_ready ? module.secrets[0].secret_arns : []
+  argocd_application_manifests = local.argocd_secrets_ready ? module.argocd_apps[0].all_manifests : []
+
+  depends_on = [module.cluster, module.bastion]
+}
+
+module "argocd_apps" {
+  source = "./argocd-apps"
+  count  = var.argocd_enabled && local.argocd_secrets_ready ? 1 : 0
+
+  argocd_namespace          = "argocd"
+  destination_namespace     = "paragon"
+  workspace                 = local.workspace
+  cluster_name              = module.cluster.eks_cluster.name
+  cluster_secret_store_name = "aws-secrets-manager"
+
+  chart_repository = var.argocd_app_chart_repository
+  chart_version    = local.paragon_chart_version
+  aws_region       = var.aws_region
+  logs_bucket      = module.storage.s3.logs_bucket
+
+  ingress_scheme  = var.argocd_ingress_scheme
+  certificate_arn = var.argocd_certificate_arn
+
+  monitors_enabled = var.paragon_monitors_enabled
+  monitor_version  = local.paragon_monitor_version
+
+  managed_sync_enabled = var.managed_sync_enabled
+  managed_sync_version = local.paragon_managed_sync_version
+
+  auto_sync = var.argocd_auto_sync
+  self_heal = var.argocd_self_heal
+
+  env_secret_name          = module.secrets[0].env_secret_name
+  docker_cfg_secret_name   = module.secrets[0].docker_cfg_secret_name
+  managed_sync_secret_name = module.secrets[0].managed_sync_secret_name
+  openobserve_secret_name  = module.secrets[0].openobserve_secret_name
+}

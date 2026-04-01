@@ -19,3 +19,8 @@ output "security_group" {
 output "bastion_role_arn" {
   value = data.aws_iam_role.bastion.arn
 }
+
+output "bastion_name" {
+  description = "Name of the bastion (used for SSM tag-based targeting)."
+  value       = local.bastion_name
+}

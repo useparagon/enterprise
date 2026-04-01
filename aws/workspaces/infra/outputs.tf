@@ -66,3 +66,27 @@ output "cluster_name" {
   description = "The name of the EKS cluster."
   value       = module.cluster.eks_cluster.name
 }
+
+# ---------------------------------------------------------------------------
+# ArgoCD outputs (only populated when argocd_enabled = true)
+# ---------------------------------------------------------------------------
+
+output "argocd_enabled" {
+  description = "Whether ArgoCD is bootstrapped on this cluster."
+  value       = var.argocd_enabled
+}
+
+output "argocd_namespace" {
+  description = "The namespace ArgoCD is installed in."
+  value       = var.argocd_enabled ? module.argocd[0].argocd_namespace : null
+}
+
+output "eso_role_arn" {
+  description = "IAM role ARN used by the External Secrets Operator."
+  value       = var.argocd_enabled ? module.argocd[0].eso_role_arn : null
+}
+
+output "secrets_manager_env_secret" {
+  description = "Name of the Secrets Manager secret containing Paragon env config."
+  value       = var.argocd_enabled && local.argocd_secrets_ready ? module.secrets[0].env_secret_name : null
+}
