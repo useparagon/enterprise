@@ -418,6 +418,7 @@ variable "argocd_slack_channel" {
   description = "Slack channel name for ArgoCD notifications."
   type        = string
   default     = ""
+  nullable    = false
 }
 
 # ---------------------------------------------------------------------------
@@ -428,6 +429,7 @@ variable "argocd_app_chart_repository" {
   description = "Helm chart repository URL for Paragon application charts (e.g. OCI registry or HTTPS repo)."
   type        = string
   default     = ""
+  nullable    = false
 }
 
 variable "paragon_chart_version" {
@@ -440,6 +442,7 @@ variable "paragon_monitors_enabled" {
   description = "Whether monitoring charts should be deployed via ArgoCD."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "paragon_monitor_version" {
@@ -476,6 +479,7 @@ variable "argocd_docker_registry_server" {
   description = "Docker registry server for ArgoCD image pulls."
   type        = string
   default     = "docker.io"
+  nullable    = false
 }
 
 variable "argocd_docker_username" {
@@ -505,12 +509,14 @@ variable "argocd_ingress_scheme" {
   description = "ALB scheme for ArgoCD-managed ingress: internet-facing or internal."
   type        = string
   default     = "internet-facing"
+  nullable    = false
 }
 
 variable "argocd_certificate_arn" {
   description = "ACM certificate ARN for the ArgoCD-managed ingress."
   type        = string
   default     = ""
+  nullable    = false
 }
 
 # ---------------------------------------------------------------------------
