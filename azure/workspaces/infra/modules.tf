@@ -71,6 +71,7 @@ module "storage" {
   source = "./storage"
 
   managed_sync_enabled       = var.managed_sync_enabled
+  storage_account_tier       = var.storage_account_tier
   auditlogs_lock_enabled     = var.auditlogs_lock_enabled
   auditlogs_retention_days   = var.auditlogs_retention_days
   resource_group             = module.network.resource_group

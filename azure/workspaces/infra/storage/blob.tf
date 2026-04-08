@@ -16,9 +16,9 @@ resource "azurerm_storage_account" "blob" {
   resource_group_name = var.resource_group.name
   location            = var.resource_group.location
 
-  account_kind                    = "BlockBlobStorage"
+  account_kind                    = var.storage_account_tier == "Premium" ? "BlockBlobStorage" : "StorageV2"
   account_replication_type        = "LRS"
-  account_tier                    = "Premium"
+  account_tier                    = var.storage_account_tier
   allow_nested_items_to_be_public = true
   tags                            = merge(var.tags, { Name = local.storage_account_name })
 }
