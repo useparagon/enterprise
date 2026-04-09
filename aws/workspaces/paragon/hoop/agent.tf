@@ -23,4 +23,17 @@ resource "helm_release" "hoopagent" {
     name  = "image.tag"
     value = var.hoop_version
   }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "true"
+  }
+
+  dynamic "set" {
+    for_each = try(aws_iam_role.hoop_support[0].arn, null) != null ? [1] : []
+    content {
+      name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+      value = aws_iam_role.hoop_support[0].arn
+    }
+  }
 }

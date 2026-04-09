@@ -15,7 +15,7 @@ resource "aws_iam_role" "hoop_support" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
-            "${replace(var.eks_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:${var.namespace_paragon.id}:hoop-cluster-admin"
+            "${replace(var.eks_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:${var.namespace_paragon.id}:hoopagent"
             "${replace(var.eks_oidc_issuer_url, "https://", "")}:aud" = "sts.amazonaws.com"
           }
         }
