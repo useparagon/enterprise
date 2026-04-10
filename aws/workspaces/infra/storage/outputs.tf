@@ -12,3 +12,8 @@ output "s3" {
   }
   sensitive = true
 }
+
+output "cdn_public_url" {
+  description = "HTTPS CloudFront URL for public CDN assets."
+  value       = "https://${aws_cloudfront_distribution.cdn.domain_name}"
+}

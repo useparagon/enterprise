@@ -76,6 +76,16 @@ locals {
     )
     public_url = coalesce(
       try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+      local.storage_type == "GCP" ? try(var.infra_values.cdn_public_url.value, null) : null,
+      local.storage_type == "GCP" ? "https://storage.googleapis.com" : null,
+      try(var.microservices["minio"].public_url, null),
+      null
+    )
+    private_url = coalesce(
+      try(var.base_helm_values.global.env["CLOUD_STORAGE_PRIVATE_URL"], null),
+      local.storage_type == "GCP" ? try("http://minio:${var.microservices["minio"].port}", null) : null,
+      try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+      local.storage_type == "GCP" ? try(var.infra_values.cdn_public_url.value, null) : null,
       local.storage_type == "GCP" ? "https://storage.googleapis.com" : null,
       try(var.microservices["minio"].public_url, null),
       null
@@ -97,8 +107,9 @@ locals {
 
     CLOUD_STORAGE_TYPE                = local.storage_type
     CLOUD_STORAGE_PUBLIC_BUCKET       = local.storage_config.buckets.public
-    CLOUD_STORAGE_PRIVATE_URL         = local.storage_config.public_url
+    CLOUD_STORAGE_PRIVATE_URL         = local.storage_config.private_url
     CLOUD_STORAGE_PUBLIC_URL          = local.storage_config.public_url
+    CDN_PUBLIC_URL                    = coalesce(try(var.base_helm_values.global.env["CDN_PUBLIC_URL"], null), local.storage_config.public_url)
     CLOUD_STORAGE_REGION              = local.storage_config.region
     CLOUD_STORAGE_USER                = local.storage_config.user
     CLOUD_STORAGE_PASS                = local.storage_type == "GCP" ? (try(var.gcp_storage_sa_key, null) != null ? base64encode(var.gcp_storage_sa_key) : "") : local.storage_config.pass

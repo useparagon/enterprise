@@ -26,7 +26,7 @@ resource "aws_s3_bucket_ownership_controls" "cdn" {
   bucket = aws_s3_bucket.cdn.id
 
   rule {
-    object_ownership = "ObjectWriter"
+    object_ownership = "BucketOwnerEnforced"
   }
 }
 
@@ -51,32 +51,8 @@ resource "aws_s3_bucket_versioning" "cdn" {
 resource "aws_s3_bucket_public_access_block" "cdn" {
   bucket = aws_s3_bucket.cdn.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-resource "aws_s3_bucket_policy" "cdn" {
-  bucket = aws_s3_bucket.cdn.id
-
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Sid" : "AllowAnonymousReads",
-        "Effect" : "Allow",
-        "Principal" : "*",
-        "Action" : [
-          "s3:GetObjectVersion",
-          "s3:GetObject"
-        ],
-        "Resource" : "arn:aws:s3:::${aws_s3_bucket.cdn.id}/*"
-      }
-    ]
-  })
-
-  depends_on = [
-    aws_s3_bucket_public_access_block.cdn
-  ]
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }

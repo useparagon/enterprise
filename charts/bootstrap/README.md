@@ -172,6 +172,8 @@ The following sections in `.secure/values.yaml` must be configured:
 - **GCP**: Configure GCS buckets and service account credentials
 - **On-premises**: Configure external storage and database connections
 
+**Public assets:** set `CLOUD_STORAGE_PUBLIC_URL` and `CDN_PUBLIC_URL` to the **`cdn_public_url`** HTTPS value from `infra` outputs, not the raw blob host.
+
 ## DNS Configuration
 
 After installing the infrastructure components and deploying Paragon, configure your DNS with the `EXTERNAL-IP` from this command:

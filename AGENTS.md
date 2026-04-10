@@ -39,3 +39,4 @@ This is a **Paragon Enterprise** self-hosted deployment repository — an infras
 - `terraform init -backend=false` is required for local validation since backend configs reference remote state stores.
 - Files under `.secure/`, `main.tf`, and `*.tfvars` are gitignored. `prepare.sh` generates them from templates/examples.
 - There are no automated tests or lint scripts in this repo. Validation = `terraform validate` + `helm lint` + running `prepare.sh`.
+- **CDN:** `infra` adds edge endpoints for private CDN storage; GCP `infra` may need `google-beta` and `tls` after `terraform init -upgrade`.

@@ -53,6 +53,11 @@ output "minio" {
   sensitive = true
 }
 
+output "cdn_public_url" {
+  description = "HTTPS CloudFront URL (defaults for CLOUD_STORAGE_PUBLIC_URL / CDN_PUBLIC_URL)."
+  value       = module.storage.cdn_public_url
+}
+
 output "bastion" {
   description = "Bastion server connection info."
   value = {

@@ -105,10 +105,13 @@ This will produce an `infra-output.json` file that will generally follow the sch
       "microservice_pass": "<service-password>",
       "microservice_user": "<service-username>",
       "private_bucket": "<private-bucket-name>",
-      "public_bucket": "<private-bucket-name>",
+      "public_bucket": "<public-cdn-bucket-or-container-name>",
       "root_password": "<iam-password>",
       "root_user": "<iam-username>"
     }
+  },
+  "cdn_public_url": {
+    "value": "https://<cdn-endpoint-hostname>"
   },
   "postgres": {
     "value": {
@@ -162,6 +165,10 @@ This will produce an `infra-output.json` file that will generally follow the sch
   }
 }
 ```
+
+### Public CDN URLs
+
+`infra` outputs **`cdn_public_url`**. **`CLOUD_STORAGE_PUBLIC_URL`** and **`CDN_PUBLIC_URL`** default to that HTTPS edge URL (not the raw object-store host). **`CLOUD_STORAGE_PRIVATE_URL`** may default to in-cluster MinIO for server-side access.
 
 ### Paragon Deployment
 

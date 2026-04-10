@@ -51,6 +51,11 @@ output "minio" {
   sensitive = true
 }
 
+output "cdn_public_url" {
+  description = "HTTPS CDN LB URL (defaults for CLOUD_STORAGE_PUBLIC_URL / CDN_PUBLIC_URL)."
+  value       = module.storage.cdn_public_url
+}
+
 output "redis" {
   description = "Connection information for Redis."
   value       = module.redis.redis

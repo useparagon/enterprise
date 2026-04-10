@@ -771,11 +771,21 @@ locals {
 
           CLOUD_STORAGE_PUBLIC_URL = coalesce(
             try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+            local.cloud_storage_type == "S3" ? try(local.infra_vars.cdn_public_url.value, null) : null,
             local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
             try(local.microservices.minio.public_url, null), null
           )
           CLOUD_STORAGE_PRIVATE_URL = coalesce(
+            try(local.helm_vars.global.env["CLOUD_STORAGE_PRIVATE_URL"], null),
+            local.cloud_storage_type == "S3" ? try("http://minio:${local.microservices.minio.port}", null) : null,
             try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+            local.cloud_storage_type == "S3" ? try(local.infra_vars.cdn_public_url.value, null) : null,
+            local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+            try(local.microservices.minio.public_url, null), null
+          )
+          CDN_PUBLIC_URL = coalesce(
+            try(local.helm_vars.global.env["CDN_PUBLIC_URL"], null),
+            local.cloud_storage_type == "S3" ? try(local.infra_vars.cdn_public_url.value, null) : null,
             local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
             try(local.microservices.minio.public_url, null), null
           )
