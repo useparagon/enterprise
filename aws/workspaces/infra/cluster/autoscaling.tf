@@ -21,11 +21,9 @@ resource "aws_autoscaling_group_tag" "cluster_autoscaler_label_tags" {
 }
 
 module "cluster_autoscaler" {
-  # Skip the Terraform-managed cluster-autoscaler if ArgoCD is enabled
-  count = var.argocd_enabled ? 0 : 1
-
   source  = "lablabs/eks-cluster-autoscaler/aws"
   version = "2.2.0"
+  count   = var.argocd_enabled ? 0 : 1
 
   cluster_name                     = module.eks.cluster_name
   cluster_identity_oidc_issuer     = module.eks.cluster_oidc_issuer_url
