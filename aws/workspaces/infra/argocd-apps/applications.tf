@@ -132,6 +132,13 @@ locals {
               clusterName = var.cluster_name
             }
             awsRegion = var.aws_region
+            rbac = {
+              serviceAccount = {
+                annotations = {
+                  "eks.amazonaws.com/role-arn" = var.cluster_autoscaler_role_arn
+                }
+              }
+            }
           }
         }
       }

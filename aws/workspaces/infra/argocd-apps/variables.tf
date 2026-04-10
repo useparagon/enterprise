@@ -87,6 +87,11 @@ variable "monitor_version" {
   default     = "latest"
 }
 
+variable "cluster_autoscaler_role_arn" {
+  description = "IAM role ARN for the cluster-autoscaler IRSA service account."
+  type        = string
+}
+
 variable "ingress_chart_version" {
   description = "Version of the AWS Load Balancer Controller chart."
   type        = string

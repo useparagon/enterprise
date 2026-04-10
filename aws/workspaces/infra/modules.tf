@@ -112,6 +112,7 @@ module "cluster" {
   bastion_role_arn          = module.bastion.bastion_role_arn
   bastion_security_group_id = module.bastion.security_group.host[0]
 
+  argocd_enabled                  = var.argocd_enabled
   create_autoscaling_linked_role  = var.create_autoscaling_linked_role
   eks_admin_arns                  = var.eks_admin_arns
   eks_max_node_count              = var.eks_max_node_count
@@ -184,10 +185,11 @@ module "argocd_apps" {
   cluster_name              = module.cluster.eks_cluster.name
   cluster_secret_store_name = "aws-secrets-manager"
 
-  chart_repository = var.argocd_app_chart_repository
-  chart_version    = local.paragon_chart_version
-  aws_region       = var.aws_region
-  logs_bucket      = module.storage.s3.logs_bucket
+  cluster_autoscaler_role_arn = module.argocd[0].cluster_autoscaler_role_arn
+  chart_repository            = var.argocd_app_chart_repository
+  chart_version               = local.paragon_chart_version
+  aws_region                  = var.aws_region
+  logs_bucket                 = module.storage.s3.logs_bucket
 
   ingress_scheme  = var.argocd_ingress_scheme
   certificate_arn = var.argocd_certificate_arn
