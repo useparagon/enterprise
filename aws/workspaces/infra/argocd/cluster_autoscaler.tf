@@ -1,6 +1,6 @@
 locals {
   cas_namespace = "kube-system"
-  cas_sa_name   = "cluster-autoscaler-aws-cluster-autoscaler"
+  cas_sa_name   = "${var.workspace}-cluster-autoscaler"
 }
 
 data "aws_iam_policy_document" "cas_assume" {

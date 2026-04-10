@@ -134,6 +134,7 @@ locals {
             awsRegion = var.aws_region
             rbac = {
               serviceAccount = {
+                name = "${var.workspace}-cluster-autoscaler"
                 annotations = {
                   "eks.amazonaws.com/role-arn" = var.cluster_autoscaler_role_arn
                 }
