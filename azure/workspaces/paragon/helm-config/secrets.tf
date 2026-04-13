@@ -70,7 +70,7 @@ locals {
     )
     public_url = coalesce(
       try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
-      local.storage_type == "AZURE" ? "https://${var.infra_values.minio.value.root_user}.blob.core.windows.net" : null,
+      local.storage_type == "AZURE" ? "https://${try(var.infra_values.minio.value.public_storage_account_name, var.infra_values.minio.value.root_user)}.blob.core.windows.net" : null,
       try(var.microservices.minio.public_url, null), null
     )
   }

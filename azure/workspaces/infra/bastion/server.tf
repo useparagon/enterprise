@@ -10,6 +10,17 @@ resource "tls_private_key" "bastion" {
   rsa_bits  = 4096
 }
 
+# User-assigned identity so role assignments can use a top-level principal_id. Referencing
+# azurerm_linux_virtual_machine_scale_set.*.identity[0].principal_id breaks validation in
+# some root-module graphs (nested computed; see hashicorp/terraform-provider-azurerm#21545).
+resource "azurerm_user_assigned_identity" "bastion" {
+  name                = "${local.bastion_name}-uai"
+  location            = var.resource_group.location
+  resource_group_name = var.resource_group.name
+
+  tags = var.tags
+}
+
 resource "azurerm_linux_virtual_machine_scale_set" "bastion" {
   name                = local.bastion_name
   location            = var.resource_group.location
@@ -30,18 +41,22 @@ resource "azurerm_linux_virtual_machine_scale_set" "bastion" {
     }
   }
 
+  # Bastion runtime auth to Azure/AKS is always this identity (not the Terraform principal).
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.bastion.id]
+  }
+
   custom_data = base64encode(templatefile("${path.module}/../templates/bastion/bastion-startup.tpl.sh", {
-    account_id      = var.cloudflare_tunnel_account_id,
-    client_id       = var.azure_client_id,
-    client_secret   = var.azure_client_secret,
-    cluster_name    = var.cluster_name,
-    cluster_version = local.k8s_version_major_minor,
-    resource_group  = var.resource_group.name
-    subscription_id = var.azure_subscription_id,
-    tenant_id       = var.azure_tenant_id,
-    tunnel_id       = local.tunnel_id,
-    tunnel_name     = local.tunnel_domain,
-    tunnel_secret   = local.tunnel_secret,
+    account_id                 = var.cloudflare_tunnel_account_id,
+    cluster_name               = var.cluster_name,
+    cluster_version            = local.k8s_version_major_minor,
+    managed_identity_client_id = azurerm_user_assigned_identity.bastion.client_id,
+    resource_group             = var.resource_group.name,
+    subscription_id            = var.azure_subscription_id,
+    tunnel_id                  = local.tunnel_id,
+    tunnel_name                = local.tunnel_domain,
+    tunnel_secret              = local.tunnel_secret,
   }))
 
   admin_ssh_key {
@@ -75,4 +90,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "bastion" {
   upgrade_mode = "Automatic"
 
   tags = merge(var.tags, { Name = local.bastion_name })
+}
+
+# Allow the bastion VMSS managed identity to fetch kubeconfig and use kubectl against AKS.
+resource "azurerm_role_assignment" "bastion_aks_cluster_admin" {
+  scope                = var.cluster_id
+  role_definition_name = "Azure Kubernetes Service Cluster Admin Role"
+  principal_id         = azurerm_user_assigned_identity.bastion.principal_id
 }

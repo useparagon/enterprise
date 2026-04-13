@@ -8,12 +8,14 @@ variable "aws_access_key_id" {
   description = "AWS Access Key for AWS account to provision resources on."
   type        = string
   sensitive   = true
+  default     = null
 }
 
 variable "aws_secret_access_key" {
   description = "AWS Secret Access Key for AWS account to provision resources on."
   type        = string
   sensitive   = true
+  default     = null
 }
 
 variable "aws_session_token" {
@@ -34,18 +36,21 @@ variable "az_count" {
   description = "Number of AZs to cover in a given region."
   type        = number
   default     = 2
+  nullable    = false
 }
 
 variable "vpc_cidr" {
   description = "CIDR for the VPC."
   type        = string
   default     = "10.0.0.0/16"
+  nullable    = false
 }
 
 variable "vpc_cidr_newbits" {
   description = "Newbits used for calculating subnets."
   type        = number
   default     = 3
+  nullable    = false
 }
 
 # rds
@@ -53,36 +58,42 @@ variable "rds_instance_class" {
   description = "The RDS instance class type used for Postgres."
   type        = string
   default     = "db.t4g.small"
+  nullable    = false
 }
 
 variable "rds_postgres_version" {
   description = "Postgres version for the database."
   type        = string
-  default     = "14"
+  default     = "16"
+  nullable    = false
 }
 
 variable "rds_multiple_instances" {
   description = "Whether or not to create multiple Postgres instances. Used for higher volume installations."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 variable "rds_multi_az" {
   description = "Whether or not to enable multi-AZ in each RDS instance."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 variable "rds_restore_from_snapshot" {
   description = "Specifies that RDS instances should be restored from a snapshot."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "rds_final_snapshot_enabled" {
   description = "Specifies that RDS instances should perform a final snapshot before being deleted."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 # elasticache
@@ -90,43 +101,50 @@ variable "elasticache_node_type" {
   description = "The ElastiCache node type used for Redis."
   type        = string
   default     = "cache.r6g.large"
+  nullable    = false
 }
 
 variable "elasticache_multiple_instances" {
   description = "Whether or not to create multiple ElastiCache instances. Used for higher volume installations."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 variable "elasticache_multi_az" {
   description = "Whether or not to enable multi-AZ in each ElastiCache instance."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 # eks
 variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
-  default     = "1.33"
+  default     = "1.34"
+  nullable    = false
 }
 
 variable "eks_ondemand_node_instance_type" {
   description = "The compute instance type to use for Kubernetes nodes."
   type        = string
   default     = "m6a.xlarge"
+  nullable    = false
 }
 
 variable "eks_spot_node_instance_type" {
   description = "The compute instance type to use for Kubernetes spot nodes."
   type        = string
   default     = "t3a.xlarge,t3.xlarge,m5a.xlarge,m5.xlarge,m6a.xlarge,m6i.xlarge,m7a.xlarge,m7i.xlarge,r5a.xlarge,m4.xlarge"
+  nullable    = false
 }
 
 variable "eks_spot_instance_percent" {
   description = "The percentage of spot instances to use for Kubernetes nodes."
   type        = number
   default     = 75
+  nullable    = false
   validation {
     condition     = var.eks_spot_instance_percent >= 0 && var.eks_spot_instance_percent <= 100
     error_message = "Value must be between 0 - 100."
@@ -136,25 +154,29 @@ variable "eks_spot_instance_percent" {
 variable "eks_min_node_count" {
   description = "The minimum number of nodes to run in the Kubernetes cluster."
   type        = number
-  default     = 4
+  default     = 2
+  nullable    = false
 }
 
 variable "eks_max_node_count" {
   description = "The maximum number of nodes to run in the Kubernetes cluster."
   type        = number
-  default     = 30
+  default     = 40
+  nullable    = false
 }
 
 variable "eks_admin_arns" {
   description = "Array of ARNs for IAM users or roles that should have admin access to cluster. Used for viewing cluster resources in AWS dashboard."
   type        = list(string)
   default     = []
+  nullable    = false
 }
 
 variable "create_autoscaling_linked_role" {
   description = "Whether or not to create an IAM role for autoscaling."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 # security
@@ -168,42 +190,49 @@ variable "mfa_enabled" {
   description = "Whether to require MFA for certain configurations (e.g. cloudtrail s3 bucket deletion)"
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "ssh_whitelist" {
   description = "An optional list of IP addresses to whitelist ssh access."
   type        = string
   default     = ""
+  nullable    = false
 }
 
 variable "disable_cloudtrail" {
   description = "Used to specify that Cloudtrail is disabled."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 variable "disable_deletion_protection" {
   description = "Used to disable deletion protection on RDS and S3 resources."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "app_bucket_expiration" {
   description = "The number of days to retain S3 app data before deleting"
   type        = number
   default     = 90
+  nullable    = false
 }
 
 variable "auditlogs_retention_days" {
   description = "The number of days to retain audit logs before deletion."
   type        = number
   default     = 365
+  nullable    = false
 }
 
 variable "auditlogs_lock_enabled" {
   description = "Whether to enable S3 Object Lock for the audit logs bucket."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 # cloudflare
@@ -212,18 +241,21 @@ variable "cloudflare_api_token" {
   type        = string
   sensitive   = true
   default     = "dummy-cloudflare-tokens-must-be-40-chars"
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_enabled" {
   description = "Flag whether to enable Cloudflare Zero Trust tunnel for bastion"
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_subdomain" {
   description = "Subdomain under the Cloudflare Zone to create the tunnel"
   type        = string
   default     = ""
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_zone_id" {
@@ -231,6 +263,7 @@ variable "cloudflare_tunnel_zone_id" {
   type        = string
   sensitive   = true
   default     = ""
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_account_id" {
@@ -238,6 +271,7 @@ variable "cloudflare_tunnel_account_id" {
   type        = string
   sensitive   = true
   default     = ""
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_email_domain" {
@@ -245,6 +279,7 @@ variable "cloudflare_tunnel_email_domain" {
   type        = string
   sensitive   = true
   default     = "useparagon.com"
+  nullable    = false
 }
 
 variable "migrated_workspace" {
@@ -257,12 +292,14 @@ variable "migrated_passwords" {
   description = "Override credentials to preserve complexity conventions when migrating from legacy workspaces"
   type        = map(string)
   default     = {}
+  nullable    = false
 }
 
 variable "managed_sync_enabled" {
   description = "Whether to enable managed sync."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "msk_kafka_version" {
@@ -270,25 +307,29 @@ variable "msk_kafka_version" {
   type        = string
   // NOTE: to use a small instance type like `kafka.t3.small`, we need to use an older version that uses zookeeper
   // we're default to an older version to keep costs low, but we can override this if we use a supported larger instance type
-  default = "3.6.0"
+  default  = "3.6.0"
+  nullable = false
 }
 
 variable "msk_kafka_num_broker_nodes" {
   description = "The number of broker nodes for the MSK cluster."
   type        = number
   default     = 2
+  nullable    = false
 }
 
 variable "msk_autoscaling_enabled" {
   description = "Whether to enable autoscaling for the MSK cluster."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 variable "msk_instance_type" {
   description = "The instance type for the MSK cluster."
   type        = string
   default     = "kafka.t3.small"
+  nullable    = false
 }
 
 locals {

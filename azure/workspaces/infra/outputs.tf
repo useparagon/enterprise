@@ -33,13 +33,14 @@ output "auditlogs_bucket" {
 output "minio" {
   description = "MinIO server connection info."
   value = {
-    public_bucket       = module.storage.blob.public_container
-    private_bucket      = module.storage.blob.private_container
-    managed_sync_bucket = module.storage.blob.managed_sync_container
-    microservice_user   = module.storage.blob.minio_microservice_user
-    microservice_pass   = module.storage.blob.minio_microservice_pass
-    root_user           = module.storage.blob.name
-    root_password       = module.storage.blob.access_key
+    public_bucket               = module.storage.blob.public_container
+    public_storage_account_name = module.storage.blob.public_storage_account_name
+    private_bucket              = module.storage.blob.private_container
+    managed_sync_bucket         = module.storage.blob.managed_sync_container
+    microservice_user           = module.storage.blob.minio_microservice_user
+    microservice_pass           = module.storage.blob.minio_microservice_pass
+    root_user                   = module.storage.blob.name
+    root_password               = module.storage.blob.access_key
   }
   sensitive = true
 }

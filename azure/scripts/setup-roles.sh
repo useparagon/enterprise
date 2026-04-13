@@ -1,41 +1,47 @@
 #!/bin/bash
 
-# Script to assign roles to a service principal or user within an Azure subscription using `az cli`.
-# This script documents the minimum required permissions to run the Azure infra and paragon Terraform workspaces.
+# Assign subscription-scoped Azure RBAC for the principal that runs Paragon enterprise
+# Terraform (e.g. Spacelift Azure integration app) and for operational diagnostics.
+#
+# Provisioning: Contributor + User Access Administrator cover ARM for AKS, Postgres,
+# Redis, storage, networking, VMSS, etc., plus Key Vault RBAC / role assignments.
+#
+# Kubernetes API: Contributor does NOT grant access to the Kubernetes control plane when
+# using Azure RBAC for Kubernetes. "Azure Kubernetes Service Cluster User Role" allows
+# obtaining a kubeconfig and read-oriented kubectl (e.g. inspect cert-manager Certificates,
+# ingress, events) subject to Kubernetes RBAC inside the cluster.
+#
+# Key Vault data plane: To read secret/certificate *values* (not just manage the vault
+# resource), also assign a data-plane role at the vault scope (e.g. Key Vault Administrator
+# or Key Vault Secrets User) — subscription roles alone are not enough for secret content.
 
-# Define variables
 SUBSCRIPTION_ID="your-azure-subscription-id"
 PRINCIPAL_ID="your-service-principal-object-id-or-user-object-id"
 
-# List of roles to assign at subscription level
-# Note: Contributor role is sufficient for most operations, but we document specific roles
-# for better security and compliance with least privilege principle.
-
 ROLES=(
-  # Contributor role - provides full access to manage all resources except grant access to others
-  # This is the minimum role needed for Terraform to create and manage Azure resources
+  # Full resource management except IAM grants (Terraform apply/destroy)
   "Contributor"
-  # Needed to switch Key Vaults to RBAC and create role assignments
+  # Key Vault permission model (RBAC) and Azure resource role assignments
   "User Access Administrator"
+  # kubectl / Kubernetes API via Azure RBAC (cluster inspection, certs, events, logs)
+  "Azure Kubernetes Service Cluster User Role"
 )
 
-# Alternative: If you want to use more granular permissions instead of Contributor,
-# you would need the following roles (but Contributor is simpler and sufficient):
+# Optional: tighter scope than Contributor (more roles to maintain):
 #
 # GRANULAR_ROLES=(
-#   "Network Contributor"              # For Virtual Networks, Subnets, NSGs, Private Endpoints
-#   "DNS Zone Contributor"             # For Private DNS Zones
-#   "PostgreSQL Flexible Server Contributor"  # For PostgreSQL Flexible Servers
-#   "Redis Cache Contributor"          # For Redis Caches
-#   "Storage Account Contributor"      # For Storage Accounts
-#   "Kubernetes Cluster Contributor"   # For AKS Clusters
-#   "Virtual Machine Contributor"      # For VM Scale Sets (bastion)
-#   "Key Vault Contributor"            # For Key Vaults (management plane)
-#   "Key Vault Administrator"          # For Key Vault data-plane access (RBAC)
-#   "User Access Administrator"        # For role assignments (RBAC)
+#   "Network Contributor"
+#   "DNS Zone Contributor"
+#   "PostgreSQL Flexible Server Contributor"
+#   "Redis Cache Contributor"
+#   "Storage Account Contributor"
+#   "Kubernetes Cluster Contributor"
+#   "Virtual Machine Contributor"
+#   "Key Vault Contributor"
+#   "Key Vault Administrator"
+#   "User Access Administrator"
 # )
 
-# Assign Contributor role at subscription level
 for ROLE in "${ROLES[@]}"; do
   echo "Assigning role '$ROLE' to principal $PRINCIPAL_ID..."
   az role assignment create \
@@ -45,23 +51,12 @@ for ROLE in "${ROLES[@]}"; do
 done
 
 echo ""
-echo "Role assignment complete!"
+echo "Role assignment complete."
 echo ""
-echo "Note: The Contributor role provides the following permissions needed for Terraform:"
-echo "  - Create and manage Resource Groups"
-echo "  - Create and manage Virtual Networks, Subnets, and Network Security Groups"
-echo "  - Create and manage Private DNS Zones and Private Endpoints"
-echo "  - Create and manage PostgreSQL Flexible Servers"
-echo "  - Create and manage Redis Caches"
-echo "  - Create and manage Storage Accounts and Containers"
-echo "  - Create and manage AKS Clusters and Node Pools"
-echo "  - Create and manage Virtual Machine Scale Sets"
-echo "  - Create and manage Key Vaults"
-echo "  - Create and manage Key Vault role assignments (via User Access Administrator)"
-echo "  - Create and manage Public IPs"
+echo "Contributor: ARM for resource groups, VNet/NSG/DNS, private endpoints, Postgres,"
+echo "  Redis, storage, AKS node pools, VMSS (bastion), public IPs, etc."
+echo "User Access Administrator: Key Vault RBAC transitions and Azure RBAC assignments."
+echo "AKS Cluster User: Kubernetes API access for diagnostics (e.g. cert-manager, ingress)."
 echo ""
-echo "For Key Vault RBAC (permission model change + role assignments),"
-echo "Terraform also needs User Access Administrator at subscription or resource group scope."
-echo ""
-echo "If you want the Terraform principal to manage Key Vault secrets/certs/keys,"
-echo "assign Key Vault Administrator at the vault scope."
+echo "For Key Vault secret/certificate *contents*, assign a Key Vault data-plane role at"
+echo "the vault scope (e.g. Key Vault Administrator)."

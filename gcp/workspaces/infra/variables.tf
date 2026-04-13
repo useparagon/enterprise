@@ -50,6 +50,7 @@ variable "gcp_assume_role" {
   description = "Whether to assume a role for the service account instead of using JSON credentials."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 # account
@@ -67,12 +68,14 @@ variable "environment" {
   description = "Type of environment being deployed to."
   type        = string
   default     = "enterprise"
+  nullable    = false
 }
 
 variable "vpc_cidr" {
   description = "CIDR for the virtual network. A `/16` (65,536 IPs) or larger is recommended."
   type        = string
   default     = "10.0.0.0/16"
+  nullable    = false
 }
 
 variable "region" {
@@ -96,18 +99,21 @@ variable "cloudflare_api_token" {
   type        = string
   sensitive   = true
   default     = "dummy-cloudflare-tokens-must-be-40-chars"
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_enabled" {
   description = "Flag whether to enable Cloudflare Zero Trust tunnel for bastion"
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_subdomain" {
   description = "Subdomain under the Cloudflare Zone to create the tunnel"
   type        = string
   default     = ""
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_zone_id" {
@@ -115,6 +121,7 @@ variable "cloudflare_tunnel_zone_id" {
   type        = string
   sensitive   = true
   default     = ""
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_account_id" {
@@ -122,6 +129,7 @@ variable "cloudflare_tunnel_account_id" {
   type        = string
   sensitive   = true
   default     = ""
+  nullable    = false
 }
 
 variable "cloudflare_tunnel_email_domain" {
@@ -129,6 +137,7 @@ variable "cloudflare_tunnel_email_domain" {
   type        = string
   sensitive   = true
   default     = "useparagon.com"
+  nullable    = false
 }
 
 # optional network restrictions
@@ -136,24 +145,28 @@ variable "ssh_whitelist" {
   description = "An optional list of IP addresses to whitelist ssh access."
   type        = string
   default     = ""
+  nullable    = false
 }
 
 variable "disable_deletion_protection" {
   description = "Used to disable deletion protection on database and storage resources."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "auditlogs_retention_days" {
   description = "The number of days to retain audit logs before deletion."
   type        = number
   default     = 365
+  nullable    = false
 }
 
 variable "auditlogs_lock_enabled" {
   description = "Whether to lock the GCS audit logs bucket retention policy."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 # postgres
@@ -161,6 +174,7 @@ variable "postgres_tier" {
   description = "The instance type to use for Postgres."
   type        = string
   default     = "db-custom-2-7680"
+  nullable    = false
   # https://cloud.google.com/sql/docs/mysql/instance-settings#:~:text=see%20Instance%20Locations.-,Machine,-Type
 }
 
@@ -168,6 +182,7 @@ variable "postgres_multiple_instances" {
   description = "Whether or not to create multiple Postgres instances. Used for higher volume installations."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 # redis
@@ -175,12 +190,14 @@ variable "redis_multiple_instances" {
   description = "Whether or not to create multiple Redis instances."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 variable "redis_memory_size" {
   description = "The size of the Redis instance (in GB)."
   type        = number
   default     = 2
+  nullable    = false
 }
 
 # managed sync (GMK = Google Managed Kafka)
@@ -188,42 +205,49 @@ variable "managed_sync_enabled" {
   description = "Whether to enable managed sync (GMK cluster, managed_sync bucket, postgres and redis instances)."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "gmk_kafka_version" {
   description = "Kafka version for the Google Managed Kafka cluster (version offered by the service)."
   type        = string
   default     = "3.7.1"
+  nullable    = false
 }
 
 variable "gmk_vcpu_count" {
   description = "Number of vCPUs for the GMK cluster (minimum 3 in GCP)."
   type        = number
   default     = 3
+  nullable    = false
 }
 
 variable "gmk_memory_gib" {
   description = "Memory in GiB for the GMK cluster (1-8 GiB per vCPU)."
   type        = number
   default     = 6
+  nullable    = false
 }
 
 variable "gmk_disk_size_gib" {
   description = "Disk size in GiB per broker for the GMK cluster."
   type        = number
   default     = 100
+  nullable    = false
 }
 
 variable "gmk_auto_rebalance" {
   description = "Whether to enable automatic partition rebalancing across brokers (can add load)."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "gmk_sasl_mechanism" {
   description = "SASL mechanism: plain (module creates SA key and outputs in kafka.cluster_password) or oauthbearer (Workload Identity)."
   type        = string
   default     = "plain"
+  nullable    = false
 
   validation {
     condition     = contains(["oauthbearer", "plain"], var.gmk_sasl_mechanism)
@@ -235,6 +259,7 @@ variable "gmk_sasl_plain_key_file_path" {
   description = "Optional path to your own Kafka SA key JSON for SASL/PLAIN. When empty, the module creates the key and outputs it in kafka.cluster_password."
   type        = string
   default     = ""
+  nullable    = false
 }
 
 # kubernetes
@@ -242,24 +267,28 @@ variable "k8s_version" {
   description = "The version of Kubernetes to run in the cluster."
   type        = string
   default     = "1.33"
+  nullable    = false
 }
 
 variable "k8s_min_node_count" {
   description = "Minimum number of node Kubernetes can scale down to."
   type        = number
   default     = 2
+  nullable    = false
 }
 
 variable "k8s_max_node_count" {
   description = "Maximum number of node Kubernetes can scale up to."
   type        = number
   default     = 20
+  nullable    = false
 }
 
 variable "k8s_spot_instance_percent" {
   description = "The percentage of spot instances to use for Kubernetes nodes."
   type        = number
   default     = 80
+  nullable    = false
   validation {
     condition     = var.k8s_spot_instance_percent >= 0 && var.k8s_spot_instance_percent <= 100
     error_message = "Value must be between 0 - 100."
@@ -270,18 +299,21 @@ variable "k8s_ondemand_node_instance_type" {
   description = "The compute instance type to use for Kubernetes on demand nodes."
   type        = string
   default     = "e2-standard-4"
+  nullable    = false
 }
 
 variable "k8s_spot_node_instance_type" {
   description = "The compute instance type to use for Kubernetes spot nodes."
   type        = string
   default     = "e2-standard-4"
+  nullable    = false
 }
 
 variable "k8s_disable_public_endpoint" {
   description = "Used to disable public endpoint on GKE cluster."
   type        = bool
   default     = true
+  nullable    = false
 }
 
 variable "k8s_master_authorized_networks" {
@@ -290,13 +322,15 @@ variable "k8s_master_authorized_networks" {
     cidr_block   = string
     display_name = optional(string, "")
   }))
-  default = []
+  default  = []
+  nullable = false
 }
 
 variable "use_storage_account_key" {
   description = "Whether to use the storage service account privatekey for the storage service account."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "tfc_agent_token" {
@@ -304,6 +338,7 @@ variable "tfc_agent_token" {
   type        = string
   sensitive   = true
   default     = ""
+  nullable    = false
 }
 
 locals {

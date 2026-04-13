@@ -10,10 +10,8 @@ module "network" {
 module "bastion" {
   source = "./bastion"
 
-  azure_client_id       = var.azure_client_id
-  azure_client_secret   = var.azure_client_secret
   azure_subscription_id = var.azure_subscription_id
-  azure_tenant_id       = var.azure_tenant_id
+  cluster_id            = module.cluster.kubernetes.id
 
   bastion_vm_size                = var.bastion_vm_size
   cloudflare_api_token           = var.cloudflare_api_token

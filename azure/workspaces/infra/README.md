@@ -2,9 +2,11 @@
 
 ## Azure credentials
 
-Terraform uses the Azure client ID, secret, subscription, and tenant from variables (e.g. `vars.auto.tfvars`) or from environment variables: `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`.
+**Terraform** (this workspace or a parent stack) can authenticate with optional variables `azure_client_id`, `azure_client_secret`, `azure_tenant_id` when this repo is the root, or with `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID` / Azure CLI when those are omitted. When this path is used as a **child module**, the parent stack owns provider auth and typically passes only `azure_subscription_id`.
 
-To update credentials when the app registration secret expires:
+**Bastion VMs** do not use that principal. The bastion **always** uses its **VMSS system-assigned managed identity** (`az login --identity` in cloud-init); Terraform grants that identity `Azure Kubernetes Service Cluster Admin Role` on the AKS cluster. This is independent of whether Terraform runs as a service principal or OIDC.
+
+To update credentials when the **Terraform** app registration secret expires:
 
 1. In **Azure Portal** go to **Microsoft Entra ID** → **App registrations** → select the app (use the client ID to find it).
 2. Open **Certificates & secrets** → **New client secret** → add a description and expiry → **Add**.
