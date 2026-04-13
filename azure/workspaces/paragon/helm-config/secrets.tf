@@ -68,19 +68,18 @@ locals {
     pass = try(
       local.storage_type == "MINIO" ? try(var.base_helm_values.global.env["MINIO_MICROSERVICE_PASS"], var.infra_values.minio.value.microservice_pass) : try(var.base_helm_values.global.env["CLOUD_STORAGE_MICROSERVICE_PASS"], var.infra_values.minio.value.root_password)
     )
-    public_url = coalesce(
-      try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
-      local.storage_type == "AZURE" ? try(var.infra_values.cdn_public_url.value, null) : null,
-      local.storage_type == "AZURE" ? "https://${var.infra_values.minio.value.root_user}.blob.core.windows.net" : null,
-      try(var.microservices.minio.public_url, null), null
+    public_url = (
+      trimspace(try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
+      var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
+      try(var.microservices.minio.public_url, null)
     )
-    private_url = coalesce(
-      try(var.base_helm_values.global.env["CLOUD_STORAGE_PRIVATE_URL"], null),
-      local.storage_type == "AZURE" ? try("http://minio:${var.microservices.minio.port}", null) : null,
-      try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
-      local.storage_type == "AZURE" ? try(var.infra_values.cdn_public_url.value, null) : null,
-      local.storage_type == "AZURE" ? "https://${var.infra_values.minio.value.root_user}.blob.core.windows.net" : null,
-      try(var.microservices.minio.public_url, null), null
+    private_url = (
+      trimspace(try(var.base_helm_values.global.env["CLOUD_STORAGE_PRIVATE_URL"], "")) != "" ?
+      var.base_helm_values.global.env["CLOUD_STORAGE_PRIVATE_URL"] :
+      local.storage_type == "AZURE" ? try("http://minio:${var.microservices.minio.port}", null) :
+      trimspace(try(var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
+      var.base_helm_values.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
+      try(var.microservices.minio.public_url, null)
     )
   }
 
@@ -102,7 +101,11 @@ locals {
     CLOUD_STORAGE_MANAGED_SYNC_BUCKET = local.storage_config.buckets.managed_sync
     CLOUD_STORAGE_PUBLIC_URL          = local.storage_config.public_url
     CLOUD_STORAGE_PRIVATE_URL         = local.storage_config.private_url
-    CDN_PUBLIC_URL                    = coalesce(try(var.base_helm_values.global.env["CDN_PUBLIC_URL"], null), local.storage_config.public_url)
+    CDN_PUBLIC_URL = (
+      trimspace(try(var.base_helm_values.global.env["CDN_PUBLIC_URL"], "")) != "" ?
+      var.base_helm_values.global.env["CDN_PUBLIC_URL"] :
+      local.storage_config.public_url
+    )
 
     // TODO: make `MANAGED_SYNC_URL` communicate via private DNS instead of open internet
     MANAGED_SYNC_URL       = try(var.base_helm_values.global.env["MANAGED_SYNC_URL"], "https://sync.${var.domain}")

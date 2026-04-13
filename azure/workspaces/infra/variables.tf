@@ -253,7 +253,7 @@ variable "k8s_sku_tier" {
 }
 
 variable "storage_account_tier" {
-  description = "Account tier. Prefer Standard for general use; CDN container is private (Front Door). Check Azure limits before Premium BlockBlob."
+  description = "Account tier. Prefer Standard for general use. Check Azure limits before Premium BlockBlob."
   type        = string
   default     = "Premium"
 }

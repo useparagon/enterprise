@@ -110,9 +110,6 @@ This will produce an `infra-output.json` file that will generally follow the sch
       "root_user": "<iam-username>"
     }
   },
-  "cdn_public_url": {
-    "value": "https://<cdn-endpoint-hostname>"
-  },
   "postgres": {
     "value": {
       "cerberus": {
@@ -168,7 +165,7 @@ This will produce an `infra-output.json` file that will generally follow the sch
 
 ### Public CDN URLs
 
-`infra` outputs **`cdn_public_url`**. **`CLOUD_STORAGE_PUBLIC_URL`** and **`CDN_PUBLIC_URL`** default to that HTTPS edge URL (not the raw object-store host). **`CLOUD_STORAGE_PRIVATE_URL`** may default to in-cluster MinIO for server-side access.
+The public CDN bucket or container is **private** in `infra` (no anonymous object-store access). **`CLOUD_STORAGE_PUBLIC_URL`** and **`CDN_PUBLIC_URL`** must be the HTTPS base URL of your **existing or new proxy service** that serves those objects (set via Paragon Helm / Terraform overrides, or default to the cluster MinIO ingress URL when that is your gateway).
 
 ### Paragon Deployment
 

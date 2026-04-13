@@ -752,25 +752,27 @@ locals {
         AZURE_STORAGE_ACCOUNT_NAME = try(local.infra_vars.minio.value.root_user, null)
         AZURE_STORAGE_ACCOUNT_KEY  = try(local.infra_vars.minio.value.root_password, null)
 
-        CLOUD_STORAGE_PUBLIC_URL = coalesce(
-          try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
-          local.cloud_storage_type == "AZURE" ? try(local.infra_vars.cdn_public_url.value, null) : null,
-          local.cloud_storage_type == "AZURE" ? "https://${local.infra_vars.minio.value.root_user}.blob.core.windows.net" : null,
-          try(local.microservices.minio.public_url, null), null
+        CLOUD_STORAGE_PUBLIC_URL = (
+          trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
+          local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
+          try(local.microservices.minio.public_url, null)
         )
-        CLOUD_STORAGE_PRIVATE_URL = coalesce(
-          try(local.helm_vars.global.env["CLOUD_STORAGE_PRIVATE_URL"], null),
-          local.cloud_storage_type == "AZURE" ? try("http://minio:${local.microservices.minio.port}", null) : null,
-          try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
-          local.cloud_storage_type == "AZURE" ? try(local.infra_vars.cdn_public_url.value, null) : null,
-          local.cloud_storage_type == "AZURE" ? "https://${local.infra_vars.minio.value.root_user}.blob.core.windows.net" : null,
-          try(local.microservices.minio.public_url, null), null
+        CLOUD_STORAGE_PRIVATE_URL = (
+          trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PRIVATE_URL"], "")) != "" ?
+          local.helm_vars.global.env["CLOUD_STORAGE_PRIVATE_URL"] :
+          local.cloud_storage_type == "AZURE" ? try("http://minio:${local.microservices.minio.port}", null) :
+          trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
+          local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
+          try(local.microservices.minio.public_url, null)
         )
-        CDN_PUBLIC_URL = coalesce(
-          try(local.helm_vars.global.env["CDN_PUBLIC_URL"], null),
-          local.cloud_storage_type == "AZURE" ? try(local.infra_vars.cdn_public_url.value, null) : null,
-          local.cloud_storage_type == "AZURE" ? "https://${local.infra_vars.minio.value.root_user}.blob.core.windows.net" : null,
-          try(local.microservices.minio.public_url, null), null
+        CDN_PUBLIC_URL = (
+          trimspace(try(local.helm_vars.global.env["CDN_PUBLIC_URL"], "")) != "" ?
+          local.helm_vars.global.env["CDN_PUBLIC_URL"] :
+          (
+            trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
+            local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
+            try(local.microservices.minio.public_url, null)
+          )
         )
 
         # MinIO configurations

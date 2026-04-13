@@ -12,8 +12,3 @@ output "blob" {
   }
   sensitive = true
 }
-
-output "cdn_public_url" {
-  description = "HTTPS Front Door endpoint URL for public CDN assets."
-  value       = "https://${azurerm_cdn_frontdoor_endpoint.cdn.host_name}"
-}

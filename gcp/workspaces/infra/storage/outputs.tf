@@ -14,8 +14,3 @@ output "storage" {
   }
   sensitive = true
 }
-
-output "cdn_public_url" {
-  description = "HTTPS CDN LB URL (self-signed cert on default IP)."
-  value       = "https://${google_compute_global_address.cdn.address}"
-}

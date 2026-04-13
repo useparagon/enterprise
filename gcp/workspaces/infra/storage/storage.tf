@@ -13,7 +13,7 @@ resource "google_storage_bucket_iam_member" "app" {
   member = "serviceAccount:${google_service_account.minio.email}"
 }
 
-# CDN bucket (private; edge in cdn-lb.tf)
+# CDN bucket (private; public asset URLs must use your app/proxy base URL in Helm)
 resource "google_storage_bucket" "cdn" {
   name          = "${var.workspace}-cdn"
   location      = var.region
