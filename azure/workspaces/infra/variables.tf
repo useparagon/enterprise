@@ -253,7 +253,7 @@ variable "k8s_sku_tier" {
 }
 
 variable "storage_account_tier" {
-  description = "Account tier. Prefer Standard for general use. Check Azure limits before Premium BlockBlob."
+  description = "Storage account tier. Use \"Standard\" for new deployments that need public CDN container access (Premium BlockBlobStorage does not support it)."
   type        = string
   default     = "Premium"
 }

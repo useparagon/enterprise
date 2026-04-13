@@ -823,27 +823,16 @@ locals {
         CLOUD_STORAGE_SYSTEM_BUCKET     = try(local.infra_vars.minio.value.private_bucket, "${local.workspace}-app")
         CLOUD_STORAGE_TYPE              = local.cloud_storage_type
 
-        CLOUD_STORAGE_PUBLIC_URL = (
-          trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
-          local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
-          try(local.microservices.minio.public_url, null)
+        CLOUD_STORAGE_PUBLIC_URL = coalesce(
+          try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+          local.cloud_storage_type == "GCP" ? "https://storage.googleapis.com" : null,
+          try(local.microservices.minio.public_url, null), null
         )
-        CLOUD_STORAGE_PRIVATE_URL = (
-          trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PRIVATE_URL"], "")) != "" ?
-          local.helm_vars.global.env["CLOUD_STORAGE_PRIVATE_URL"] :
-          local.cloud_storage_type == "GCP" ? try("http://minio:${local.microservices.minio.port}", null) :
-          trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
-          local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
-          try(local.microservices.minio.public_url, null)
-        )
-        CDN_PUBLIC_URL = (
-          trimspace(try(local.helm_vars.global.env["CDN_PUBLIC_URL"], "")) != "" ?
-          local.helm_vars.global.env["CDN_PUBLIC_URL"] :
-          (
-            trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
-            local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
-            try(local.microservices.minio.public_url, null)
-          )
+        # TODO: In the future, we should use a private link to access the storage account so traffic stays within the VPC. This affects costs and performance.
+        CLOUD_STORAGE_PRIVATE_URL = coalesce(
+          try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+          local.cloud_storage_type == "GCP" ? "https://storage.googleapis.com" : null,
+          try(local.microservices.minio.public_url, null), null
         )
 
         # MinIO configurations

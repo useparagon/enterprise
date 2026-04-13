@@ -39,4 +39,3 @@ This is a **Paragon Enterprise** self-hosted deployment repository — an infras
 - `terraform init -backend=false` is required for local validation since backend configs reference remote state stores.
 - Files under `.secure/`, `main.tf`, and `*.tfvars` are gitignored. `prepare.sh` generates them from templates/examples.
 - There are no automated tests or lint scripts in this repo. Validation = `terraform validate` + `helm lint` + running `prepare.sh`.
-- **Public CDN bucket:** `infra` keeps the CDN bucket/container private. **`CLOUD_STORAGE_PUBLIC_URL`** / **`CDN_PUBLIC_URL`** are not wired to a cloud CDN in this repo; set them to your proxy or gateway URL (often the MinIO ingress) in Helm / Paragon Terraform overrides.

@@ -769,27 +769,15 @@ locals {
           CLOUD_STORAGE_TYPE              = local.cloud_storage_type
           CLOUD_STORAGE_REGION            = var.aws_region
 
-          CLOUD_STORAGE_PUBLIC_URL = (
-            trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
-            local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
-            try(local.microservices.minio.public_url, null)
+          CLOUD_STORAGE_PUBLIC_URL = coalesce(
+            try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+            local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+            try(local.microservices.minio.public_url, null), null
           )
-          CLOUD_STORAGE_PRIVATE_URL = (
-            trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PRIVATE_URL"], "")) != "" ?
-            local.helm_vars.global.env["CLOUD_STORAGE_PRIVATE_URL"] :
-            local.cloud_storage_type == "S3" ? try("http://minio:${local.microservices.minio.port}", null) :
-            trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
-            local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
-            try(local.microservices.minio.public_url, null)
-          )
-          CDN_PUBLIC_URL = (
-            trimspace(try(local.helm_vars.global.env["CDN_PUBLIC_URL"], "")) != "" ?
-            local.helm_vars.global.env["CDN_PUBLIC_URL"] :
-            (
-              trimspace(try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], "")) != "" ?
-              local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"] :
-              try(local.microservices.minio.public_url, null)
-            )
+          CLOUD_STORAGE_PRIVATE_URL = coalesce(
+            try(local.helm_vars.global.env["CLOUD_STORAGE_PUBLIC_URL"], null),
+            local.cloud_storage_type == "S3" ? "https://s3.${var.aws_region}.amazonaws.com" : null,
+            try(local.microservices.minio.public_url, null), null
           )
 
           # MinIO configurations

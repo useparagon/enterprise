@@ -105,7 +105,7 @@ This will produce an `infra-output.json` file that will generally follow the sch
       "microservice_pass": "<service-password>",
       "microservice_user": "<service-username>",
       "private_bucket": "<private-bucket-name>",
-      "public_bucket": "<public-cdn-bucket-or-container-name>",
+      "public_bucket": "<private-bucket-name>",
       "root_password": "<iam-password>",
       "root_user": "<iam-username>"
     }
@@ -162,10 +162,6 @@ This will produce an `infra-output.json` file that will generally follow the sch
   }
 }
 ```
-
-### Public CDN URLs
-
-The public CDN bucket or container is **private** in `infra` (no anonymous object-store access). **`CLOUD_STORAGE_PUBLIC_URL`** and **`CDN_PUBLIC_URL`** must be the HTTPS base URL of your **existing or new proxy service** that serves those objects (set via Paragon Helm / Terraform overrides, or default to the cluster MinIO ingress URL when that is your gateway).
 
 ### Paragon Deployment
 
