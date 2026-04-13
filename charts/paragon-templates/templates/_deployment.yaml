@@ -61,6 +61,11 @@ spec:
           {{- $serviceData := fromJson (include "service.inputs" $root) }}
           {{- $category := $serviceData.category | default "" }}
           {{- if or (eq $category "microservice") (eq $category "worker") }}
+          {{- $probes := $root.Values.probes | default dict }}
+          {{- $readinessProbeCfg := index $probes "readiness" | default dict }}
+          {{- $livenessProbeCfg := index $probes "liveness" | default dict }}
+          {{- $readinessFailureThreshold := int (default 3 (index $readinessProbeCfg "failureThreshold")) }}
+          {{- $livenessFailureThreshold := int (default 3 (index $livenessProbeCfg "failureThreshold")) }}
           lifecycle:
             # need to sleep for `deregistration_delay` + 5s to prevent downtime on deployments
             # https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/1719#issuecomment-743452334
@@ -77,6 +82,7 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
+            failureThreshold: {{ $livenessFailureThreshold }}
           readinessProbe:
             httpGet:
               path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
@@ -84,6 +90,7 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
+            failureThreshold: {{ $readinessFailureThreshold }}
           startupProbe:
             httpGet:
               path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
