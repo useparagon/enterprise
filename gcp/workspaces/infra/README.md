@@ -16,6 +16,7 @@ NOTE: The following APIs must be enabled for the project in the [GCP Console](ht
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7.0 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | ~> 7.0 |
+| <a name="requirement_tls"></a> [tls](#requirement\_tls) | ~> 4.0 |
 
 ## Providers
 
