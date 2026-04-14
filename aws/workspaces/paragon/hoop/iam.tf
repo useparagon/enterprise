@@ -1,4 +1,4 @@
-# IAM role for Hoop agent ServiceAccount with SupportUser access (IRSA)
+# IAM role for Hoop agent ServiceAccount with read-only access (IRSA)
 resource "aws_iam_role" "hoop_support" {
   count = var.hoop_enabled && var.eks_oidc_provider_arn != null ? 1 : 0
 
@@ -15,7 +15,7 @@ resource "aws_iam_role" "hoop_support" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
-            "${replace(var.eks_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:${var.namespace_paragon.id}:hoop-cluster-admin"
+            "${replace(var.eks_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:${var.namespace_paragon.id}:hoopagent"
             "${replace(var.eks_oidc_issuer_url, "https://", "")}:aud" = "sts.amazonaws.com"
           }
         }
@@ -32,5 +32,5 @@ resource "aws_iam_role_policy_attachment" "hoop_support" {
   count = var.hoop_enabled && var.eks_oidc_provider_arn != null ? 1 : 0
 
   role       = aws_iam_role.hoop_support[0].name
-  policy_arn = "arn:aws:iam::aws:policy/PowerUserAccess"
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
