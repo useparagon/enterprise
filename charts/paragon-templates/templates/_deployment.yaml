@@ -77,6 +77,11 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
+            {{- if $root.Values.probes }}
+            {{- if and $root.Values.probes.liveness (hasKey $root.Values.probes.liveness "failureThreshold") }}
+            failureThreshold: {{ int $root.Values.probes.liveness.failureThreshold }}
+            {{- end }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
@@ -84,6 +89,11 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
+            {{- if $root.Values.probes }}
+            {{- if and $root.Values.probes.readiness (hasKey $root.Values.probes.readiness "failureThreshold") }}
+            failureThreshold: {{ int $root.Values.probes.readiness.failureThreshold }}
+            {{- end }}
+            {{- end }}
           startupProbe:
             httpGet:
               path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
