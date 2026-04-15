@@ -428,7 +428,7 @@ variable "argocd_slack_channel" {
 variable "argocd_app_chart_repository" {
   description = "Helm chart repository URL for Paragon application charts (e.g. OCI registry or HTTPS repo)."
   type        = string
-  default     = ""
+  default     = "https://paragon-helm-production.s3.amazonaws.com"
   nullable    = false
 }
 
@@ -501,6 +501,17 @@ variable "argocd_docker_email" {
   default     = null
 }
 
+variable "secrets_recovery_window_in_days" {
+  description = "Secrets Manager deletion recovery window for ArgoCD application secrets (env, docker-cfg, managed-sync, openobserve). Set to 0 for immediate deletion so names are free after destroy; use 7–30 in production for undo protection."
+  type        = number
+  default     = 0
+
+  validation {
+    condition     = var.secrets_recovery_window_in_days == 0 || (var.secrets_recovery_window_in_days >= 7 && var.secrets_recovery_window_in_days <= 30)
+    error_message = "secrets_recovery_window_in_days must be 0 (immediate) or between 7 and 30."
+  }
+}
+
 # ---------------------------------------------------------------------------
 # ArgoCD / GitOps — ingress
 # ---------------------------------------------------------------------------
@@ -569,6 +580,10 @@ resource "terraform_data" "validate_argocd_versions" {
     precondition {
       condition     = var.paragon_chart_version != null
       error_message = "paragon_chart_version is required when argocd_enabled is true."
+    }
+    precondition {
+      condition     = var.argocd_app_chart_repository != ""
+      error_message = "argocd_app_chart_repository must be a non-empty Helm repository URL when argocd_enabled is true."
     }
     precondition {
       condition     = !var.managed_sync_enabled || var.paragon_managed_sync_version != null

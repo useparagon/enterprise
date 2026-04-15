@@ -5,7 +5,7 @@ locals {
 resource "aws_secretsmanager_secret" "env" {
   name                    = "${local.secret_prefix}/env"
   description             = "Paragon application environment variables for ${var.organization}"
-  recovery_window_in_days = 7
+  recovery_window_in_days = var.recovery_window_in_days
 
   tags = {
     Name         = "${local.secret_prefix}/env"
@@ -21,7 +21,7 @@ resource "aws_secretsmanager_secret_version" "env" {
 resource "aws_secretsmanager_secret" "docker_cfg" {
   name                    = "${local.secret_prefix}/docker-cfg"
   description             = "Docker registry credentials for ${var.organization}"
-  recovery_window_in_days = 7
+  recovery_window_in_days = var.recovery_window_in_days
 
   tags = {
     Name         = "${local.secret_prefix}/docker-cfg"
@@ -39,7 +39,7 @@ resource "aws_secretsmanager_secret" "managed_sync" {
 
   name                    = "${local.secret_prefix}/managed-sync"
   description             = "Managed sync secrets for ${var.organization}"
-  recovery_window_in_days = 7
+  recovery_window_in_days = var.recovery_window_in_days
 
   tags = {
     Name         = "${local.secret_prefix}/managed-sync"
@@ -59,7 +59,7 @@ resource "aws_secretsmanager_secret" "openobserve" {
 
   name                    = "${local.secret_prefix}/openobserve"
   description             = "OpenObserve credentials for ${var.organization}"
-  recovery_window_in_days = 7
+  recovery_window_in_days = var.recovery_window_in_days
 
   tags = {
     Name         = "${local.secret_prefix}/openobserve"

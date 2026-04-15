@@ -1,0 +1,122 @@
+name: Release Charts
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Base chart version (e.g. 2026.04.01)"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  release-charts:
+    name: Package & Publish Production Helm Charts
+    runs-on: ubuntu-latest
+    env:
+      HELM_REPO_URL: https://paragon-helm-production.s3.amazonaws.com
+      S3_BUCKET: paragon-helm-production
+      CHARTS: paragon-onprem paragon-logging paragon-monitoring
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Distribute service-inputs
+        run: node scripts/update-charts.mjs charts/files/service-inputs.json
+
+      - name: Stage and stamp charts
+        id: stamp
+        run: |
+          set -euo pipefail
+          version="${{ inputs.version }}"
+          staging="$RUNNER_TEMP/charts"
+          mkdir -p "$staging"
+
+          rsync -aq --delete \
+            --exclude='example.yaml' \
+            --exclude='values.placeholder.yaml' \
+            --exclude='bootstrap/' \
+            charts/ "$staging/"
+
+          for chart in "$staging"/*/; do
+            [ -d "$chart" ] || continue
+            hash=$(find "$chart" -type f | sort \
+              | xargs shasum -a 256 -b | awk '{print $1}' \
+              | shasum -a 256 | awk '{print $1}' \
+              | cut -c1-8)
+            find "$chart" -type f -exec sed -i "s/__PARAGON_VERSION__/${version}-${hash}/g" {} +
+            echo "$(basename "$chart"): ${version}-${hash}"
+          done
+
+          echo "staging=$staging" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Helm
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+        with:
+          version: v3.16.1
+
+      - name: Build and package charts
+        run: |
+          set -euo pipefail
+          staging="${{ steps.stamp.outputs.staging }}"
+          pkg_dir="$RUNNER_TEMP/packages"
+          mkdir -p "$pkg_dir"
+
+          for chart_name in $CHARTS; do
+            chart_dir="$staging/$chart_name"
+            if [ ! -d "$chart_dir" ]; then
+              echo "Skipping $chart_name (directory not found)"
+              continue
+            fi
+
+            echo "=== Building $chart_name ==="
+            for sub in "$chart_dir"/charts/*/; do
+              [ -f "$sub/Chart.yaml" ] && helm dependency build "$sub" 2>/dev/null || true
+            done
+            helm dependency build "$chart_dir"
+            helm package "$chart_dir" --destination "$pkg_dir"
+          done
+
+          echo "--- Packaged charts ---"
+          ls -1 "$pkg_dir"/*.tgz
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
+        with:
+          aws-region: us-east-1
+          role-session-name: enterprise-chart-release
+          role-to-assume: arn:aws:iam::571812824132:role/helm-repo-manager
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Publish charts to S3
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/packages"
+
+          aws s3 cp "s3://$S3_BUCKET/index.yaml" existing-index.yaml 2>/dev/null \
+            || echo "No existing index found; creating new index."
+
+          if [ -f existing-index.yaml ]; then
+            helm repo index . --url "$HELM_REPO_URL" --merge existing-index.yaml
+          else
+            helm repo index . --url "$HELM_REPO_URL"
+          fi
+
+          for tgz in *.tgz; do
+            echo "Uploading $tgz"
+            aws s3 cp "$tgz" "s3://$S3_BUCKET/"
+          done
+
+          echo "Uploading index.yaml"
+          aws s3 cp index.yaml "s3://$S3_BUCKET/"

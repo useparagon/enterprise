@@ -13,6 +13,11 @@ variable "destination_namespace" {
 variable "chart_repository" {
   description = "OCI or HTTPS Helm chart repository URL."
   type        = string
+
+  validation {
+    condition     = length(var.chart_repository) > 0
+    error_message = "chart_repository must not be empty."
+  }
 }
 
 variable "chart_version" {

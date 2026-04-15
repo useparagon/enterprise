@@ -151,6 +151,8 @@ module "secrets" {
 
   managed_sync_config     = var.paragon_managed_sync_config
   openobserve_credentials = local.argocd_openobserve_credentials
+
+  recovery_window_in_days = var.secrets_recovery_window_in_days
 }
 
 module "argocd" {

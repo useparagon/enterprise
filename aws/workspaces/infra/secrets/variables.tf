@@ -1,3 +1,8 @@
+variable "recovery_window_in_days" {
+  description = "Days before Secrets Manager permanently deletes a secret after destroy. Use 0 for immediate deletion so the same secret name can be recreated (e.g. ephemeral stacks). Production values are typically 7–30."
+  type        = number
+}
+
 variable "workspace" {
   description = "Workspace name used for Secrets Manager path prefix."
   type        = string
