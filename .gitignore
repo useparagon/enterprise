@@ -46,7 +46,8 @@ dist/
 build/
 
 # ignore IDE files
-.cursor
+.cursor/*
+!.cursor/skills/
 .idea/
 .vscode/
 

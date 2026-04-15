@@ -79,6 +79,10 @@ ingress:
   host: '' # When empty, will use chart name + domain
   healthcheck_path: /healthz
 
+probes:
+  liveness:
+    failureThreshold: 6
+
 nodeSelector: {}
 
 tolerations: []

@@ -1,4 +1,4 @@
-# GCP Service Account for Hoop agent with Editor access via Workload Identity
+# GCP Service Account for Hoop agent with read-only access via Workload Identity
 resource "google_service_account" "hoop_agent" {
   count = var.hoop_enabled && var.gcp_project_id != null ? 1 : 0
 
@@ -12,7 +12,7 @@ resource "google_project_iam_member" "hoop_support" {
   count = var.hoop_enabled && var.gcp_project_id != null ? 1 : 0
 
   project = var.gcp_project_id
-  role    = "roles/editor"
+  role    = "roles/viewer"
   member  = "serviceAccount:${google_service_account.hoop_agent[0].email}"
 }
 
@@ -21,5 +21,5 @@ resource "google_service_account_iam_member" "hoop_workload_identity" {
 
   service_account_id = google_service_account.hoop_agent[0].name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${var.gcp_project_id}.svc.id.goog[${var.namespace_paragon.id}/hoop-cluster-admin]"
+  member             = "serviceAccount:${var.gcp_project_id}.svc.id.goog[${var.namespace_paragon.id}/hoopagent]"
 }
