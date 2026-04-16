@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Base chart version (e.g. 2026.04.01)"
+        description: "Git tag to check out and publish (must exist). Chart trees use __PARAGON_VERSION__ = this tag only."
         required: true
         type: string
 
@@ -24,16 +24,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.3.1
+        with:
+          ref: ${{ inputs.version }}
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
 
-      - name: Distribute service-inputs
+      # ubuntu-latest includes rsync; common act images (e.g. catthehacker/ubuntu:js-22.04) do not
+      - name: Ensure rsync is installed
+        run: |
+          if command -v rsync >/dev/null 2>&1; then
+            exit 0
+          fi
+          if command -v sudo >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y rsync
+          else
+            apt-get update -qq
+            apt-get install -y rsync
+          fi
+
+      - name: Update chart fixtures
         run: node scripts/update-charts.mjs charts/files/service-inputs.json
 
-      - name: Stage and stamp charts
+      - name: Stage and version charts
         id: stamp
         run: |
           set -euo pipefail
@@ -49,12 +67,8 @@ jobs:
 
           for chart in "$staging"/*/; do
             [ -d "$chart" ] || continue
-            hash=$(find "$chart" -type f | sort \
-              | xargs shasum -a 256 -b | awk '{print $1}' \
-              | shasum -a 256 | awk '{print $1}' \
-              | cut -c1-8)
-            find "$chart" -type f -exec sed -i "s/__PARAGON_VERSION__/${version}-${hash}/g" {} +
-            echo "$(basename "$chart"): ${version}-${hash}"
+            find "$chart" -type f -exec sed -i "s/__PARAGON_VERSION__/${version}/g" {} +
+            echo "$(basename "$chart"): ${version}"
           done
 
           echo "staging=$staging" >> "$GITHUB_OUTPUT"
