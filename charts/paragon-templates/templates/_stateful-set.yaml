@@ -33,6 +33,7 @@ spec:
       labels:
         {{- include (printf "%s.selectorLabels" $name) $root | nindent 8 }}
     spec:
+      terminationGracePeriodSeconds: 65
       {{- with $root.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
