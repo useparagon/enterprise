@@ -103,12 +103,38 @@ jobs:
           echo "--- Packaged charts ---"
           ls -1 "$pkg_dir"/*.tgz
 
-      - name: Configure AWS credentials
+      # GitHub-hosted: OIDC → role. Local act: pass -s ACT_AWS_ACCESS_KEY_ID / -s ACT_AWS_SECRET_ACCESS_KEY
+      # (and optional -s ACT_AWS_SESSION_TOKEN) for an IAM principal in account 571812824132 with S3 + Helm index permissions.
+      - name: Configure AWS credentials (OIDC)
+        if: ${{ !env.ACT }}
         uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
           aws-region: us-east-1
           role-session-name: enterprise-chart-release
           role-to-assume: arn:aws:iam::571812824132:role/helm-repo-manager
+
+      - name: Configure AWS credentials (act — access keys)
+        if: ${{ env.ACT }}
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.ACT_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.ACT_AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.ACT_AWS_SESSION_TOKEN }}
+
+      - name: Ensure AWS CLI is installed
+        run: |
+          if command -v aws >/dev/null 2>&1; then
+            exit 0
+          fi
+          if command -v sudo >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y awscli
+          else
+            apt-get update -qq
+            apt-get install -y awscli
+          fi
+          aws --version
 
       - name: Verify AWS identity
         run: aws sts get-caller-identity
