@@ -827,7 +827,7 @@ locals {
         FLIPT_LOG_LEVEL                 = "warn"
         FLIPT_STORAGE_GIT_POLL_INTERVAL = "30s"
         FLIPT_STORAGE_GIT_REF           = "main"
-        FLIPT_STORAGE_GIT_REPOSITORY    = local.feature_flags_content != null ? null : "https://github.com/useparagon/feature-flags.git"
+        FLIPT_STORAGE_GIT_REPOSITORY    = local.feature_flags_content != null ? null : "https://github.com/useparagon-internal/feature-flags.git"
         FLIPT_STORAGE_LOCAL_PATH        = local.feature_flags_content != null ? "/var/opt/flipt" : null
         FLIPT_STORAGE_READ_ONLY         = "true"
         FLIPT_STORAGE_TYPE              = local.feature_flags_content != null ? "local" : "git"
