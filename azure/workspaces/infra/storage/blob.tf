@@ -19,7 +19,7 @@ resource "azurerm_storage_account" "blob" {
   account_kind                    = var.storage_account_tier == "Premium" ? "BlockBlobStorage" : "StorageV2"
   account_replication_type        = "LRS"
   account_tier                    = var.storage_account_tier
-  allow_nested_items_to_be_public = true
+  allow_nested_items_to_be_public = false
   tags                            = merge(var.tags, { Name = local.storage_account_name })
 }
 
@@ -31,7 +31,7 @@ resource "azurerm_storage_container" "app" {
 
 resource "azurerm_storage_container" "cdn" {
   name                  = "${var.workspace}-cdn"
-  container_access_type = "container"
+  container_access_type = "private"
   storage_account_id    = azurerm_storage_account.blob.id
 }
 
