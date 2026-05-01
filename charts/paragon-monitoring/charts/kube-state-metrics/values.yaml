@@ -367,13 +367,12 @@ namespacesDenylist: ""
 ##
 namespaceOverride: ""
 
-resources: {}
-  # limits:
-  #  cpu: 100m
-  #  memory: 64Mi
-  # requests:
-  #  cpu: 10m
-  #  memory: 32Mi
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
 
 ## Provide a k8s version to define apiGroups for podSecurityPolicy Cluster Role.
 ## For example: kubeTargetVersionOverride: 1.14.9
