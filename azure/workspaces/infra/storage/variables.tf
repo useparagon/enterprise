@@ -31,3 +31,9 @@ variable "auditlogs_lock_enabled" {
   description = "Whether to lock the audit logs container immutability policy."
   type        = bool
 }
+
+variable "storage_account_tier" {
+  description = "Storage account tier. Use \"Standard\" for new deployments that need public CDN container access (Premium BlockBlobStorage does not support it)."
+  type        = string
+  default     = "Premium"
+}
