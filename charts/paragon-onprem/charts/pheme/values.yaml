@@ -16,17 +16,17 @@ service:
 
 resources:
   limits:
-    memory: 1024Mi
+    memory: 500Mi
   requests:
-    cpu: 0.5
-    memory: 1024Mi
+    cpu: 100m
+    memory: 500Mi
 
 autoscaling:
   enabled: false
   # minReplicas: 2
-  # maxReplicas: 2
-  # targetCPUUtilizationPercentage: 40
-  # targetMemoryUtilizationPercentage: 40
+  # maxReplicas: 4
+  # targetCPUUtilizationPercentage: 75
+  # targetMemoryUtilizationPercentage: 75
 
 secretName: "paragon-secrets"
 
@@ -91,3 +91,8 @@ affinity:
           - spot
 
 tls_secret: ''
+
+env:
+  WORKER_SHARED_AUTOSCALING_DISABLED: false
+  WORKER_SHARED_SERVICE_MAX_INSTANCES: 4
+  WORKER_SHARED_SERVICE_MIN_INSTANCES: 2

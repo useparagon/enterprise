@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 4
+replicaCount: 2
 
 image:
   repository: useparagon/worker-triggers
@@ -16,18 +16,17 @@ service:
 
 resources:
   limits:
-    cpu: 1
-    memory: 2048Mi
+    memory: 1000Mi
   requests:
-    cpu: 0.5
-    memory: 2048Mi
+    cpu: 200m
+    memory: 1000Mi
 
 autoscaling:
   enabled: true
-  minReplicas: 4
+  minReplicas: 2
   maxReplicas: 10
-  targetCPUUtilizationPercentage: 80
-  targetMemoryUtilizationPercentage: 80
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 75
 
 secretName: "paragon-secrets"
 

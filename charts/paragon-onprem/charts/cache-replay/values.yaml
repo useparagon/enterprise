@@ -16,18 +16,17 @@ service:
 
 resources:
   limits:
-    cpu: 1
     memory: 2048Mi
   requests:
-    cpu: 0.5
+    cpu: 500m
     memory: 2048Mi
 
 autoscaling:
   enabled: false
-  minReplicas: 0
-  maxReplicas: 0
-  targetCPUUtilizationPercentage: 80
-  targetMemoryUtilizationPercentage: 80
+  # minReplicas: 0
+  # maxReplicas: 0
+  # targetCPUUtilizationPercentage: 75
+  # targetMemoryUtilizationPercentage: 75
 
 secretName: "paragon-secrets"
 

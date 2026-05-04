@@ -4,7 +4,7 @@ subchart:
   grafana:
     enabled: true
   kafka-exporter:
-    enabled: true
+    enabled: false
   kube-state-metrics:
     enabled: true
   node-exporter:

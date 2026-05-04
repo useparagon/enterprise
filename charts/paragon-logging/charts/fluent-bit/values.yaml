@@ -199,10 +199,9 @@ readinessProbe:
 
 resources:
   limits:
-    cpu: 0.5
-    memory: 256Mi
+    memory: 100Mi
   requests:
-    cpu: 0.2
+    cpu: 100m
     memory: 100Mi
 
 ## only available if kind is Deployment
