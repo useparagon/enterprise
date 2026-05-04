@@ -13,34 +13,21 @@ resource "google_storage_bucket_iam_member" "app" {
   member = "serviceAccount:${google_service_account.minio.email}"
 }
 
-# public bucket
+# CDN bucket (private; public asset URLs must use your app/proxy base URL in Helm)
 resource "google_storage_bucket" "cdn" {
   name          = "${var.workspace}-cdn"
   location      = var.region
   project       = var.gcp_project_id
   storage_class = "STANDARD"
   force_destroy = var.disable_deletion_protection
+
+  uniform_bucket_level_access = true
 }
 
 resource "google_storage_bucket_iam_member" "cdn" {
   bucket = google_storage_bucket.cdn.name
   role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.minio.email}"
-}
-
-resource "google_storage_bucket_acl" "cdn_public_read_access" {
-  bucket = google_storage_bucket.cdn.name
-  role_entity = [
-    "READER:allUsers"
-  ]
-}
-
-# configure all objects added to the public bucket to have public read access
-resource "google_storage_default_object_acl" "cdn_public_read_access" {
-  bucket = google_storage_bucket.cdn.name
-  role_entity = [
-    "READER:allUsers"
-  ]
 }
 
 # logs bucket
