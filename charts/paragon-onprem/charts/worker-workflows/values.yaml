@@ -77,7 +77,7 @@ ingress:
   enabled: true
   className: ''
   host: '' # When empty, will use chart name + domain
-  healthcheck_path: /healthz
+  healthcheck_path: "/healthz?isLite=true"
 
 probes:
   liveness:
