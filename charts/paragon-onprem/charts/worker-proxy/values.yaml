@@ -71,6 +71,10 @@ ingress:
   healthcheck_path: /healthz
   group_order: '-10'
 
+probes:
+  liveness:
+    failureThreshold: 18
+
 nodeSelector: {}
 
 tolerations: []

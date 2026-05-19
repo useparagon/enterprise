@@ -72,36 +72,11 @@ spec:
                   - -c
                   - sleep 35
           livenessProbe:
-            httpGet:
-              path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
-              port: http
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 5
-            {{- if $root.Values.probes }}
-            {{- if and $root.Values.probes.liveness (hasKey $root.Values.probes.liveness "failureThreshold") }}
-            failureThreshold: {{ int $root.Values.probes.liveness.failureThreshold }}
-            {{- end }}
-            {{- end }}
+            {{- include "probes.httpGet" (dict "root" $root "type" "liveness") | nindent 12 }}
           readinessProbe:
-            httpGet:
-              path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
-              port: http
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 5
-            {{- if $root.Values.probes }}
-            {{- if and $root.Values.probes.readiness (hasKey $root.Values.probes.readiness "failureThreshold") }}
-            failureThreshold: {{ int $root.Values.probes.readiness.failureThreshold }}
-            {{- end }}
-            {{- end }}
+            {{- include "probes.httpGet" (dict "root" $root "type" "readiness") | nindent 12 }}
           startupProbe:
-            httpGet:
-              path: {{ $root.Values.ingress.healthcheck_path | default "/healthz" }}
-              port: http
-            failureThreshold: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
+            {{- include "probes.httpGet" (dict "root" $root "type" "startup") | nindent 12 }}
           {{- end }}
           resources:
             {{- toYaml $root.Values.resources | nindent 12 }}

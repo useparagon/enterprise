@@ -75,6 +75,10 @@ ingress:
   host: '' # When empty, will use chart name + domain
   healthcheck_path: /healthz
 
+probes:
+  liveness:
+    failureThreshold: 18
+
 nodeSelector: {}
 
 tolerations: []
@@ -91,8 +95,3 @@ affinity:
           - spot
 
 tls_secret: ''
-
-env:
-  WORKER_SHARED_AUTOSCALING_DISABLED: false
-  WORKER_SHARED_SERVICE_MAX_INSTANCES: 4
-  WORKER_SHARED_SERVICE_MIN_INSTANCES: 2
