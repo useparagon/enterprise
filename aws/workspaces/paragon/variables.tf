@@ -685,6 +685,7 @@ locals {
           MINIO_PUBLIC_URL              = try(local.microservices.minio.public_url, null)
           PASSPORT_PUBLIC_URL           = try(local.microservices.passport.public_url, null)
           PHEME_PUBLIC_URL              = try(local.microservices.pheme.public_url, null)
+          PUBLIC_UPLOAD_PROXY_BASE_URL  = try("${local.microservices.zeus.public_url}/public-upload-proxy", null)
           RELEASE_PUBLIC_URL            = try(local.microservices.release.public_url, null)
           WORKER_ACTIONKIT_PUBLIC_URL   = try(local.microservices["worker-actionkit"].public_url, null)
           WORKER_ACTIONS_PUBLIC_URL     = try(local.microservices["worker-actions"].public_url, null)
